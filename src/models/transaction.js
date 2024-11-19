@@ -1,47 +1,51 @@
 import { v4 as uuidv4 } from "uuid";
 
-export class Transaction {
-  constructor(nPeople, currency) {
-    this.name = "";
-    this.id = uuidv4();
-    this.amount = 0;
-    this.payer = nPeople > 0 ? 0 : -1;
-    this.currency = currency;
-    this.isDebtor = Array(nPeople).fill(true);
-    this.owed = Array(nPeople).fill(0);
-  }
+const Transaction = {
+  make(nPeople, currency) {
+    let name = "";
+    const id = uuidv4();
+    let amount = 0;
+    let payer = nPeople > 0 ? 0 : -1;
+    const isDebtor = Array(nPeople).fill(true);
+    const owed = Array(nPeople).fill(0);
+    return { name, id, amount, payer, currency, isDebtor, owed };
+  },
 
-  updatePeople(nPeople) {
-    const addPeople = nPeople - this.owed.length;
+  updatePeople(transaction, nPeople) {
+    const addPeople = nPeople - transaction.owed.length;
     if (addPeople > 0) {
-      this.isDebtor.push(...Array(addPeople).fill(false));
-      this.owed.push(...Array(addPeople).fill(0));
-      if (this.payer === -1) {
-        this.payer = 0;
+      transaction.isDebtor.push(...Array(addPeople).fill(false));
+      transaction.owed.push(...Array(addPeople).fill(0));
+      if (transaction.payer === -1) {
+        transaction.payer = 0;
       }
     }
-  }
-  
-  split() {
-    const nDebtors = this.isDebtor.filter((value) => value === true).length;
+  },
+
+  split(transaction) {
+    const nDebtors = transaction.isDebtor.filter(
+      (value) => value === true
+    ).length;
     if (nDebtors == 0) {
-      this.owed.fill(0);
+      transaction.owed.fill(0);
       return;
     }
 
-    const q = Math.floor(this.amount / nDebtors);
-    let r = this.amount % nDebtors;
+    const q = Math.floor(transaction.amount / nDebtors);
+    let r = transaction.amount % nDebtors;
 
-    for (let i = this.owed.length - 1; i >= 0; --i) {
-      if (this.isDebtor[i]) {
-        this.owed[i] = q;
+    for (let i = transaction.owed.length - 1; i >= 0; --i) {
+      if (transaction.isDebtor[i]) {
+        transaction.owed[i] = q;
         if (r > 0) {
-          this.owed[i] += 1;
+          transaction.owed[i] += 1;
           --r;
         }
       } else {
-        this.owed[i] = 0;
+        transaction.owed[i] = 0;
       }
     }
-  }
-}
+  },
+};
+
+export default Transaction;

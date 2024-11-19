@@ -1,9 +1,11 @@
 import { v4 as uuidv4 } from "uuid";
 
-export class Person {
-  constructor(name="") {
-    this.name = name;
-    this.id = uuidv4();
-    this.active = true;
-  }
-}
+const Person = {
+  make(name = "") {
+    const id = uuidv4();
+    let active = true;
+    return { name, id, active };
+  },
+};
+
+export default Person;

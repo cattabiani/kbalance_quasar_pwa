@@ -54,19 +54,19 @@ const finalize = (reset) => {
 };
 
 const addSheet = () => {
-  store.sheetID = -1;
-  store.saveInCurrentSheet(store.makeNewSheet());
+  store.setSheetID();
+  store.addSheet();
 };
 
 const onLeft = ({ reset }, id) => {
   finalize(reset);
   setTimeout(() => {
-    store.deleteSheet(id);
+    store.removeSheet(id);
   }, 1);
 };
 
 const editSheet = (id) => {
-  store.sheetID = id;
+  store.setSheetID(id);
   router.push({ name: "SheetPage" });
 };
 </script>

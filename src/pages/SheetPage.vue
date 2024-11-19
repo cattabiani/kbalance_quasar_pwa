@@ -9,13 +9,13 @@
         class="bg-white text-primary"
       />
       <q-toolbar-title style="font-size: 28px"> Transactions </q-toolbar-title>
-      <!-- <q-btn
+      <q-btn
         flat
-        icon="bug_report"
+        icon="bar_chart"
         class="q-ml-md bg-white text-primary"
-        aria-label="Debug"
-        @click="debug"
-      /> -->
+        aria-label="Results"
+        @click="goToResults"
+      />
       <q-btn
         flat
         icon="people"
@@ -47,19 +47,26 @@
 
         <q-item clickable :class="id % 2 === 0 ? 'bg-grey-1' : 'bg-white'">
           <q-item-section>
-            <div class="q-gutter-sm" style="display: flex; align-items: center; justify-content: space-between;">
-            <div>
-              {{ transaction.name || "New Transaction" }}
-            </div>
-            <div>
-              <CurrencyInput
+            <div
+              class="q-gutter-sm"
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+              "
+            >
+              <div>
+                {{ transaction.name || "New Transaction" }}
+              </div>
+              <div>
+                <CurrencyInput
                   class="q-mr-md"
                   v-model="transaction.amount"
                   :currency="transaction.currency"
                   :disable="true"
                 />
+              </div>
             </div>
-          </div>
           </q-item-section>
         </q-item>
       </q-slide-item>
@@ -82,17 +89,16 @@ const timer = ref(null);
 const store = useStore();
 const router = useRouter();
 
-// const debug = () => {
-//   console.log(store.currentSheet.results);
-// }
-
 const goBack = () => {
-  store.clearSheet();
   router.go(-1); // Go back to the previous page
 };
 
 const goToPeople = () => {
   router.push({ name: "PeoplePage" });
+};
+
+const goToResults = () => {
+  router.push({ name: "ResultsPage" });
 };
 
 const finalize = (reset) => {
@@ -104,17 +110,17 @@ const finalize = (reset) => {
 const onLeft = ({ reset }, id) => {
   finalize(reset);
   setTimeout(() => {
-    store.deleteTransaction(id);
+    store.removeTransaction(id);
   }, 1);
 };
 
 const editTransaction = (id) => {
-  store.transactionID = id;
+  store.setTransactionID(id);
   router.push({ name: "TransactionPage" });
 };
 
 const addTransaction = () => {
-  store.transactionID = -1;
+  store.setTransactionID();
   router.push({ name: "TransactionPage" });
 };
 </script>

@@ -1,9 +1,5 @@
 import { defineStore } from "pinia";
-import { v4 as uuidv4 } from "uuid";
-import { Transaction } from "../models/transaction";
-import { Person } from "../models/person";
-
-import _ from 'lodash';
+import Sheet from "../models/sheet";
 
 export const useStore = defineStore("store", {
   state: () => ({
@@ -25,109 +21,82 @@ export const useStore = defineStore("store", {
     },
   },
   actions: {
+    // set store IDs
+    setSheetID(id = -1) {
+      this.sheetID = id;
+    },
+    setTransactionID(id = -1) {
+      this.transactionID = id;
+    },
+    setPersonID(id = -1) {
+      this.personID = id;
+    },
+
+    // // transaction
     getEditableTransaction() {
-      const nPeople = this.sheets[this.sheetID].people.length;
-      if (this.currentTransaction) {
-        const ans = _.cloneDeep(this.sheets[this.sheetID].transactions[this.transactionID]);
-        ans.updatePeople(nPeople);
-        return ans;
-      } else {
-        return new Transaction(nPeople, this.lastEditedCurrency);
-      }
+      return Sheet.getEditableTransaction(
+        this.sheets[this.sheetID],
+        this.transactionID,
+        this.lastEditedCurrency
+      );
     },
-    saveInCurrentTransaction(transaction) {
-      if (this.currentTransaction) {
-        this._registerTransaction(this.sheets[this.sheetID].transactions[this.transactionID], -1);
-        this._registerTransaction(transaction, 1);
-        this.sheets[this.sheetID].transactions[this.transactionID] =
-          transaction;
-      } else {
-        this._registerTransaction(transaction, 1);
-        this.sheets[this.sheetID].transactions.push(transaction);
-      }
+    addTransaction(transaction) {
+      Sheet.addTransaction(
+        this.sheets[this.sheetID],
+        this.transactionID,
+        transaction
+      );
     },
-    deleteTransaction(id, complete = true) {
-      this._registerTransaction(this.sheets[this.sheetID].transactions[id], -1);
-      if (complete) {
-        this.sheets[this.sheetID].transactions.splice(id, 1);
-      }
+    removeTransaction(id) {
+      Sheet.removeTransaction(this.sheets[this.sheetID], id);
     },
-    _registerTransaction(transaction, multi) {
-      const j = transaction.payer;
-      for (let i = 0; i < transaction.owed.length; ++i) {
-        if (j === i) {
-          continue;
-        }
-        const v = multi*transaction.owed[i];
-        if (i > j) {
-          this.sheets[this.sheetID].results[i][j] += v;
-        } else {
-          this.sheets[this.sheetID].results[j][i] -= v;
-        }
-      }
-    },
+    // // person
     getEditablePerson() {
-      if (this.currentPerson) {
-        return { ...this.sheets[this.sheetID].people[this.personID] };
-      } else {
-        return new Person();
+      return Sheet.getEditablePerson(this.sheets[this.sheetID], this.personID);
+    },
+    addPerson(person) {
+      Sheet.addPerson(this.sheets[this.sheetID], this.personID, person);
+    },
+    removePerson(id) {
+      Sheet.removePerson(this.sheets[this.sheetID], id);
+    },
+
+    // sheet
+    addSheet(sheet = null) {
+      if (sheet === null) {
+        sheet = Sheet.make();
       }
-    },
-    saveInCurrentPerson(person) {
-      if (this.sheets[this.sheetID].people[this.personID]) {
-        this.sheets[this.sheetID].people[this.personID] = person;
-      } else {
-        this.sheets[this.sheetID].results.push(
-          Array(this.sheets[this.sheetID].people.length).fill(0)
-        );
-        this.sheets[this.sheetID].people.push(person);
-      }
-    },
-    deletePerson(id) {
-      if (this.sheets[this.sheetID].transactions.length == 0) {
-        let matrix = this.sheets[this.sheetID].results;
-        if (!matrix[id].every((element) => element === 0)) {
-          return;
-        }
 
-        // Step 2: Check if all elements in column i are 0 (in rows after i)
-        for (let row = id + 1; row < matrix.length; row++) {
-          if (matrix[row][id] !== 0) {
-            return;
-          }
-        }
-
-        // Step 3: Remove row i
-        matrix.splice(id, 1);
-
-        // Step 4: Remove column i from each row after row i
-        for (let row = id; row < matrix.length; row++) {
-          matrix[row].splice(id, 1);
-        }
-
-        this.sheets[this.sheetID].people.splice(id, 1);
-      } else {
-        this.sheets[this.sheetID].people[id].active = false;
-      }
-    },
-
-    makeNewSheet() {
-      return {
-        name: "",
-        people: [new Person("Self")],
-        results: [[]],
-        transactions: [],
-      };
-    },
-    saveInCurrentSheet(sheet) {
-      if (this.sheets[this.sheetID]) {
+      if (this.sheetID >= 0 && this.sheetID < this.sheets.length) {
         this.sheets[this.sheetID] = sheet;
       } else {
         this.sheets.push(sheet);
       }
     },
-    deleteSheet(id) {
+    removeSheet(id) {
       this.sheets.splice(id, 1);
     },
+  },
+  // Add this persist option to save to local storage
+  persist: {
+    enabled: true,
+    strategies: [
+      {
+        key: "store",
+        storage: localStorage,
+        // Custom serialization to exclude variables ending with "ID"
+        serializer: {
+          serialize: (state) => {
+            // Filter out keys ending with "ID"
+            const persistedState = { ...state };
+            delete persistedState["sheetID"];
+            delete persistedState["transactionID"];
+            delete persistedState["personID"];
+            return JSON.stringify(persistedState);
+          },
+          deserialize: (value) => JSON.parse(value),
+        },
+      },
+    ],
   },
 });

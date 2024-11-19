@@ -3,8 +3,7 @@
     v-model="selectedOption"
     :options="options"
     label="Select a Currency"
-    filled
-    map-options
+    outlined
   />
 </template>
 

@@ -12,7 +12,7 @@
       <!-- <q-btn v-if="!isEditable"
         flat
         icon="edit"
-        @click="editForm"
+        @click="editForm"matrix
         class="q-ml-md bg-white text-primary"
         aria-label="Add a new transaction"
       /> -->
@@ -36,7 +36,7 @@
               v-model="editableTransaction.amount"
               :currency="'XXX'"
               :disable="!isEditable"
-              @blur="editableTransaction.split()"
+              @blur="Transaction.split(editableTransaction)"
             />
           </div>
           <div class="col-auto">
@@ -83,7 +83,7 @@
                   left-label
                   v-model="editableTransaction.isDebtor[id]"
                   class="q-mr-md"
-                  @update:model-value="editableTransaction.split()"
+                  @update:model-value="Transaction.split(editableTransaction)"
                 />
 
                 <CurrencyInput
@@ -115,6 +115,7 @@ import { useRouter } from "vue-router";
 import { useStore } from "src/stores/store.js";
 import CurrencyInput from "../components/CurrencyInput.vue";
 import CurrencySelector from "../components/CurrencySelector.vue";
+import Transaction from "../models/transaction";
 
 const store = useStore();
 const router = useRouter();
@@ -134,13 +135,12 @@ const filteredPeople = computed(() => {
 });
 
 const saveAndGoBack = () => {
-  store.saveInCurrentTransaction(editableTransaction.value);
+  store.addTransaction(editableTransaction.value);
   goBack();
 };
 
 const goBack = () => {
   store.lastEditedCurrency = editableTransaction.value.currency;
-  store.transactionID = -1;
   router.go(-1);
 };
 
@@ -150,5 +150,4 @@ watch(
     store.lastEditedCurrency = value;
   }
 );
-
 </script>

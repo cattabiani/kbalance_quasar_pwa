@@ -126,7 +126,7 @@ const goBack = () => {
 };
 
 const addPerson = () => {
-  store.personID = -1;
+  store.setPersonID();
   editablePerson.value = store.getEditablePerson();
   focusInput();
 };
@@ -139,7 +139,7 @@ const focusInput = () => {
 };
 
 const editPerson = (id) => {
-  store.personID = id;
+  store.setPersonID(id);
   editablePerson.value = store.getEditablePerson();
   focusInput();
 };
@@ -153,26 +153,26 @@ const finalize = (reset) => {
 const onLeft = ({ reset }, id) => {
   finalize(reset);
   setTimeout(() => {
-    store.deletePerson(id);
+    store.removePerson(id);
   }, 1);
 };
 
 const onRight = ({ reset }, id) => {
   finalize(reset);
   setTimeout(() => {
-    store.currentSheet.people[id].active = true;
+    store.currentPerson().active = true;
   }, 1);
 };
 
 // Save note and close the modal
 const saveAndCloseModal = () => {
-  store.saveInCurrentPerson(editablePerson.value);
+  store.addPerson(editablePerson.value);
   closeModal();
 };
 
 // Close the modal and reset the edit note ID
 const closeModal = () => {
-  store.personID = -1;
+  store.setPersonID();
   editablePerson.value = null;
 };
 </script>

@@ -23,11 +23,6 @@ const routes = [
         name: "TransactionPage",
         component: () => import("pages/TransactionPage.vue"),
       },
-      {
-        path: "ResultsPage",
-        name: "ResultsPage",
-        component: () => import("pages/ResultsPage.vue"),
-      },
     ],
   },
 

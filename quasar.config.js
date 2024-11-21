@@ -124,7 +124,7 @@ module.exports = configure(function (/* ctx */) {
       // extendSSRWebserverConf (esbuildConf) {},
       // extendPackageJson (json) {},
 
-      pwa: false,
+      pwa: true,
 
       // manualStoreHydration: true,
       // manualPostHydrationTrigger: true,
@@ -147,7 +147,44 @@ module.exports = configure(function (/* ctx */) {
       // useFilenameHashes: true,
       // extendGenerateSWOptions (cfg) {}
       // extendInjectManifestOptions (cfg) {},
-      // extendManifestJson (json) {}
+      extendManifestJson(json) {
+        Object.assign(json, {
+          name: "kBalance",
+          short_name: "kBalance",
+          description:
+            "A simple balance-tracking app to manage finances.",
+          display: "standalone",
+          start_url: "./",
+          theme_color: "#1976D2", // Quasar primary color
+          background_color: "#ffffff", // Default background color
+          icons: [
+            {
+              src: "icons/icon-192x192.png", // Make sure these paths are correct
+              sizes: "192x192",
+              type: "image/png",
+            },
+            {
+              src: "icons/icon-512x512.png",
+              sizes: "512x512",
+              type: "image/png",
+            },
+          ],
+          screenshots: [
+            // {
+            //   src: "screenshots/screenshot-1.jpeg",
+            //   sizes: "985x2048",
+            //   type: "image/jpeg",
+            //   form_factor: "wide",
+            // },
+            // {
+            //   src: "screenshots/screenshot-2.jpeg",
+            //   sizes: "985x2048",
+            //   type: "image/jpeg",
+            // },
+            // Add more screenshots if necessary
+          ],
+        });
+      },
       // extendPWACustomSWConf (esbuildConf) {}
     },
 

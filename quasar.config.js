@@ -97,7 +97,7 @@ module.exports = configure(function (/* ctx */) {
       // directives: [],
 
       // Quasar plugins
-      plugins: [],
+      plugins: ["Notify"],
     },
 
     // animations: 'all', // --- includes all animations
@@ -151,8 +151,7 @@ module.exports = configure(function (/* ctx */) {
         Object.assign(json, {
           name: "kBalance",
           short_name: "kBalance",
-          description:
-            "A simple balance-tracking app to manage finances.",
+          description: "A simple balance-tracking app to manage finances.",
           display: "standalone",
           start_url: "./",
           theme_color: "#1976D2", // Quasar primary color

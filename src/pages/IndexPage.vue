@@ -39,14 +39,15 @@
 defineOptions({
   name: "IndexPage",
 });
-import { ref } from "vue";
+import { ref, onBeforeUnmount } from "vue";
+import { useQuasar } from "quasar";
 import { useStore } from "src/stores/store.js";
 import { useRouter } from "vue-router";
 
 const store = useStore();
 const timer = ref(null);
 const router = useRouter();
-const nameInputs = ref([]);
+const $q = useQuasar();
 
 const finalize = (reset) => {
   timer.value = setTimeout(() => {
@@ -70,4 +71,37 @@ const editSheet = (id) => {
   store.setSheetID(id);
   router.push({ name: "SheetPage" });
 };
+
+const installPromptHandler = (event) => {
+  event.preventDefault(); // Prevent the default prompt from appearing
+
+  notification = $q.notify({
+    actions: [
+      {
+        label: "Install",
+        color: "white",
+        handler: () => {
+          if (event) {
+            event.prompt(); // Show the install prompt
+            notification.close(); // Dismiss the notification
+          }
+        },
+      },
+      {
+        label: "Dismiss",
+        color: "white",
+        handler: () => {
+          notification.close(); // Dismiss the notification
+        },
+      },
+    ],
+    timeout: 0, // Prevent it from auto-closing
+  });
+};
+
+window.addEventListener("beforeinstallprompt", installPromptHandler);
+
+onBeforeUnmount(() => {
+  window.removeEventListener("beforeinstallprompt", installPromptHandler);
+});
 </script>

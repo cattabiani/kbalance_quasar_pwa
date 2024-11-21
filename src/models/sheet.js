@@ -89,7 +89,7 @@ const Sheet = {
   },
 
   addPerson(sheet, id, person) {
-    if (id >= 0 && id < sheet.transactions.length) {
+    if (id >= 0 && id < sheet.people.length) {
       sheet.people[id] = person;
     } else {
       sheet.people.push(person);

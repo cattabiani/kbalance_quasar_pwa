@@ -8,14 +8,16 @@
         aria-label="Go Back"
         class="bg-white text-primary"
       />
-      <q-toolbar-title style="font-size: 28px"> Transactions </q-toolbar-title>
-      <q-btn
+      <q-toolbar-title style="font-size: 28px">
+        {{ store.currentSheet.name }}
+      </q-toolbar-title>
+      <!-- <q-btn
         flat
-        icon="bar_chart"
+        icon="bug_report"
+        @click="debug"
         class="q-ml-md bg-white text-primary"
-        aria-label="Results"
-        @click="goToResults"
-      />
+        aria-label="Debug"
+      /> -->
       <q-btn
         flat
         icon="people"
@@ -33,40 +35,134 @@
     </q-toolbar>
   </q-header>
   <q-page>
-    <q-list bordered class="q-my-md">
+    <q-input
+      class="q-my-md q-mr-md q-ml-md"
+      ref="nameInput"
+      v-model="store.currentSheet.name"
+      label="Description"
+      autogrow
+      outlined
+      @focus="nameInput.select()"
+    />
+    <q-select
+      bordered
+      class="q-my-md q-mr-md q-ml-md"
+      v-model="selectedPerson"
+      :options="peopleOptions"
+      label="Selected Person"
+      outlined
+    />
+
+    <q-card
+      v-if="negativeSummaryDisplay || positiveSummaryDisplay"
+      class="q-my-md q-mr-md q-ml-md"
+    >
+      <div class="q-pa-md">
+        <div v-if="negativeSummaryDisplay" :style="{ color: 'green' }">
+          {{ store.currentSheet.people[selectedPerson.value].name }} is owed
+          {{ negativeSummaryDisplay }}
+        </div>
+
+        <div v-if="positiveSummaryDisplay" :style="{ color: 'red' }">
+          {{ store.currentSheet.people[selectedPerson.value].name }} owes
+          {{ positiveSummaryDisplay }}
+        </div>
+      </div>
+    </q-card>
+    <q-card v-if="summaries.detail.length > 0" class="q-my-md q-mr-md q-ml-md">
+      <div class="q-pa-md">
+        <div v-for="item in summaries.detail" :key="item.id">
+          <div>
+            <span>
+              {{
+                item.amount > 0
+                  ? store.currentSheet.people[selectedPerson.value].name
+                  : store.currentSheet.people[item.person].name
+              }}
+            </span>
+            <span> owes </span>
+            <span>
+              {{
+                item.amount < 0
+                  ? store.currentSheet.people[selectedPerson.value].name
+                  : store.currentSheet.people[item.person].name
+              }}
+              &nbsp;
+            </span>
+            <span :style="{ color: item.amount > 0 ? 'red' : 'green' }">
+              {{ displayCurrency(item.currency, Math.abs(item.amount)) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </q-card>
+
+    <q-list>
       <q-slide-item
-        v-for="(transaction, id) in store.currentSheet.transactions"
-        :key="id"
-        @left="(event) => onLeft(event, id)"
-        @dblclick="editTransaction(id)"
+        v-for="(item, index) in store.currentSheet.transactions"
+        :key="index"
+        @left="(event) => onLeft(event, index)"
+        @dblclick="editTransaction(index)"
         left-color="red"
       >
         <template v-slot:left>
           <q-icon name="delete" />
         </template>
 
-        <q-item clickable :class="id % 2 === 0 ? 'bg-grey-1' : 'bg-white'">
+        <q-item clickable :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'">
           <q-item-section>
-            <div
-              class="q-gutter-sm"
-              style="
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-              "
-            >
-              <div>
-                {{ transaction.name || "New Transaction" }}
-              </div>
-              <div>
-                <CurrencyInput
-                  class="q-mr-md"
-                  v-model="transaction.amount"
-                  :currency="transaction.currency"
-                  :disable="true"
-                />
-              </div>
-            </div>
+            <q-item-label>
+              {{ item.name || "New Transaction" }}
+            </q-item-label>
+            <q-item-label caption>
+              {{ store.currentSheet.people[item.payer]?.name || "Nobody" }} paid
+              {{ displayCurrency(item.currency, item.amount) }}
+            </q-item-label>
+          </q-item-section>
+          <q-item-section
+            side
+            v-if="item.payer === selectedPerson?.value"
+            :style="{ color: 'green' }"
+          >
+            <q-item-label caption :style="{ color: 'green' }">
+              {{
+                store.currentSheet.people[selectedPerson?.value]?.name ||
+                "Nobody"
+              }}
+              lent
+            </q-item-label>
+            <q-item-label>
+              {{
+                displayCurrency(
+                  item.currency,
+                  item.amount - item.owed[item.payer]
+                )
+              }}
+            </q-item-label>
+          </q-item-section>
+          <q-item-section
+            side
+            v-else-if="item.owed[selectedPerson?.value] > 0"
+            :style="{ color: 'red' }"
+          >
+            <q-item-label caption :style="{ color: 'red' }">
+              {{
+                store.currentSheet.people[selectedPerson?.value]?.name ||
+                "Nobody"
+              }}
+              borrowed
+            </q-item-label>
+            <q-item-label>
+              {{
+                displayCurrency(
+                  item.currency,
+                  item.amount - item.owed[selectedPerson?.value]
+                )
+              }}
+            </q-item-label>
+          </q-item-section>
+          <q-item-section side v-else>
+            <q-item-label> not involved </q-item-label>
           </q-item-section>
         </q-item>
       </q-slide-item>
@@ -79,15 +175,59 @@ defineOptions({
   name: "SheetPage",
 });
 
-import { ref } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "src/stores/store.js";
-import CurrencyInput from "../components/CurrencyInput.vue";
+import Sheet from "../models/sheet";
 
 const timer = ref(null);
+const nameInput = ref(null);
 
 const store = useStore();
 const router = useRouter();
+
+const peopleOptions = computed(() => {
+  return store.currentSheet.people.map((person, index) => ({
+    label: person.name,
+    value: index, // Assuming `id` is a unique field in your `person` object
+  }));
+});
+const selectedPerson = ref(peopleOptions.value[0] || null);
+const summaries = computed(() => {
+  const { ans, totals } = Sheet.getSummary(
+    store.currentSheet,
+    selectedPerson.value?.value
+  );
+
+  const detail = ans.map((item, index) => ({
+    ...item,
+    id: index, // Adding a unique id based on the index
+  }));
+
+  return { detail, totals }; // Return both formattedAns and totals
+});
+
+const positiveSummaryDisplay = computed(() => {
+  return Object.entries(summaries.value.totals)
+    .filter(([_, amount]) => amount > 0) // Filter for positive values
+    .map(([currency, amount]) => displayCurrency(currency, amount)) // Format the string
+    .join(" + ");
+});
+
+const negativeSummaryDisplay = computed(() => {
+  return Object.entries(summaries.value.totals)
+    .filter(([_, amount]) => amount < 0) // Filter for positive values
+    .map(([currency, amount]) => displayCurrency(currency, -amount)) // Format the string
+    .join(" + ");
+});
+
+const displayCurrency = (currency, amount) => {
+  return `${currency} ${parseFloat(amount / 100).toFixed(2)}`;
+};
+
+const debug = () => {
+  console.log(summaryByCurrency.value);
+};
 
 const goBack = () => {
   router.go(-1); // Go back to the previous page
@@ -97,9 +237,16 @@ const goToPeople = () => {
   router.push({ name: "PeoplePage" });
 };
 
-const goToResults = () => {
-  router.push({ name: "ResultsPage" });
+const addTransaction = () => {
+  store.setTransactionID();
+  router.push({ name: "TransactionPage" });
 };
+
+onMounted(() => {
+  if (nameInput.value) {
+    nameInput.value.focus();
+  }
+});
 
 const finalize = (reset) => {
   timer.value = setTimeout(() => {
@@ -116,11 +263,6 @@ const onLeft = ({ reset }, id) => {
 
 const editTransaction = (id) => {
   store.setTransactionID(id);
-  router.push({ name: "TransactionPage" });
-};
-
-const addTransaction = () => {
-  store.setTransactionID();
   router.push({ name: "TransactionPage" });
 };
 </script>

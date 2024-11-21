@@ -25,7 +25,7 @@
           <q-icon name="delete" />
         </template>
 
-        <q-item clickable :class="id % 2 === 0 ? 'bg-grey-1' : 'bg-white'">
+        <q-item clickable :class="id % 2 === 0 ? 'bg-grey-3' : 'bg-white'">
           <q-item-section>
             {{ sheet.name || "New Sheet" }}
           </q-item-section>
@@ -46,6 +46,7 @@ import { useRouter } from "vue-router";
 const store = useStore();
 const timer = ref(null);
 const router = useRouter();
+const nameInputs = ref([]);
 
 const finalize = (reset) => {
   timer.value = setTimeout(() => {
@@ -54,8 +55,8 @@ const finalize = (reset) => {
 };
 
 const addSheet = () => {
-  store.setSheetID();
   store.addSheet();
+  router.push({ name: "SheetPage" });
 };
 
 const onLeft = ({ reset }, id) => {

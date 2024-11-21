@@ -14,23 +14,29 @@ const Sheet = {
 
   getSummary(sheet, id) {
     const ans = [];
+    const totals = {};
 
     if (id < 0 || id >= sheet.people.length) {
-      return ans;
+      return ans, totals;
     }
 
     // Loop over the keys in store.currentSheet.results
     Object.keys(sheet.results).forEach((key) => {
       // Call getSummary on each item, passing selectedPerson.value
       const l = Result.getSummary(sheet.results[key], id);
+      let tot = 0;
       if (l.length > 0) {
         l.forEach((v) => {
           ans.push({ currency: key, person: v.person, amount: v.amount });
+          tot += v.amount;
         });
+      }
+      if (tot != 0) {
+        totals[key] = tot;
       }
     });
 
-    return ans;
+    return { ans, totals };
   },
 
   getEditableTransaction(sheet, id, lastEditedCurrency = "XXX") {

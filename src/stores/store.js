@@ -62,18 +62,14 @@ export const useStore = defineStore("store", {
     },
 
     // sheet
-    addSheet(sheet = null) {
-      if (sheet === null) {
-        sheet = Sheet.make();
-      }
 
-      if (this.sheetID >= 0 && this.sheetID < this.sheets.length) {
-        this.sheets[this.sheetID] = sheet;
-      } else {
-        this.sheets.push(sheet);
-      }
+    addSheet() {
+      this.sheets.push(Sheet.make());
+      this.setSheetID(this.sheets.length - 1);
     },
+
     removeSheet(id) {
+      this.setSheetID();
       this.sheets.splice(id, 1);
     },
   },

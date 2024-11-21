@@ -110,7 +110,7 @@ defineOptions({
   name: "TransactionPage",
 });
 
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "src/stores/store.js";
 import CurrencyInput from "../components/CurrencyInput.vue";
@@ -150,4 +150,10 @@ watch(
     store.lastEditedCurrency = value;
   }
 );
+
+onMounted(() => {
+  if (nameInput.value) {
+    nameInput.value.focus();
+  }
+});
 </script>

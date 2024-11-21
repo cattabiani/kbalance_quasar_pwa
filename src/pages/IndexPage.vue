@@ -4,6 +4,13 @@
       <q-toolbar-title style="font-size: 28px"> Sheets </q-toolbar-title>
       <q-btn
         flat
+        icon="info"
+        @click="showAbout"
+        class="q-ml-md bg-white text-primary"
+        aria-label="About kNote"
+      />
+      <q-btn
+        flat
         icon="add"
         @click="addSheet"
         class="q-ml-md bg-white text-primary"
@@ -32,7 +39,20 @@
         </q-item>
       </q-slide-item>
     </q-list>
+    <!-- empty state -->
+    <div v-if="store.sheets.length === 0" style="padding: 20px">
+      <AboutContent />
+    </div>
   </q-page>
+
+  <q-dialog v-model="isAboutDialogVisible" persistent>
+    <q-card style="width: 90%">
+      <q-card-section><AboutContent /></q-card-section>
+      <q-card-actions align="center">
+        <q-btn icon="close" color="red" @click="isAboutDialogVisible = false" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script setup>
@@ -43,16 +63,23 @@ import { ref, onBeforeUnmount } from "vue";
 import { useQuasar } from "quasar";
 import { useStore } from "src/stores/store.js";
 import { useRouter } from "vue-router";
+import AboutContent from "../components/AboutContent.vue";
 
 const store = useStore();
 const timer = ref(null);
 const router = useRouter();
 const $q = useQuasar();
+const isAboutDialogVisible = ref(false);
 
 const finalize = (reset) => {
   timer.value = setTimeout(() => {
     reset?.(); // Optional chaining to call reset if defined
   }, 0);
+};
+
+const showAbout = () => {
+  // Logic to show the about dialog
+  isAboutDialogVisible.value = true; // Set the dialog to visible
 };
 
 const addSheet = () => {

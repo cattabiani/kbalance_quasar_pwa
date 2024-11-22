@@ -47,19 +47,22 @@
           @change="Transaction.split(editableTransaction)"
           style="flex: 1"
         />
-        <q-card-section class="column" style="margin-left: auto">
-          <q-card-label>
-            <q-icon name="event" size="lg" class="text-grey-7" />
+        <q-card-section
+          class="column dense"
+          style="margin-left: auto; text-align: center"
+        >
+          <q-card-label class="text-caption">
+            <q-icon name="event" size="sm" class="text-grey-7" />
           </q-card-label>
-          <q-card-label>
+          <q-card-label class="text-caption">
             {{ Utils.getYear(editableTransaction.date) }}
           </q-card-label>
         </q-card-section>
-        <q-card-section class="column" style="text-align: center">
-          <q-card-label>
+        <q-card-section class="column dense" style="text-align: center">
+          <q-card-label class="text-caption">
             {{ Utils.getMonth(editableTransaction.date) }}
           </q-card-label>
-          <q-card-label>
+          <q-card-label class="text-caption">
             {{ Utils.getDay(editableTransaction.date) }}
           </q-card-label>
         </q-card-section>
@@ -99,9 +102,8 @@
               "
             >
               <q-checkbox
-                left-label
                 v-model="editableTransaction.isDebtor[id]"
-                class="q-mr-md"
+                class="q-mr-md justify-end"
                 @update:model-value="Transaction.split(editableTransaction)"
               />
 
@@ -110,7 +112,7 @@
                 v-model="editableTransaction.owed[id]"
                 :currency="'XXX'"
                 :disable="true"
-                style="flex: 1; max-width: 20%"
+                style="flex: 1; max-width: 50%"
               />
             </div>
           </div>

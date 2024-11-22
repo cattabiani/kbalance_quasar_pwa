@@ -91,15 +91,10 @@
               justify-content: space-between;
             "
           >
-            <div
-              style="
-                display: flex;
-                justify-content: flex-start;
-              "
-            >
+            <div style="display: flex; justify-content: flex-start">
               <q-radio v-model="editableTransaction.payer" :val="id" />
-              </div>
-              <div
+            </div>
+            <div
               style="
                 display: flex;
                 align-items: center;

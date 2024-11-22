@@ -92,6 +92,7 @@
               "
             >
               <q-radio v-model="editableTransaction.payer" :val="id" />
+
               <q-item-label>{{ item.name }}</q-item-label>
             </div>
             <div
@@ -101,18 +102,17 @@
                 justify-content: flex-end;
               "
             >
-              <q-checkbox
-                v-model="editableTransaction.isDebtor[id]"
-                class="q-mr-md justify-end"
-                @update:model-value="Transaction.split(editableTransaction)"
-              />
-
               <CurrencyInput
                 class="q-mr-md"
                 v-model="editableTransaction.owed[id]"
                 :currency="'XXX'"
                 :disable="true"
-                style="flex: 1; max-width: 50%"
+                style="flex: 1"
+              />
+              <q-checkbox
+                v-model="editableTransaction.isDebtor[id]"
+                class="q-mr-md justify-end"
+                @update:model-value="Transaction.split(editableTransaction)"
               />
             </div>
           </div>

@@ -116,7 +116,7 @@
               />
               <q-card flat bordered class="q-pl-sm q-pr-sm">
                 <div>
-                  {{ Utils.displayCurrency("", editableTransaction.amount) }}
+                  {{ Utils.displayCurrency("", editableTransaction.owed[id]) }}
                 </div>
               </q-card>
             </div>

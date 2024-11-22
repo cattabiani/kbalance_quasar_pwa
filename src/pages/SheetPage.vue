@@ -117,7 +117,7 @@
         </template>
 
         <q-item clickable :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'">
-          <q-item-section style="display: flex; align-items: center;">
+          <q-item-section style="max-width: 10%;">
             <q-item-label>{{ Utils.getMonth(item.date) }}</q-item-label>
             <q-item-label>{{ Utils.getDay(item.date) }}</q-item-label>
           </q-item-section>

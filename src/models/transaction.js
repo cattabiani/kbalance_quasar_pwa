@@ -8,7 +8,8 @@ const Transaction = {
     let payer = nPeople > 0 ? 0 : -1;
     const isDebtor = Array(nPeople).fill(true);
     const owed = Array(nPeople).fill(0);
-    return { name, id, amount, payer, currency, isDebtor, owed };
+    const date = Date.now();
+    return { name, id, amount, payer, currency, isDebtor, owed, date };
   },
 
   updatePeople(transaction, nPeople) {

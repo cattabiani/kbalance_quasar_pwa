@@ -99,10 +99,17 @@
 
     <q-list>
       <q-slide-item
-        v-for="(item, index) in store.currentSheet.transactions"
+        v-for="(item, index) in store.currentSheet.transactions
+          .slice()
+          .reverse()"
         :key="index"
-        @left="(event) => onLeft(event, index)"
-        @dblclick="editTransaction(index)"
+        @left="
+          (event) =>
+            onLeft(event, store.currentSheet.transactions.length - 1 - index)
+        "
+        @dblclick="
+          editTransaction(store.currentSheet.transactions.length - 1 - index)
+        "
         left-color="red"
       >
         <template v-slot:left>

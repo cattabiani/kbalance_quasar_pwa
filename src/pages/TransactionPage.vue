@@ -9,13 +9,20 @@
         class="bg-white text-primary"
       />
       <q-toolbar-title style="font-size: 28px"> Transaction </q-toolbar-title>
-      <!-- <q-btn v-if="!isEditable"
+      <q-btn
         flat
-        icon="edit"
-        @click="editForm"matrix
-        class="q-ml-md bg-white text-primary"
-        aria-label="Add a new transaction"
-      /> -->
+        icon="close"
+        @click="goBack"
+        class="q-ml-md bg-red text-white"
+        aria-label="Cancel"
+      />
+      <q-btn
+        flat
+        icon="check"
+        @click="saveAndGoBack"
+        class="q-ml-md bg-green text-white"
+        aria-label="Save"
+      />
     </q-toolbar>
   </q-header>
   <q-page>
@@ -119,13 +126,6 @@
         </q-item-section>
       </q-item>
     </q-list>
-    <div
-      class="q-mt-md q-mx-auto"
-      style="max-width: 300px; display: flex; justify-content: space-between"
-    >
-      <q-btn icon="close" color="red" @click="goBack" label="Cancel" />
-      <q-btn icon="check" color="primary" @click="saveAndGoBack" label="Save" />
-    </div>
   </q-page>
 </template>
 

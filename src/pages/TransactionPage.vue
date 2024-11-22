@@ -94,12 +94,18 @@
             <div
               style="
                 display: flex;
-                align-items: center;
                 justify-content: flex-start;
               "
             >
               <q-radio v-model="editableTransaction.payer" :val="id" />
-
+              </div>
+              <div
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
               <q-item-label>{{ item.name }}</q-item-label>
             </div>
             <div

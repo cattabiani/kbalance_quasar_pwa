@@ -9,13 +9,12 @@
 
 <script setup>
 import { ref } from "vue";
-import currencyCodes from "currency-codes";
 
 // Local state for the selected option
 const selectedOption = ref("");
 
 // Fixed options for the `q-select`
-const options = currencyCodes.data.map((currency) => currency.code);
+const options = ["CHF", "EUR", "USD"];
 </script>
 
 <style scoped>

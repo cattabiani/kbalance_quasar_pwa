@@ -31,36 +31,37 @@
           @focus="nameInput.select()"
         />
       </q-card-section>
-      <q-card-section class="row justify-center" style="align-items: center">
-        <q-card-section class="row justify-center q-gutter-sm" style="flex: 1">
-          <CurrencySelector
-            v-model="editableTransaction.currency"
-            :disable="!isEditable"
-          />
-          <CurrencyInput
-            v-model="editableTransaction.amount"
-            :currency="'XXX'"
-            :disable="!isEditable"
-            @blur="Transaction.split(editableTransaction)"
-          />
+      <q-card-section
+        class="row"
+        style="justify-content: space-between; align-items: center"
+      >
+        <CurrencySelector
+          v-model="editableTransaction.currency"
+          :disable="!isEditable"
+        />
+        <CurrencyInput
+          class="q-ml-md"
+          v-model="editableTransaction.amount"
+          :currency="'XXX'"
+          :disable="!isEditable"
+          @change="Transaction.split(editableTransaction)"
+          style="flex: 1"
+        />
+        <q-card-section class="column" style="margin-left: auto">
+          <q-card-label>
+            <q-icon name="event" size="lg" class="text-grey-7" />
+          </q-card-label>
+          <q-card-label>
+            {{ Utils.getYear(editableTransaction.date) }}
+          </q-card-label>
         </q-card-section>
-        <q-card-section class="q-gutter-sm" style="margin-left: auto">
-          <q-card-section
-            class="row q-gutter-sm"
-            style="display: flex; align-items: center"
-          >
-            <q-card-section class="q-mt-none q-mb-none">
-              <q-icon name="event" size="lg" class="text-grey-7" />
-              <div>{{ formattedDate.split("-")[2] }}</div>
-            </q-card-section>
-            <q-card-section
-              class="q-mt-none q-mb-none"
-              style="text-align: center"
-            >
-              <div>{{ formattedDate.split("-")[1] }}</div>
-              <div>{{ formattedDate.split("-")[0] }}</div>
-            </q-card-section>
-          </q-card-section>
+        <q-card-section class="column" style="text-align: center">
+          <q-card-label>
+            {{ Utils.getMonth(editableTransaction.date) }}
+          </q-card-label>
+          <q-card-label>
+            {{ Utils.getDay(editableTransaction.date) }}
+          </q-card-label>
         </q-card-section>
       </q-card-section>
     </q-card>
@@ -109,6 +110,7 @@
                 v-model="editableTransaction.owed[id]"
                 :currency="'XXX'"
                 :disable="true"
+                style="flex: 1; max-width: 20%"
               />
             </div>
           </div>
@@ -136,6 +138,7 @@ import { useStore } from "src/stores/store.js";
 import CurrencyInput from "../components/CurrencyInput.vue";
 import CurrencySelector from "../components/CurrencySelector.vue";
 import Transaction from "../models/transaction";
+import Utils from "../utils/utils";
 
 const store = useStore();
 const router = useRouter();
@@ -152,19 +155,6 @@ const editForm = () => {
 
 const filteredPeople = computed(() => {
   return store.currentSheet.people.filter((person) => person.active);
-});
-
-const formattedDate = computed(() => {
-  if (!editableTransaction.value.date) return "";
-  const date = new Date(editableTransaction.value.date);
-
-  const day = date.getDate().toString().padStart(2, "0");
-  const month = new Intl.DateTimeFormat("en-GB", { month: "short" }).format(
-    date
-  );
-  const year = date.getFullYear();
-
-  return `${day}-${month}-${year}`; // Example format: 01-Nov-2024
 });
 
 const saveAndGoBack = () => {

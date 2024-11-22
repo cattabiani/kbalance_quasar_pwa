@@ -117,6 +117,11 @@
         </template>
 
         <q-item clickable :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'">
+          <q-item-section left>
+            <q-item-label> a </q-item-label>
+
+            <q-item-label> b </q-item-label>
+          </q-item-section>
           <q-item-section>
             <q-item-label>
               {{ item.name || "New Transaction" }}

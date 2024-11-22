@@ -117,10 +117,12 @@
         </template>
 
         <q-item clickable :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'">
-          <q-item-section style="max-width: 10%;">
-            <q-item-label>{{ Utils.getMonth(item.date) }}</q-item-label>
-            <q-item-label>{{ Utils.getDay(item.date) }}</q-item-label>
-          </q-item-section>
+          <q-card flat bordered class="q-ml-sm q-mr-sm q-pl-sm q-pr-sm">
+            <q-card-section class="column q-pa-none" style="display: flex; justify-content: center; align-items: center;">
+            <q-card-label>{{ Utils.getMonth(item.date) }}</q-card-label>
+            <q-card-label>{{ Utils.getDay(item.date) }}</q-card-label>
+          </q-card-section>
+          </q-card>
           <q-item-section>
             <q-item-label>
               {{ item.name || "New Transaction" }}
@@ -165,7 +167,7 @@
             </q-item-label>
             <q-item-label>
               {{
-                displayCurrency(
+                Utils.displayCurrency(
                   item.currency,
                   item.amount - item.owed[selectedPerson?.value]
                 )

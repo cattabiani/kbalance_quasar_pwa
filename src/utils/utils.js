@@ -11,6 +11,10 @@ const Utils = {
     const date = new Date(dateint);
     return date.getFullYear();
   },
+
+  displayCurrency(currency, amount) {
+    return `${currency} ${parseFloat(amount / 100).toFixed(2)}`;
+  },
 };
 
 export default Utils;

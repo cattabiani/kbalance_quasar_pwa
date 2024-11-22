@@ -90,7 +90,7 @@
               &nbsp;
             </span>
             <span :style="{ color: item.amount > 0 ? 'red' : 'green' }">
-              {{ displayCurrency(item.currency, Math.abs(item.amount)) }}
+              {{ Utils.displayCurrency(item.currency, Math.abs(item.amount)) }}
             </span>
           </div>
         </div>
@@ -117,10 +117,9 @@
         </template>
 
         <q-item clickable :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'">
-          <q-item-section left>
-            <q-item-label> a </q-item-label>
-
-            <q-item-label> b </q-item-label>
+          <q-item-section>
+            <q-item-label> {{ Utils.getMonth(item.date) }} </q-item-label>
+            <q-item-label> {{ Utils.getDay(item.date) }} </q-item-label>
           </q-item-section>
           <q-item-section>
             <q-item-label>
@@ -128,7 +127,7 @@
             </q-item-label>
             <q-item-label caption>
               {{ store.currentSheet.people[item.payer]?.name || "Nobody" }} paid
-              {{ displayCurrency(item.currency, item.amount) }}
+              {{ Utils.displayCurrency(item.currency, item.amount) }}
             </q-item-label>
           </q-item-section>
           <q-item-section
@@ -145,7 +144,7 @@
             </q-item-label>
             <q-item-label>
               {{
-                displayCurrency(
+                Utils.displayCurrency(
                   item.currency,
                   item.amount - item.owed[item.payer]
                 )
@@ -191,6 +190,7 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "src/stores/store.js";
 import Sheet from "../models/sheet";
+import Utils from "../utils/utils";
 
 const timer = ref(null);
 const nameInput = ref(null);
@@ -222,20 +222,16 @@ const summaries = computed(() => {
 const positiveSummaryDisplay = computed(() => {
   return Object.entries(summaries.value.totals)
     .filter(([_, amount]) => amount > 0) // Filter for positive values
-    .map(([currency, amount]) => displayCurrency(currency, amount)) // Format the string
+    .map(([currency, amount]) => Utils.displayCurrency(currency, amount)) // Format the string
     .join(" + ");
 });
 
 const negativeSummaryDisplay = computed(() => {
   return Object.entries(summaries.value.totals)
     .filter(([_, amount]) => amount < 0) // Filter for positive values
-    .map(([currency, amount]) => displayCurrency(currency, -amount)) // Format the string
+    .map(([currency, amount]) => Utils.displayCurrency(currency, -amount)) // Format the string
     .join(" + ");
 });
-
-const displayCurrency = (currency, amount) => {
-  return `${currency} ${parseFloat(amount / 100).toFixed(2)}`;
-};
 
 const debug = () => {
   console.log(summaryByCurrency.value);

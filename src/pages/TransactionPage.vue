@@ -47,7 +47,7 @@
           :disable="!isEditable"
         />
         <CurrencyInput
-          class="q-ml-md"
+          class="q-ml-md custom-disabled"
           v-model="editableTransaction.amount"
           :currency="'XXX'"
           :disable="!isEditable"
@@ -109,18 +109,16 @@
                 justify-content: flex-end;
               "
             >
-              <CurrencyInput
-                class="q-mr-md"
-                v-model="editableTransaction.owed[id]"
-                :currency="'XXX'"
-                :disable="true"
-                style="flex: 1"
-              />
               <q-checkbox
                 v-model="editableTransaction.isDebtor[id]"
                 class="q-mr-md justify-end"
                 @update:model-value="Transaction.split(editableTransaction)"
               />
+              <q-card flat bordered class="q-pl-sm q-pr-sm">
+                <div>
+                  {{ Utils.displayCurrency("", editableTransaction.amount) }}
+                </div>
+              </q-card>
             </div>
           </div>
         </q-item-section>

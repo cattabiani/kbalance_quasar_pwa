@@ -181,17 +181,11 @@ const filteredPeople = computed(() => {
 });
 
 const removeCurrency = (val) => {
-  const index = store.currencies.indexOf(val);
-  if (index > -1) {
-    store.currencies.splice(index, 1);
+  store.removeCurrency(val);
 
-    // Handle fallback if the removed currency is currently selected
-    if (editableTransaction.value.currency === val) {
-      if (store.currencies.length === 0) {
-        store.currencies.push("XXX");
-      }
-      editableTransaction.value.currency = store.currencies[0];
-    }
+  // Handle fallback if the removed currency is currently selected
+  if (editableTransaction.value.currency === val) {
+    editableTransaction.value.currency = store.currencies[0];
   }
 };
 
@@ -208,10 +202,7 @@ const goBack = () => {
 // Create a new value when the user inputs a custom currency
 const addCurrency = (val, done) => {
   if (val.length > 0) {
-    if (!store.currencies.includes(val)) {
-      // Currency not present, add it
-      store.currencies.push(val);
-    }
+    store.addCurrency(val);
 
     done(val, "toggle");
   }

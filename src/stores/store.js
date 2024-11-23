@@ -40,12 +40,28 @@ export const useStore = defineStore("store", {
         this.transactionID,
         this.lastEditedCurrency
       );
-      if (!this.currencies.includes(ans.currency)) {
-        this.currencies.push(ans.currency); // Add it if not present
-      }
+      this.addCurrency(ans.currency);
 
       return ans;
     },
+
+    addCurrency(val) {
+      if (val.length && !this.currencies.includes(val)) {
+        this.currencies.push(val);
+      }
+    },
+
+    removeCurrency(val) {
+      const index = this.currencies.indexOf(val);
+      if (index > -1) {
+        this.currencies.splice(index, 1);
+      }
+
+      if (this.currencies.length === 0) {
+        this.currencies.push("XXX");
+      }
+    },
+
     addTransaction(transaction) {
       Sheet.addTransaction(
         this.sheets[this.sheetID],

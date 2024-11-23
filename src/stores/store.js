@@ -8,6 +8,7 @@ export const useStore = defineStore("store", {
     transactionID: -1,
     personID: -1,
     lastEditedCurrency: "XXX",
+    currencies: ["USD", "EUR", "CHF"],
   }),
   getters: {
     currentSheet() {
@@ -34,11 +35,16 @@ export const useStore = defineStore("store", {
 
     // // transaction
     getEditableTransaction() {
-      return Sheet.getEditableTransaction(
+      const ans = Sheet.getEditableTransaction(
         this.sheets[this.sheetID],
         this.transactionID,
         this.lastEditedCurrency
       );
+      if (!this.currencies.includes(ans.currency)) {
+        this.currencies.push(ans.currency); // Add it if not present
+      }
+
+      return ans;
     },
     addTransaction(transaction) {
       Sheet.addTransaction(

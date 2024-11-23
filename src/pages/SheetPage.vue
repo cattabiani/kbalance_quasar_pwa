@@ -118,10 +118,17 @@
 
         <q-item clickable :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'">
           <q-card flat bordered class="q-ml-sm q-mr-sm q-pl-sm q-pr-sm">
-            <q-card-section class="column q-pa-none" style="display: flex; justify-content: center; align-items: center;">
-            <q-card-label>{{ Utils.getMonth(item.date) }}</q-card-label>
-            <q-card-label>{{ Utils.getDay(item.date) }}</q-card-label>
-          </q-card-section>
+            <q-card-section
+              class="column q-pa-none"
+              style="
+                display: flex;
+                justify-content: center;
+                align-items: center;
+              "
+            >
+              <div>{{ Utils.getMonth(item.date) }}</div>
+              <div>{{ Utils.getDay(item.date) }}</div>
+            </q-card-section>
           </q-card>
           <q-item-section>
             <q-item-label>

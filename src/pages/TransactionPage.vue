@@ -42,10 +42,33 @@
         class="row"
         style="justify-content: space-between; align-items: center"
       >
-        <CurrencySelector
+        <q-select
+          label="Select a Currency"
+          filled
           v-model="editableTransaction.currency"
-          :disable="!isEditable"
-        />
+          :options="store.currencies"
+          @new-value="addCurrency"
+          use-input
+          option-slot
+        >
+          <template v-slot:option="scope">
+            <div class="row items-center q-pl-sm">
+              <span
+                class="col"
+                @click="editableTransaction.currency = scope.opt"
+                >{{ scope.opt }}</span
+              >
+              <q-btn
+                flat
+                dense
+                round
+                icon="delete"
+                color="negative"
+                @click.stop="removeCurrency(scope.opt)"
+              />
+            </div>
+          </template>
+        </q-select>
         <CurrencyInput
           class="q-ml-md custom-disabled"
           v-model="editableTransaction.amount"
@@ -58,20 +81,20 @@
           class="column dense"
           style="margin-left: auto; text-align: center"
         >
-          <q-card-label class="text-caption">
+          <div class="text-caption">
             <q-icon name="event" size="sm" class="text-grey-7" />
-          </q-card-label>
-          <q-card-label class="text-caption">
+          </div>
+          <div class="text-caption">
             {{ Utils.getYear(editableTransaction.date) }}
-          </q-card-label>
+          </div>
         </q-card-section>
         <q-card-section class="column dense" style="text-align: center">
-          <q-card-label class="text-caption">
+          <div class="text-caption">
             {{ Utils.getMonth(editableTransaction.date) }}
-          </q-card-label>
-          <q-card-label class="text-caption">
+          </div>
+          <div class="text-caption">
             {{ Utils.getDay(editableTransaction.date) }}
-          </q-card-label>
+          </div>
         </q-card-section>
       </q-card-section>
     </q-card>
@@ -137,7 +160,6 @@ import { ref, watch, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "src/stores/store.js";
 import CurrencyInput from "../components/CurrencyInput.vue";
-import CurrencySelector from "../components/CurrencySelector.vue";
 import Transaction from "../models/transaction";
 import Utils from "../utils/utils";
 
@@ -158,6 +180,21 @@ const filteredPeople = computed(() => {
   return store.currentSheet.people.filter((person) => person.active);
 });
 
+const removeCurrency = (val) => {
+  const index = store.currencies.indexOf(val);
+  if (index > -1) {
+    store.currencies.splice(index, 1);
+
+    // Handle fallback if the removed currency is currently selected
+    if (editableTransaction.value.currency === val) {
+      if (store.currencies.length === 0) {
+        store.currencies.push("XXX");
+      }
+      editableTransaction.value.currency = store.currencies[0];
+    }
+  }
+};
+
 const saveAndGoBack = () => {
   store.addTransaction(editableTransaction.value);
   goBack();
@@ -166,6 +203,18 @@ const saveAndGoBack = () => {
 const goBack = () => {
   store.lastEditedCurrency = editableTransaction.value.currency;
   router.go(-1);
+};
+
+// Create a new value when the user inputs a custom currency
+const addCurrency = (val, done) => {
+  if (val.length > 0) {
+    if (!store.currencies.includes(val)) {
+      // Currency not present, add it
+      store.currencies.push(val);
+    }
+
+    done(val, "toggle");
+  }
 };
 
 watch(

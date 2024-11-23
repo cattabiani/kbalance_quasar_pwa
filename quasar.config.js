@@ -169,17 +169,17 @@ module.exports = configure(function (/* ctx */) {
             },
           ],
           screenshots: [
-            // {
-            //   src: "screenshots/screenshot-1.jpeg",
-            //   sizes: "985x2048",
-            //   type: "image/jpeg",
-            //   form_factor: "wide",
-            // },
-            // {
-            //   src: "screenshots/screenshot-2.jpeg",
-            //   sizes: "985x2048",
-            //   type: "image/jpeg",
-            // },
+            {
+              src: "screenshots/screenshot-1.jpeg",
+              sizes: "985x2048",
+              type: "image/jpeg",
+              form_factor: "wide",
+            },
+            {
+              src: "screenshots/screenshot-1.jpeg",
+              sizes: "985x2048",
+              type: "image/jpeg",
+            },
             // Add more screenshots if necessary
           ],
         });

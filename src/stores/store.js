@@ -8,7 +8,6 @@ export const useStore = defineStore("store", {
     transactionID: -1,
     personID: -1,
     lastEditedCurrency: "XXX",
-    currencies: ["USD", "EUR", "CHF"],
   }),
   getters: {
     currentSheet() {
@@ -40,26 +39,8 @@ export const useStore = defineStore("store", {
         this.transactionID,
         this.lastEditedCurrency
       );
-      this.addCurrency(ans.currency);
 
       return ans;
-    },
-
-    addCurrency(val) {
-      if (val.length && !this.currencies.includes(val)) {
-        this.currencies.push(val);
-      }
-    },
-
-    removeCurrency(val) {
-      const index = this.currencies.indexOf(val);
-      if (index > -1) {
-        this.currencies.splice(index, 1);
-      }
-
-      if (this.currencies.length === 0) {
-        this.currencies.push("XXX");
-      }
     },
 
     addTransaction(transaction) {

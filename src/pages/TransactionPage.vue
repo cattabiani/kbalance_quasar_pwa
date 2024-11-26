@@ -46,7 +46,7 @@
           label="Select a Currency"
           filled
           v-model="editableTransaction.currency"
-          :options="store.currencies"
+          :options="currencies"
           @new-value="addCurrency"
           use-input
           option-slot
@@ -162,6 +162,7 @@ import { useStore } from "src/stores/store.js";
 import CurrencyInput from "../components/CurrencyInput.vue";
 import Transaction from "../models/transaction";
 import Utils from "../utils/utils";
+import Sheet from "../models/sheet";
 
 const store = useStore();
 const router = useRouter();
@@ -180,12 +181,26 @@ const filteredPeople = computed(() => {
   return store.currentSheet.people.filter((person) => person.active);
 });
 
+const currencies = computed(() => {
+  return Object.keys(store.currentSheet.results);
+});
+
+// Create a new value when the user inputs a custom currency
+const addCurrency = (val, done) => {
+  if (val.length > 0) {
+    Sheet.addCurrency(store.currentSheet, val);
+
+    done(val, "toggle");
+  }
+};
+
 const removeCurrency = (val) => {
-  store.removeCurrency(val);
+  Sheet.removeCurrency(store.currentSheet, val);
 
   // Handle fallback if the removed currency is currently selected
   if (editableTransaction.value.currency === val) {
-    editableTransaction.value.currency = store.currencies[0];
+    editableTransaction.value.currency =
+      currencies.value.length > 0 ? currencies.value[0] : null;
   }
 };
 
@@ -197,15 +212,6 @@ const saveAndGoBack = () => {
 const goBack = () => {
   store.lastEditedCurrency = editableTransaction.value.currency;
   router.go(-1);
-};
-
-// Create a new value when the user inputs a custom currency
-const addCurrency = (val, done) => {
-  if (val.length > 0) {
-    store.addCurrency(val);
-
-    done(val, "toggle");
-  }
 };
 
 watch(

@@ -13,16 +13,6 @@ const Sheet = {
     return { name, id, people, results, transactions };
   },
 
-  addCurrency(sheet, id) {
-    sheet.results[id] = Result.make(sheet.people.length);
-  },
-
-  removeCurrency(sheet, id) {
-    if (sheet.results[id] && Result.IsRemovable(sheet.results[id])) {
-      delete sheet.results[id];
-    }
-  },
-
   getSummary(sheet, id) {
     const ans = [];
     const totals = {};

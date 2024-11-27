@@ -11,6 +11,13 @@
       <q-toolbar-title style="font-size: 28px"> Transaction </q-toolbar-title>
       <q-btn
         flat
+        icon="bug_report"
+        @click="debug"
+        class="bg-white text-primary"
+        aria-label="debug"
+      />
+      <q-btn
+        flat
         icon="close"
         @click="goBack"
         class="q-ml-md bg-red text-white"
@@ -46,29 +53,15 @@
           label="Select a Currency"
           filled
           v-model="editableTransaction.currency"
-          :options="currencies"
-          @new-value="addCurrency"
-          use-input
+          :options="currencyOptions"
+          option-label="label"
+          option-value="value"
           option-slot
-        >
-          <template v-slot:option="scope">
-            <div class="row items-center q-pl-sm">
-              <span
-                class="col"
-                @click="editableTransaction.currency = scope.opt"
-                >{{ scope.opt }}</span
-              >
-              <q-btn
-                flat
-                dense
-                round
-                icon="delete"
-                color="negative"
-                @click.stop="removeCurrency(scope.opt)"
-              />
-            </div>
-          </template>
-        </q-select>
+          emit-value
+          use-input
+          input-debounce="0"
+          @filter="filterFn"
+        />
         <CurrencyInput
           class="q-ml-md custom-disabled"
           v-model="editableTransaction.amount"
@@ -162,8 +155,8 @@ import { useStore } from "src/stores/store.js";
 import CurrencyInput from "../components/CurrencyInput.vue";
 import Transaction from "../models/transaction";
 import Utils from "../utils/utils";
-import Sheet from "../models/sheet";
 import { useQuasar } from "quasar";
+import currencyCodes from "currency-codes";
 
 const $q = useQuasar();
 const store = useStore();
@@ -175,6 +168,32 @@ const editableTransaction = ref(store.getEditableTransaction());
 
 const nameInput = ref(null);
 
+// Map the currency codes into a format compatible with Quasar's q-select
+const currencies = currencyCodes.data.map((currency) => ({
+  label: `${currency.code} - ${currency.currency}`,
+  value: currency.code,
+}));
+
+const currencyOptions = ref(currencies);
+
+const filterFn = (val, update) => {
+  if (val === "") {
+    update(() => {
+      currencyOptions.value = currencies;
+    });
+    return;
+  }
+
+  editableTransaction.value.currency = "";
+  const needle = val.toLowerCase();
+  update(() => {
+    const filtered = currencies.filter((v) =>
+      v.value.toLowerCase().includes(needle)
+    );
+    currencyOptions.value = filtered;
+  });
+};
+
 const editForm = () => {
   isEditable.value = true;
 };
@@ -183,27 +202,8 @@ const filteredPeople = computed(() => {
   return store.currentSheet.people.filter((person) => person.active);
 });
 
-const currencies = computed(() => {
-  return Object.keys(store.currentSheet.results);
-});
-
-// Create a new value when the user inputs a custom currency
-const addCurrency = (val, done) => {
-  if (val.length > 0) {
-    Sheet.addCurrency(store.currentSheet, val);
-
-    done(val, "toggle");
-  }
-};
-
-const removeCurrency = (val) => {
-  Sheet.removeCurrency(store.currentSheet, val);
-
-  // Handle fallback if the removed currency is currently selected
-  if (editableTransaction.value.currency === val) {
-    editableTransaction.value.currency =
-      currencies.value.length > 0 ? currencies.value[0] : null;
-  }
+const debug = () => {
+  console.log(editableTransaction.value.currency);
 };
 
 const saveAndGoBack = () => {

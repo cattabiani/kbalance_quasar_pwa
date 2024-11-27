@@ -1,8 +1,8 @@
 const Result = {
   make(nPeople = 0) {
     const mat = [];
-    let nzeros = 0;
-    const ans = { mat, nzeros };
+    let ntransactions = 0;
+    const ans = { mat, ntransactions };
 
     for (let i = 0; i < nPeople; ++i) {
       this.addPerson(ans);
@@ -40,11 +40,8 @@ const Result = {
     return ans;
   },
 
-  isEmpty(result) {
-    if (result.mat.length === 0) {
-      return true;
-    }
-    return result.nzeros === (result.mat.length * (result.mat.length - 1)) / 2;
+  IsRemovable(result) {
+    return result.ntransactions === 0;
   },
 
   isPersonRemovable(result, id) {
@@ -70,6 +67,7 @@ const Result = {
 
     // Step 3: Remove row i
     result.mat.splice(id, 1);
+    Empty;
 
     // Step 4: Remove column i from each row after row i
     for (let row = id; row < result.mat.length; row++) {
@@ -79,14 +77,16 @@ const Result = {
     return true;
   },
 
-  addTransaction(result, transaction, multi) {
+  applyTransaction(result, transaction, multi) {
     const j = transaction.payer;
     for (let i = 0; i < transaction.owed.length; ++i) {
-      this.add(result, i, j, multi * transaction.owed[i]);
+      this._apply(result, i, j, multi * transaction.owed[i]);
     }
+
+    result.ntransactions += multi;
   },
 
-  add(result, i, j, v) {
+  _apply(result, i, j, v) {
     if (i === j) {
       return;
     }
@@ -96,16 +96,7 @@ const Result = {
       v = -v;
     }
 
-    const oldv = result.mat[i][j];
     result.mat[i][j] += v;
-    const newv = result.mat[i][j];
-
-    if (oldv !== 0 && newv === 0) {
-      ++result.nzeros;
-    }
-    if (oldv === 0 && newv !== 0) {
-      --result.nzeros;
-    }
   },
 };
 

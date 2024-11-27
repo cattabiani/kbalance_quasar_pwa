@@ -163,7 +163,9 @@ import CurrencyInput from "../components/CurrencyInput.vue";
 import Transaction from "../models/transaction";
 import Utils from "../utils/utils";
 import Sheet from "../models/sheet";
+import { useQuasar } from "quasar";
 
+const $q = useQuasar();
 const store = useStore();
 const router = useRouter();
 
@@ -205,6 +207,16 @@ const removeCurrency = (val) => {
 };
 
 const saveAndGoBack = () => {
+  if (
+    editableTransaction.value.currency === null ||
+    editableTransaction.value.currency.length === 0
+  ) {
+    $q.notify({
+      message: "The currency is missing.",
+    });
+    return;
+  }
+
   store.addTransaction(editableTransaction.value);
   goBack();
 };

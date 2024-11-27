@@ -22,10 +22,10 @@
   <q-page>
     <q-list bordered class="q-my-md">
       <q-slide-item
-        v-for="(sheet, id) in store.sheets"
-        :key="id"
-        @left="(event) => onLeft(event, id)"
-        @dblclick="editSheet(id)"
+        v-for="([key, sheet], id) in Object.entries(store.sheets)"
+        :key="key"
+        @left="(event) => onLeft(event, key)"
+        @dblclick="editSheet(key)"
         left-color="red"
       >
         <template v-slot:left>
@@ -64,6 +64,7 @@ import { useQuasar } from "quasar";
 import { useStore } from "src/stores/store.js";
 import { useRouter } from "vue-router";
 import AboutContent from "../components/AboutContent.vue";
+import Sheet from "../models/sheet";
 
 const store = useStore();
 const timer = ref(null);
@@ -83,7 +84,9 @@ const showAbout = () => {
 };
 
 const addSheet = () => {
-  store.addSheet();
+  const newSheet = Sheet.make();
+  store.addSheet(newSheet);
+  store.setSheetID(newSheet.id);
   router.push({ name: "SheetPage" });
 };
 

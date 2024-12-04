@@ -12,9 +12,16 @@
       <q-btn
         flat
         icon="bug_report"
-        @click="debug"
-        class="bg-white text-primary"
-        aria-label="debug"
+        @click="debug()"
+        class="q-ml-md bg-white text-primary"
+        aria-label="Debug"
+      />
+      <q-btn
+        flat
+        :icon="showOnlyActive ? 'visibility_off' : 'visibility'"
+        @click="showOnlyActive = !showOnlyActive"
+        class="q-ml-md bg-white text-primary"
+        aria-label="Toggle active state"
       />
       <q-btn
         flat
@@ -37,11 +44,10 @@
       <q-card-section>
         <q-input
           ref="nameInput"
-          v-model="editableTransaction.name"
+          v-model="tr.name"
           label="Description"
           autogrow
           outlined
-          :disable="!isEditable"
           @focus="nameInput.select()"
         />
       </q-card-section>
@@ -50,9 +56,10 @@
         style="justify-content: space-between; align-items: center"
       >
         <q-select
+          ref="currencySelect"
           label="Select a Currency"
           filled
-          v-model="editableTransaction.currency"
+          v-model="tr.currency"
           :options="currencyOptions"
           option-label="label"
           option-value="value"
@@ -64,10 +71,9 @@
         />
         <CurrencyInput
           class="q-ml-md custom-disabled"
-          v-model="editableTransaction.amount"
+          v-model="tr.amount"
           :currency="'XXX'"
-          :disable="!isEditable"
-          @change="Transaction.split(editableTransaction)"
+          @change="Transaction.split(tr)"
           style="flex: 1"
         />
         <q-card-section
@@ -78,25 +84,31 @@
             <q-icon name="event" size="sm" class="text-grey-7" />
           </div>
           <div class="text-caption">
-            {{ Utils.getYear(editableTransaction.date) }}
+            {{ Utils.getYear(tr.timestamp) }}
           </div>
         </q-card-section>
         <q-card-section class="column dense" style="text-align: center">
           <div class="text-caption">
-            {{ Utils.getMonth(editableTransaction.date) }}
+            {{ Utils.getMonth(tr.timestamp) }}
           </div>
           <div class="text-caption">
-            {{ Utils.getDay(editableTransaction.date) }}
+            {{ Utils.getDay(tr.timestamp) }}
           </div>
         </q-card-section>
       </q-card-section>
     </q-card>
-
     <q-list class="q-my-md q-mr-md q-ml-md">
       <q-item
-        v-for="(item, id) in filteredPeople"
-        :key="id"
-        :class="id % 2 === 0 ? 'bg-grey-1' : 'bg-white'"
+        v-for="(id, index) in store.currentSheetPeople"
+        :key="index"
+        :class="index % 2 === 0 ? 'bg-grey-1' : 'bg-white'"
+        v-show="
+          store.currentSheet.people[id].active ||
+          !showOnlyActive ||
+          tr.payer === index ||
+          tr.debts[index].owedAmount !== 0 ||
+          tr.debts[index].isDebtor
+        "
       >
         <q-item-section>
           <div
@@ -108,7 +120,7 @@
             "
           >
             <div style="display: flex; justify-content: flex-start">
-              <q-radio v-model="editableTransaction.payer" :val="id" />
+              <q-radio v-model="tr.payer" :val="index" />
             </div>
             <div
               style="
@@ -117,7 +129,13 @@
                 justify-content: center;
               "
             >
-              <q-item-label>{{ item.name }}</q-item-label>
+              <q-item-label
+                :style="{
+                  textDecoration:
+                  store.currentSheet.people[id].active === false ? 'line-through' : 'none',
+                }"
+                >{{ store.username(id) }}</q-item-label
+              >
             </div>
             <div
               style="
@@ -127,13 +145,13 @@
               "
             >
               <q-checkbox
-                v-model="editableTransaction.isDebtor[id]"
+                v-model="tr.debts[index].isDebtor"
                 class="q-mr-md justify-end"
-                @update:model-value="Transaction.split(editableTransaction)"
+                @update:model-value="Transaction.split(tr)"
               />
               <q-card flat bordered class="q-pl-sm q-pr-sm">
                 <div>
-                  {{ Utils.displayCurrency("", editableTransaction.owed[id]) }}
+                  {{ Utils.displayCurrency("", tr.debts[index].owedAmount) }}
                 </div>
               </q-card>
             </div>
@@ -145,28 +163,28 @@
 </template>
 
 <script setup>
-defineOptions({
-  name: "TransactionPage",
-});
-
-import { ref, watch, computed, onMounted } from "vue";
+import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "src/stores/store.js";
-import CurrencyInput from "../components/CurrencyInput.vue";
-import Transaction from "../models/transaction";
-import Utils from "../utils/utils";
 import { useQuasar } from "quasar";
+import Utils from "src/utils/utils";
+import CurrencyInput from "src/components/CurrencyInput.vue";
 import currencyCodes from "currency-codes";
+import Transaction from "src/models/transaction";
 
 const $q = useQuasar();
 const store = useStore();
 const router = useRouter();
 
-const isEditable = ref(true);
-const editableTransaction = ref(store.getEditableTransaction());
-// todo sync store.currency
-
+// editable transaction
+const tr = ref(store.getEditableTransaction());
+const showOnlyActive = ref(true);
 const nameInput = ref(null);
+const currencySelect = ref(null);
+
+const debug = () => {
+  console.log(tr.value);
+}
 
 // Map the currency codes into a format compatible with Quasar's q-select
 const currencies = currencyCodes.data.map((currency) => ({
@@ -184,58 +202,41 @@ const filterFn = (val, update) => {
     return;
   }
 
-  editableTransaction.value.currency = "";
+  tr.value.currency = "";
   const needle = val.toLowerCase();
   update(() => {
     const filtered = currencies.filter((v) =>
       v.value.toLowerCase().includes(needle)
     );
     currencyOptions.value = filtered;
+
+    if (currencyOptions.value.length === 1) {
+      tr.value.currency = currencyOptions.value[0].value;
+      if (currencySelect.value) {
+        currencySelect.value.updateInputValue(""); // Clear input
+        setTimeout(() => {
+          currencySelect.value.hidePopup(); // Close the dropdown
+        }, 0);
+      }
+    }
   });
 };
 
-const editForm = () => {
-  isEditable.value = true;
+const goBack = () => {
+  store.transactionId = null;
+  router.go(-1);
 };
 
-const filteredPeople = computed(() => {
-  return store.currentSheet.people.filter((person) => person.active);
-});
-
-const debug = () => {
-  console.log(editableTransaction.value.currency);
-};
-
-const saveAndGoBack = () => {
-  if (
-    editableTransaction.value.currency === null ||
-    editableTransaction.value.currency.length === 0
-  ) {
+const saveAndGoBack = async () => {
+  try {
+    await store.addTransaction(tr.value);
+  } catch (error) {
     $q.notify({
-      message: "The currency is missing.",
+      message: error.message || error,
     });
     return;
   }
 
-  store.addTransaction(editableTransaction.value);
   goBack();
 };
-
-const goBack = () => {
-  store.lastEditedCurrency = editableTransaction.value.currency;
-  router.go(-1);
-};
-
-watch(
-  () => editableTransaction.value.currency,
-  (value) => {
-    store.lastEditedCurrency = value;
-  }
-);
-
-onMounted(() => {
-  if (nameInput.value) {
-    nameInput.value.focus();
-  }
-});
 </script>

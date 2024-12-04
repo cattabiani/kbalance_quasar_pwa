@@ -51,7 +51,8 @@ module.exports = configure(function (/* ctx */) {
 
       // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
 
-      publicPath: "/kbalance_quasar_pwa/",
+      publicPath:
+        process.env.NODE_ENV === "production" ? "/kbalance_quasar_pwa/" : "/",
       // analyze: true,
       // env: {},
       // rawDefine: {}

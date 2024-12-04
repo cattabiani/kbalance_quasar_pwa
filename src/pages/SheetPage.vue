@@ -8,16 +8,7 @@
         aria-label="Go Back"
         class="bg-white text-primary"
       />
-      <q-toolbar-title style="font-size: 28px">
-        {{ store.currentSheet.name }}
-      </q-toolbar-title>
-      <!-- <q-btn
-        flat
-        icon="bug_report"
-        @click="debug"
-        class="q-ml-md bg-white text-primary"
-        aria-label="Debug"
-      /> -->
+      <q-toolbar-title style="font-size: 28px"> Sheet </q-toolbar-title>
       <q-btn
         flat
         icon="people"
@@ -28,7 +19,7 @@
       <q-btn
         flat
         icon="add"
-        @click="addTransaction"
+        @click="goToTransaction()"
         class="q-ml-md bg-white text-primary"
         aria-label="Add a new transaction"
       />
@@ -38,20 +29,15 @@
     <q-input
       class="q-my-md q-mr-md q-ml-md"
       ref="nameInput"
-      v-model="store.currentSheet.name"
-      label="Description"
+      v-model="name"
+      label="Sheet Name"
       autogrow
       outlined
       @focus="nameInput.select()"
+      @blur="setCurrentSheetName"
     />
-    <q-select
-      bordered
-      class="q-my-md q-mr-md q-ml-md"
-      v-model="selectedPerson"
-      :options="peopleOptions"
-      label="Selected Person"
-      outlined
-    />
+    <SelectPerson v-model="selectedPerson" :peopleOptions="peopleOptions" />
+
 
     <q-card
       v-if="negativeSummaryDisplay || positiveSummaryDisplay"
@@ -59,12 +45,12 @@
     >
       <div class="q-pa-md">
         <div v-if="negativeSummaryDisplay" :style="{ color: 'green' }">
-          {{ store.currentSheet.people[selectedPerson.value].name }} is owed
+          {{ store.username(store.currentSheetPeople[selectedPerson]) }} is owed
           {{ negativeSummaryDisplay }}
         </div>
 
         <div v-if="positiveSummaryDisplay" :style="{ color: 'red' }">
-          {{ store.currentSheet.people[selectedPerson.value].name }} owes
+          {{ store.username(store.currentSheetPeople[selectedPerson]) }} owes
           {{ positiveSummaryDisplay }}
         </div>
       </div>
@@ -76,16 +62,16 @@
             <span>
               {{
                 item.amount > 0
-                  ? store.currentSheet.people[selectedPerson.value].name
-                  : store.currentSheet.people[item.person].name
+                  ? store.username(store.currentSheetPeople[selectedPerson])
+                  : store.username(store.currentSheetPeople[item.person])
               }}
             </span>
             <span> owes </span>
             <span>
               {{
                 item.amount < 0
-                  ? store.currentSheet.people[selectedPerson.value].name
-                  : store.currentSheet.people[item.person].name
+                  ? store.username(store.currentSheetPeople[selectedPerson])
+                  : store.username(store.currentSheetPeople[item.person])
               }}
               &nbsp;
             </span>
@@ -99,17 +85,10 @@
 
     <q-list>
       <q-slide-item
-        v-for="(item, index) in store.currentSheet.transactions
-          .slice()
-          .reverse()"
+        v-for="(id, index) in store.currentSheetTransactions"
         :key="index"
-        @left="
-          (event) =>
-            onLeft(event, store.currentSheet.transactions.length - 1 - index)
-        "
-        @dblclick="
-          editTransaction(store.currentSheet.transactions.length - 1 - index)
-        "
+        @left="(event) => onLeft(event, id)"
+        @click="goToTransaction(id)"
         left-color="red"
       >
         <template v-slot:left>
@@ -126,57 +105,79 @@
                 align-items: center;
               "
             >
-              <div>{{ Utils.getMonth(item.date) }}</div>
-              <div>{{ Utils.getDay(item.date) }}</div>
+              <div>
+                {{
+                  Utils.getMonth(store.currentSheet.transactions[id].timestamp)
+                }}
+              </div>
+              <div>
+                {{
+                  Utils.getDay(store.currentSheet.transactions[id].timestamp)
+                }}
+              </div>
             </q-card-section>
           </q-card>
           <q-item-section>
             <q-item-label>
-              {{ item.name || "New Transaction" }}
+              {{
+                store.currentSheet.transactions[id].name || "New Transaction"
+              }}
             </q-item-label>
             <q-item-label caption>
-              {{ store.currentSheet.people[item.payer]?.name || "Nobody" }} paid
-              {{ Utils.displayCurrency(item.currency, item.amount) }}
-            </q-item-label>
-          </q-item-section>
-          <q-item-section
-            side
-            v-if="item.payer === selectedPerson?.value"
-            :style="{ color: 'green' }"
-          >
-            <q-item-label caption :style="{ color: 'green' }">
               {{
-                store.currentSheet.people[selectedPerson?.value]?.name ||
-                "Nobody"
+                store.username(store.currentSheetPeople[
+                  store.currentSheet.transactions[id].payer
+                ]) || "Nobody"
               }}
-              lent
-            </q-item-label>
-            <q-item-label>
+              paid
               {{
                 Utils.displayCurrency(
-                  item.currency,
-                  item.amount - item.owed[item.payer]
+                  store.currentSheet.transactions[id].currency,
+                  store.currentSheet.transactions[id].amount
                 )
               }}
             </q-item-label>
           </q-item-section>
           <q-item-section
             side
-            v-else-if="item.owed[selectedPerson?.value] > 0"
+            v-if="store.currentSheet.transactions[id].payer === selectedPerson"
+            :style="{ color: 'green' }"
+          >
+            <q-item-label caption :style="{ color: 'green' }">
+              {{ store.username(store.currentSheetPeople[selectedPerson]) || "Nobody" }}
+              lent
+            </q-item-label>
+            <q-item-label>
+              {{
+                Utils.displayCurrency(
+                  store.currentSheet.transactions[id].currency,
+                  store.currentSheet.transactions[id].amount -
+                    store.currentSheet.transactions[id].debts[
+                      store.currentSheet.transactions[id].payer
+                    ].owedAmount
+                )
+              }}
+            </q-item-label>
+          </q-item-section>
+          <q-item-section
+            side
+            v-else-if="
+              (store.currentSheet.transactions[id].debts[selectedPerson]
+                ?.owedAmount ?? 0) > 0
+            "
             :style="{ color: 'red' }"
           >
             <q-item-label caption :style="{ color: 'red' }">
-              {{
-                store.currentSheet.people[selectedPerson?.value]?.name ||
-                "Nobody"
-              }}
+              {{ store.username(store.currentSheetPeople[selectedPerson]) || "Nobody" }}
               borrowed
             </q-item-label>
             <q-item-label>
               {{
                 Utils.displayCurrency(
-                  item.currency,
-                  item.amount - item.owed[selectedPerson?.value]
+                  store.currentSheet.transactions[id].currency,
+                  store.currentSheet.transactions[id].amount -
+                    (store.currentSheet.transactions[id].debts[selectedPerson]
+                      ?.owedAmount ?? 0)
                 )
               }}
             </q-item-label>
@@ -186,7 +187,9 @@
           </q-item-section>
         </q-item>
       </q-slide-item>
-    </q-list>
+    </q-list> 
+
+    
   </q-page>
 </template>
 
@@ -195,29 +198,59 @@ defineOptions({
   name: "SheetPage",
 });
 
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
-import { useStore } from "src/stores/store.js";
-import Sheet from "../models/sheet";
-import Utils from "../utils/utils";
-
-const timer = ref(null);
-const nameInput = ref(null);
-
+import { useStore } from "src/stores/store";
+import { useQuasar } from "quasar";
+import Utils from "src/utils/utils";
+import Results from "src/models/results";
+import { auth } from "src/firebase/firebase";
+import SelectPerson from "src/components/SelectPerson.vue";
+const $q = useQuasar();
 const store = useStore();
 const router = useRouter();
+const nameInput = ref(null);
 
+const timer = ref(null);
+const name = ref(null);
+const selectedPerson = ref(
+  store.currentSheetPeople.indexOf(auth.currentUser.uid)
+);
+
+// Compute the options based on the store
 const peopleOptions = computed(() => {
-  return store.currentSheet.people.map((person, index) => ({
-    label: person.name,
-    value: index, // Assuming `id` is a unique field in your `person` object
+  const currentPeople = store.currentSheetPeople || [];
+  return currentPeople.map((id, index) => ({
+    label: store.username(id) || "New Person",
+    isUser: store.isUser(id),
+    value: index,
   }));
 });
-const selectedPerson = ref(peopleOptions.value[0] || null);
+
+
+watch(
+  () => store.currentSheetLedger, // Watch the `isReady` flag in the store
+  (newValue) => {
+    name.value = newValue?.name;
+  },
+  { immediate: true } // Run immediately to set the username if already ready
+);
+
+const setCurrentSheetName = async () => {
+  try {
+    await store.setCurrentSheetName(name.value);
+  } catch (error) {
+    $q.notify({
+      message: error.message || error,
+    });
+    return;
+  }
+};
+
 const summaries = computed(() => {
-  const { ans, totals } = Sheet.getSummary(
-    store.currentSheet,
-    selectedPerson.value?.value
+  const { ans, totals } = Results.getSummary(
+    store.currentSheetResults,
+    selectedPerson.value
   );
 
   const detail = ans.map((item, index) => ({
@@ -242,11 +275,13 @@ const negativeSummaryDisplay = computed(() => {
     .join(" + ");
 });
 
-const debug = () => {
-  console.log(summaryByCurrency.value);
+const goToTransaction = (id = null) => {
+  store.transactionId = id;
+  router.push({ name: "TransactionPage" });
 };
 
-const goBack = () => {
+const goBack = async () => {
+  await store.subscribeCurrentSheet();
   router.go(-1); // Go back to the previous page
 };
 
@@ -254,32 +289,29 @@ const goToPeople = () => {
   router.push({ name: "PeoplePage" });
 };
 
-const addTransaction = () => {
-  store.setTransactionID();
-  router.push({ name: "TransactionPage" });
-};
-
-onMounted(() => {
-  if (nameInput.value) {
-    nameInput.value.focus();
-  }
-});
-
 const finalize = (reset) => {
   timer.value = setTimeout(() => {
     reset?.(); // Optional chaining to call reset if defined
   }, 0);
 };
 
-const onLeft = ({ reset }, id) => {
+const onLeft = async ({ reset }, id) => {
   finalize(reset);
-  setTimeout(() => {
-    store.removeTransaction(id);
-  }, 1);
-};
 
-const editTransaction = (id) => {
-  store.setTransactionID(id);
-  router.push({ name: "TransactionPage" });
+  // Wrap setTimeout in a Promise to use async/await correctly
+  await new Promise((resolve) => {
+    setTimeout(async () => {
+      try {
+        await store.removeTransaction(id);
+        // If needed, resolve after the async operation completes
+        resolve();
+      } catch (error) {
+        $q.notify({
+          message: error.message || error,
+        });
+        resolve(); // resolve the promise even if there's an error
+      }
+    }, 0); // You can adjust the timeout duration here
+  });
 };
 </script>

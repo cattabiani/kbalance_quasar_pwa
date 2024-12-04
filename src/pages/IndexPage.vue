@@ -4,45 +4,79 @@
       <q-toolbar-title style="font-size: 28px"> Sheets </q-toolbar-title>
       <q-btn
         flat
+        icon="bug_report"
+        @click="debug()"
+        class="q-ml-md bg-white text-primary"
+        aria-label="Debug"
+      />
+      <q-btn
+        flat
         icon="info"
         @click="showAbout"
         class="q-ml-md bg-white text-primary"
-        aria-label="About kNote"
+        aria-label="About kBalance"
+      />
+      <q-btn
+        flat
+        icon="logout"
+        @click="logout"
+        class="q-ml-md bg-white text-primary"
+        aria-label="Log out"
       />
       <q-btn
         flat
         icon="add"
-        @click="addSheet"
+        @click="addNewSheet()"
         class="q-ml-md bg-white text-primary"
         aria-label="Add a new balance sheet"
       />
     </q-toolbar>
   </q-header>
 
-  <q-page>
-    <q-list bordered class="q-my-md">
-      <q-slide-item
-        v-for="([key, sheet], id) in Object.entries(store.sheets)"
-        :key="key"
-        @left="(event) => onLeft(event, key)"
-        @dblclick="editSheet(key)"
-        left-color="red"
-      >
-        <template v-slot:left>
-          <q-icon name="delete" />
-        </template>
+  <q-page v-if="store.fbLedger">
+    <q-card>
+      <q-card-section>
+        <q-input
+          v-model="username"
+          ref="usernameRef"
+          @focus="usernameRef.select()"
+          @blur="setUsername"
+          label="Username"
+          autogrow
+          outlined
+        />
+      </q-card-section>
+    </q-card>
 
-        <q-item clickable :class="id % 2 === 0 ? 'bg-grey-3' : 'bg-white'">
-          <q-item-section>
-            {{ sheet.name || "New Sheet" }}
-          </q-item-section>
-        </q-item>
-      </q-slide-item>
-    </q-list>
-    <!-- empty state -->
-    <div v-if="store.sheets.length === 0" style="padding: 20px">
+        <q-list bordered class="q-mb-md">
+          <q-slide-item
+            v-for="(obj, index) in store.userSheets"
+            :key="index"
+            @left="(event) => onLeft(event, obj.id)"
+            @click="editSheet(obj.id)"
+            left-color="red"
+          >
+            <template v-slot:left>
+              <q-icon name="delete" />
+            </template>
+            <q-item
+              clickable
+              :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'"
+            >
+              <q-item-section>
+                {{ obj.name || "New Sheet" }}
+              </q-item-section>
+            </q-item>
+          </q-slide-item>
+        </q-list>
+
+    
+
+    <div v-if="!store.userSheets.length" style="padding: 20px">
       <AboutContent />
     </div>
+
+    
   </q-page>
 
   <q-dialog v-model="isAboutDialogVisible" persistent>
@@ -56,26 +90,53 @@
 </template>
 
 <script setup>
-defineOptions({
-  name: "IndexPage",
-});
-import { ref, onBeforeUnmount } from "vue";
+import AboutContent from "src/components/AboutContent.vue";
+import { ref, watch } from "vue";
 import { useQuasar } from "quasar";
-import { useStore } from "src/stores/store.js";
 import { useRouter } from "vue-router";
-import AboutContent from "../components/AboutContent.vue";
-import Sheet from "../models/sheet";
+import { useStore } from "src/stores/store";
 
 const store = useStore();
-const timer = ref(null);
 const router = useRouter();
 const $q = useQuasar();
 const isAboutDialogVisible = ref(false);
+const timer = ref(null);
+const usernameRef = ref(null);
+const username = ref("");
 
-const finalize = (reset) => {
-  timer.value = setTimeout(() => {
-    reset?.(); // Optional chaining to call reset if defined
-  }, 0);
+const debug = () => {
+  const aaa = store.getEditablePerson();
+  console.log(aaa);
+};
+
+watch(
+  () => store.fbLedger, // Watch the `isReady` flag in the store
+  (_) => {
+    username.value = store.username();
+  },
+  { immediate: true } // Run immediately to set the username if already ready
+);
+
+const setUsername = async () => {
+  try {
+    await store.setUsername(username.value);
+  } catch (error) {
+    $q.notify({
+      message: error.message || error,
+    });
+    return;
+  }
+};
+
+const addNewSheet = async () => {
+  try {
+    await store.addNewSheet();
+  } catch (error) {
+    $q.notify({
+      message: error.message || error,
+    });
+    return;
+  }
 };
 
 const showAbout = () => {
@@ -83,55 +144,42 @@ const showAbout = () => {
   isAboutDialogVisible.value = true; // Set the dialog to visible
 };
 
-const addSheet = () => {
-  const newSheet = Sheet.make();
-  store.addSheet(newSheet);
-  store.setSheetID(newSheet.id);
-  router.push({ name: "SheetPage" });
+const editSheet = async (id) => {
+  try {
+    await store.subscribeCurrentSheet(id);
+    router.push({ name: "SheetPage" });
+  } catch (error) {
+    $q.notify({
+      message: error.message || error,
+    });
+    return;
+  }
+};
+
+const finalize = (reset) => {
+  timer.value = setTimeout(() => {
+    reset?.(); // Optional chaining to call reset if defined
+  }, 0);
 };
 
 const onLeft = ({ reset }, id) => {
   finalize(reset);
   setTimeout(() => {
-    store.removeSheet(id);
-  }, 1);
+    store.unfollowSheet(id);
+  }, 0);
 };
 
-const editSheet = (id) => {
-  store.setSheetID(id);
-  router.push({ name: "SheetPage" });
+const logout = async () => {
+  try {
+    await store.logoutUser();
+    router.push({ name: "LoginPage" });
+  } catch (error) {
+    $q.notify({
+      message: error.message || error,
+    });
+    return;
+  }
 };
-
-const installPromptHandler = (event) => {
-  event.preventDefault(); // Prevent the default prompt from appearing
-
-  notification = $q.notify({
-    actions: [
-      {
-        label: "Install",
-        color: "white",
-        handler: () => {
-          if (event) {
-            event.prompt(); // Show the install prompt
-            notification.close(); // Dismiss the notification
-          }
-        },
-      },
-      {
-        label: "Dismiss",
-        color: "white",
-        handler: () => {
-          notification.close(); // Dismiss the notification
-        },
-      },
-    ],
-    timeout: 0, // Prevent it from auto-closing
-  });
-};
-
-window.addEventListener("beforeinstallprompt", installPromptHandler);
-
-onBeforeUnmount(() => {
-  window.removeEventListener("beforeinstallprompt", installPromptHandler);
-});
 </script>
+
+<style scoped></style>

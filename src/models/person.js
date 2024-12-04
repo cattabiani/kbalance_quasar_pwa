@@ -1,10 +1,13 @@
 import { v4 as uuidv4 } from "uuid";
 
 const Person = {
-  make(name = "") {
-    const id = uuidv4();
+  make(name = null, id = null) {
+    if (!id) {
+      id = uuidv4();
+    }
     let active = true;
-    return { name, id, active };
+    const timestamp = Date.now();
+    return { name, id, active, timestamp };
   },
 };
 

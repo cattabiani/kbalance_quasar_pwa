@@ -22,7 +22,7 @@ const { inputRef, formattedValue, setValue, setOptions } = useCurrencyInput({
   currency: props.currency,
   currencyDisplay: "hidden",
   valueScaling: "precision",
-  allowNegative: true,
+  allowNegative: false,
 });
 
 watch(

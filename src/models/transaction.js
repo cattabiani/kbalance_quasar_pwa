@@ -1,49 +1,50 @@
 import { v4 as uuidv4 } from "uuid";
 
 const Transaction = {
-  make(nPeople, currency) {
+  make(peopleids, currency, payerid, people) {
+    const nPeople = peopleids.length;
     let name = "";
     const id = uuidv4();
     let amount = 0;
-    let payer = nPeople > 0 ? 0 : -1;
-    const isDebtor = Array(nPeople).fill(true);
-    const owed = Array(nPeople).fill(0);
-    const date = Date.now();
-    return { name, id, amount, payer, currency, isDebtor, owed, date };
+    let payer = peopleids.indexOf(payerid);
+    if (payer === -1) {
+      payer = nPeople > 0 ? 0 : -1;
+    }
+    const debts = peopleids.map((personid) => ({
+      isDebtor: people[personid].active,
+      owedAmount: 0,
+    }));
+    let timestamp = Date.now();
+    return { name, id, amount, payer, currency, debts, timestamp };
   },
 
   updatePeople(transaction, nPeople) {
-    const addPeople = nPeople - transaction.owed.length;
-    if (addPeople > 0) {
-      transaction.isDebtor.push(...Array(addPeople).fill(false));
-      transaction.owed.push(...Array(addPeople).fill(0));
-      if (transaction.payer === -1) {
-        transaction.payer = 0;
-      }
+    for (let i = transaction.debts.length; i < nPeople; i++) {
+      transaction.debts.push({ isDebtor: false, owedAmount: 0 });
     }
   },
 
   split(transaction) {
-    const nDebtors = transaction.isDebtor.filter(
-      (value) => value === true
-    ).length;
+    const nDebtors = transaction.debts.filter(debt => debt.isDebtor).length;
     if (nDebtors == 0) {
-      transaction.owed.fill(0);
+      Object.values(transaction.debts).forEach((person) => {
+        person.owedAmount = 0;
+      });
       return;
     }
 
     const q = Math.floor(transaction.amount / nDebtors);
     let r = transaction.amount % nDebtors;
 
-    for (let i = transaction.owed.length - 1; i >= 0; --i) {
-      if (transaction.isDebtor[i]) {
-        transaction.owed[i] = q;
+    for (let i = transaction.debts.length - 1; i >= 0; --i) {
+      if (transaction.debts[i].isDebtor) {
+        transaction.debts[i].owedAmount = q;
         if (r > 0) {
-          transaction.owed[i] += 1;
+          transaction.debts[i].owedAmount += 1;
           --r;
         }
       } else {
-        transaction.owed[i] = 0;
+        transaction.debts[i].owedAmount = 0;
       }
     }
   },

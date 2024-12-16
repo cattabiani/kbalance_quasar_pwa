@@ -7,35 +7,35 @@ const routes = [
         path: "",
         name: "IndexPage",
         component: () => import("pages/IndexPage.vue"),
-        meta: { requiresAuth: true }, // Protect this route
+        meta: { requiresAuth: true, requiresFirebase: true }, // Protect this route
       },
       {
-        path: "SheetPage",
+        path: "/sheet",
         name: "SheetPage",
         component: () => import("pages/SheetPage.vue"),
-        meta: { requiresAuth: true }, // Protect this route
+        meta: { requiresAuth: true, requiresFirebase: true }, // Protect this route
       },
       {
-        path: "PeoplePage",
+        path: "/sheet/people",
         name: "PeoplePage",
         component: () => import("pages/PeoplePage.vue"),
-        meta: { requiresAuth: true }, // Protect this route
+        meta: { requiresAuth: true, requiresFirebase: true }, // Protect this route
       },
       {
-        path: "TransactionPage",
+        path: "/sheet/transaction",
         name: "TransactionPage",
         component: () => import("pages/TransactionPage.vue"),
-        meta: { requiresAuth: true }, // Protect this route
+        meta: { requiresAuth: true, requiresFirebase: true }, // Protect this route
       },
-      // {
-      //   path: "/register",
-      //   name: "RegisterPage",
-      //   component: () => import("pages/RegisterPage.vue"),
-      // },
       {
         path: "/login",
         name: "LoginPage",
         component: () => import("pages/LoginPage.vue"),
+      },
+      {
+        path: "/firebaseSettings",
+        name: "FirebaseSettingsPage",
+        component: () => import("pages/FirebaseSettingsPage.vue"),
       },
     ],
   },

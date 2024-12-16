@@ -132,7 +132,9 @@
               <q-item-label
                 :style="{
                   textDecoration:
-                  store.currentSheet.people[id].active === false ? 'line-through' : 'none',
+                    store.currentSheet.people[id].active === false
+                      ? 'line-through'
+                      : 'none',
                 }"
                 >{{ store.username(id) }}</q-item-label
               >
@@ -184,7 +186,7 @@ const currencySelect = ref(null);
 
 const debug = () => {
   console.log(tr.value);
-}
+};
 
 // Map the currency codes into a format compatible with Quasar's q-select
 const currencies = currencyCodes.data.map((currency) => ({

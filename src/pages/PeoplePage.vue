@@ -26,60 +26,54 @@
     </q-toolbar>
   </q-header>
   <q-page>
+    <q-list bordered class="q-my-md">
+      <q-slide-item
+        v-for="(id, index) in store.currentSheetPeople"
+        :key="index"
+        @left="(event) => onLeft(event, id)"
+        @right="(event) => onRight(event, id)"
+        @click="editPerson(id)"
+        left-color="red"
+        right-color="green"
+        v-show="store.isPersonActive(id) || !showOnlyActive"
+        v-ripple
+        :class="index % 2 === 0 ? 'bg-grey-1' : 'bg-white'"
+      >
+        <template v-slot:left>
+          <q-icon name="delete" />
+        </template>
+        <template v-slot:right>
+          <q-icon name="done" />
+        </template>
 
-        <q-list bordered class="q-my-md">
-          <q-slide-item
-            v-for="(id, index) in store.currentSheetPeople"
-            :key="index"
-            @left="(event) => onLeft(event, id)"
-            @right="(event) => onRight(event, id)"
-            @click="editPerson(id)"
-            left-color="red"
-            right-color="green"
-            v-show="store.isPersonActive(id) || !showOnlyActive"
-            v-ripple
-            :class="index % 2 === 0 ? 'bg-grey-1' : 'bg-white'"
-          >
-            <template v-slot:left>
-              <q-icon name="delete" />
-            </template>
-            <template v-slot:right>
-              <q-icon name="done" />
-            </template>
-
-            <q-item>
-              <q-item-section>
-                <div
-                  class="q-gutter-sm"
-                  style="display: flex; align-items: center"
-                >
-                  <q-icon
-                    v-if="!showOnlyActive && !store.isPersonActive(id)"
-                    name="radio_button_unchecked"
-                    color="black"
-                    aria-label="Inactive"
-                  />
-                  <q-icon
-                    v-if="!showOnlyActive && store.isPersonActive(id)"
-                    name="check_circle"
-                    color="primary"
-                    aria-label="Active"
-                  />
-                  <q-icon
-                    name="person"
-                    :color="store.isUser(id) ? 'primary' : 'grey'"
-                    :aria-label="store.isUser(id) ? 'Real user' : 'Fake user'"
-                  />
-                  <div style="display: flex; align-items: center">
-                    {{ store.username(id) || "New Person" }}
-                  </div>
-                </div>
-              </q-item-section>
-            </q-item>
-          </q-slide-item>
-        </q-list>
-
-    
+        <q-item>
+          <q-item-section>
+            <div class="q-gutter-sm" style="display: flex; align-items: center">
+              <q-icon
+                v-if="!showOnlyActive && !store.isPersonActive(id)"
+                name="radio_button_unchecked"
+                color="black"
+                aria-label="Inactive"
+              />
+              <q-icon
+                v-if="!showOnlyActive && store.isPersonActive(id)"
+                name="check_circle"
+                color="primary"
+                aria-label="Active"
+              />
+              <q-icon
+                name="person"
+                :color="store.isUser(id) ? 'primary' : 'grey'"
+                :aria-label="store.isUser(id) ? 'Real user' : 'Fake user'"
+              />
+              <div style="display: flex; align-items: center">
+                {{ store.username(id) || "New Person" }}
+              </div>
+            </div>
+          </q-item-section>
+        </q-item>
+      </q-slide-item>
+    </q-list>
   </q-page>
 
   <q-dialog v-model="isEditablePerson" persistent @open="focusInput">
@@ -232,7 +226,10 @@ const onRight = async ({ reset }, id) => {
 // Save note and close the modal
 const saveAndCloseModal = async () => {
   try {
-    await store.addPerson(editablePerson.value, isNewPerson ? null : oldPersonId);
+    await store.addPerson(
+      editablePerson.value,
+      isNewPerson ? null : oldPersonId
+    );
   } catch (error) {
     $q.notify({
       message: error.message || error,

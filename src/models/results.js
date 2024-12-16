@@ -76,7 +76,9 @@ const Results = {
 
   applyTransactions(results, transactions, nPeople) {
     results.nPeople = nPeople;
-    if (!nPeople) {return; }
+    if (!nPeople) {
+      return;
+    }
     Object.values(transactions).forEach((tr) => {
       if (!(tr.currency in results.mats)) {
         results.mats[tr.currency] = Result.make(nPeople);

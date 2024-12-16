@@ -60,7 +60,6 @@
         />
       </q-card-actions>
     </q-card>
-    
   </q-page>
 </template>
 

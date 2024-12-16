@@ -25,7 +25,7 @@ const Transaction = {
   },
 
   split(transaction) {
-    const nDebtors = transaction.debts.filter(debt => debt.isDebtor).length;
+    const nDebtors = transaction.debts.filter((debt) => debt.isDebtor).length;
     if (nDebtors == 0) {
       Object.values(transaction.debts).forEach((person) => {
         person.owedAmount = 0;

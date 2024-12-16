@@ -1,5 +1,11 @@
 import { defineStore } from "pinia";
-import { doc, setDoc, onSnapshot, deleteField, increment } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  onSnapshot,
+  deleteField,
+  increment,
+} from "firebase/firestore";
 import { db, auth } from "src/firebase/firebase";
 import {
   createUserWithEmailAndPassword,
@@ -59,14 +65,14 @@ export const useStore = defineStore("mainStore", {
 
     lastCurrency() {
       if (this.currentSheet && this.currentSheetTransactions?.length) {
-        return this.currentSheet.transactions[this.currentSheetTransactions[0]].currency;
+        return this.currentSheet.transactions[this.currentSheetTransactions[0]]
+          .currency;
       }
       return "USD";
     },
   },
 
   actions: {
-
     // person
 
     username(id = null) {
@@ -78,7 +84,11 @@ export const useStore = defineStore("mainStore", {
       }
 
       if (id in this.fbLedger.users) {
-        return Utils.truncate(this.fbLedger.users[id].name ? this.fbLedger.users[id].name : this.fbLedger.users[id].email);
+        return Utils.truncate(
+          this.fbLedger.users[id].name
+            ? this.fbLedger.users[id].name
+            : this.fbLedger.users[id].email
+        );
       }
 
       if (!this.currentSheet) {
@@ -140,12 +150,12 @@ export const useStore = defineStore("mainStore", {
 
     async addPerson(person, prevId, batch = null) {
       if (!person || !this.currentSheet) {
-        return; 
+        return;
       }
-      if (
-        person.id in this.currentSheet.users
-      ) {
-        throw new Error("The selected user is already participating in this sheet. Pick someone else or create a fake user.");
+      if (person.id in this.currentSheet.users) {
+        throw new Error(
+          "The selected user is already participating in this sheet. Pick someone else or create a fake user."
+        );
       }
       return await Utils.autoBatch(
         async (person, batch) => {
@@ -165,8 +175,7 @@ export const useStore = defineStore("mainStore", {
               [`users.${person.id}.sheets.${this.currentSheet.id}`]: null,
             });
             batch.update(ledgerRef, {
-              [`sheets.${this.currentSheet.id}.nusers`]:
-                increment(1),
+              [`sheets.${this.currentSheet.id}.nusers`]: increment(1),
             });
             batch.update(sheetRef, { [`users.${person.id}`]: "owner" });
           }
@@ -204,7 +213,10 @@ export const useStore = defineStore("mainStore", {
           "This user does not participate in this sheet. It cannot be removed properly. This should not happen. There is a bug somewhere."
         );
       }
-      if (this.isUser(personId) && this.fbLedger.sheets[sheetId].ntransactions !== 0) {
+      if (
+        this.isUser(personId) &&
+        this.fbLedger.sheets[sheetId].ntransactions !== 0
+      ) {
         throw new Error(
           "You cannot remove another user while the sheet contains transactions."
         );
@@ -223,8 +235,7 @@ export const useStore = defineStore("mainStore", {
                 [`users.${personId}.sheets.${sheetId}`]: deleteField(),
               });
               batch.update(ledgerRef, {
-                [`sheets.${sheetId}.nusers`]:
-                  increment(-1),
+                [`sheets.${sheetId}.nusers`]: increment(-1),
               });
               batch.update(sheetRef, { [`users.${personId}`]: deleteField() });
             }
@@ -233,7 +244,7 @@ export const useStore = defineStore("mainStore", {
               batch.update(sheetRef, { [`people.${personId}`]: deleteField() });
             } else if (auth.currentUser.uid === personId) {
               batch.update(sheetRef, { [`people.${personId}.active`]: false });
-            };
+            }
           } else {
             // fake user
             if (this.fbLedger.sheets[sheetId].ntransactions === 0) {
@@ -254,12 +265,15 @@ export const useStore = defineStore("mainStore", {
     async addTransaction(transaction, batch = null) {
       return await Utils.autoBatch(
         async (transaction, batch) => {
-
           await this.removeTransaction(this.transactionId, batch);
           const sheetRef = this.getSheetRef(this.currentSheet.id);
-          batch.update(sheetRef, { [`transactions.${transaction.id}`]: transaction });
+          batch.update(sheetRef, {
+            [`transactions.${transaction.id}`]: transaction,
+          });
           const ledgerRef = this.getLedgerRef();
-          batch.update(ledgerRef, { [`sheets.${this.currentSheet.id}.ntransactions`]: increment(1) });
+          batch.update(ledgerRef, {
+            [`sheets.${this.currentSheet.id}.ntransactions`]: increment(1),
+          });
         },
         transaction,
         batch
@@ -275,7 +289,9 @@ export const useStore = defineStore("mainStore", {
           const sheetRef = this.getSheetRef(this.currentSheet.id);
           batch.update(sheetRef, { [`transactions.${id}`]: deleteField() });
           const ledgerRef = this.getLedgerRef();
-          batch.update(ledgerRef, { [`sheets.${this.currentSheet.id}.ntransactions`]: increment(-1) });
+          batch.update(ledgerRef, {
+            [`sheets.${this.currentSheet.id}.ntransactions`]: increment(-1),
+          });
         },
         id,
         batch
@@ -284,9 +300,16 @@ export const useStore = defineStore("mainStore", {
 
     getEditableTransaction(id = this.transactionId) {
       if (this.currentSheet && id in this.currentSheet.transactions) {
-        return _.cloneDeep(this.currentSheet.transactions[id]);
+        const ans = _.cloneDeep(this.currentSheet.transactions[id]);
+        Transaction.updatePeople(ans, this.currentSheetPeople.length);
+        return ans;
       }
-      return Transaction.make(this.currentSheetPeople, this.lastCurrency, auth.currentUser.uid, this.currentSheet.people);
+      return Transaction.make(
+        this.currentSheetPeople,
+        this.lastCurrency,
+        auth.currentUser.uid,
+        this.currentSheet.people
+      );
     },
 
     // sheet
@@ -435,21 +458,20 @@ export const useStore = defineStore("mainStore", {
 
       const ledgerRef = this.getLedgerRef();
       await new Promise((resolve) => {
-      this.unsubscribeToFbLedger = onSnapshot(ledgerRef, (doc) => {
-        console.log("onSnapshot fbLedger");
-        const triggerResolve = this.fbLedger === null;
-        this.fbLedger = doc.data();
-        this.users = Object.keys(this.fbLedger.users)
-          .sort((a, b) => this.username(a).localeCompare(this.username(b)));
+        this.unsubscribeToFbLedger = onSnapshot(ledgerRef, (doc) => {
+          const triggerResolve = this.fbLedger === null;
+          this.fbLedger = doc.data();
+          this.users = Object.keys(this.fbLedger.users).sort((a, b) =>
+            this.username(a).localeCompare(this.username(b))
+          );
           if (triggerResolve) {
             resolve();
-          }  
-      });});
+          }
+        });
+      });
     },
 
     async subscribeCurrentSheet(sheetid) {
-
-
       this.unsubscribeToCurrentSheet?.();
       this.unsubscribeToCurrentSheet = null;
 
@@ -462,35 +484,40 @@ export const useStore = defineStore("mainStore", {
       }
 
       await new Promise((resolve) => {
-      const sheetRef = this.getSheetRef(sheetid);
-      this.unsubscribeToCurrentSheet = onSnapshot(sheetRef, (doc) => {
-        console.log("onSnapshot currentSheet");
-        const triggerResolve = this.currentSheet === null;
-        this.currentSheet = doc.data();
+        const sheetRef = this.getSheetRef(sheetid);
+        this.unsubscribeToCurrentSheet = onSnapshot(
+          sheetRef,
+          (doc) => {
+            console.log("onSnapshot currentSheet");
+            const triggerResolve = this.currentSheet === null;
+            this.currentSheet = doc.data();
 
-        this.currentSheetPeople = Object.entries(this.currentSheet.people)
-          .sort(([, a], [, b]) => a.timestamp - b.timestamp) // Sort by timestamp (descending)
-          .map(([id]) => id); // Extract the keys (IDs)
+            this.currentSheetPeople = Object.entries(this.currentSheet.people)
+              .sort(([, a], [, b]) => a.timestamp - b.timestamp) // Sort by timestamp (descending)
+              .map(([id]) => id); // Extract the keys (IDs)
 
-        this.currentSheetTransactions = Object.entries(
-          this.currentSheet.transactions
-        )
-          .sort(([, a], [, b]) => b.timestamp - a.timestamp) // Sort by timestamp (ascending)
-          .map(([id]) => id); // Extract the keys (IDs)
+            this.currentSheetTransactions = Object.entries(
+              this.currentSheet.transactions
+            )
+              .sort(([, a], [, b]) => b.timestamp - a.timestamp) // Sort by timestamp (ascending)
+              .map(([id]) => id); // Extract the keys (IDs)
 
-          this.currentSheetResults = Results.make(
-            this.currentSheet.transactions,
-            this.currentSheetPeople?.length || 0
-          );
+            this.currentSheetResults = Results.make(
+              this.currentSheet.transactions,
+              this.currentSheetPeople?.length || 0
+            );
 
-          if (triggerResolve) {
-            resolve();
-          }  
-      }, (error) => {if (error.code === "permission-denied") {
-        this.subscribeCurrentSheet();
-      }});
-    });
-
+            if (triggerResolve) {
+              resolve();
+            }
+          },
+          (error) => {
+            if (error.code === "permission-denied") {
+              this.subscribeCurrentSheet();
+            }
+          }
+        );
+      });
     },
   },
 

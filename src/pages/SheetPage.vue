@@ -38,7 +38,6 @@
     />
     <SelectPerson v-model="selectedPerson" :peopleOptions="peopleOptions" />
 
-
     <q-card
       v-if="negativeSummaryDisplay || positiveSummaryDisplay"
       class="q-my-md q-mr-md q-ml-md"
@@ -125,9 +124,11 @@
             </q-item-label>
             <q-item-label caption>
               {{
-                store.username(store.currentSheetPeople[
-                  store.currentSheet.transactions[id].payer
-                ]) || "Nobody"
+                store.username(
+                  store.currentSheetPeople[
+                    store.currentSheet.transactions[id].payer
+                  ]
+                ) || "Nobody"
               }}
               paid
               {{
@@ -144,7 +145,10 @@
             :style="{ color: 'green' }"
           >
             <q-item-label caption :style="{ color: 'green' }">
-              {{ store.username(store.currentSheetPeople[selectedPerson]) || "Nobody" }}
+              {{
+                store.username(store.currentSheetPeople[selectedPerson]) ||
+                "Nobody"
+              }}
               lent
             </q-item-label>
             <q-item-label>
@@ -168,7 +172,10 @@
             :style="{ color: 'red' }"
           >
             <q-item-label caption :style="{ color: 'red' }">
-              {{ store.username(store.currentSheetPeople[selectedPerson]) || "Nobody" }}
+              {{
+                store.username(store.currentSheetPeople[selectedPerson]) ||
+                "Nobody"
+              }}
               borrowed
             </q-item-label>
             <q-item-label>
@@ -187,9 +194,7 @@
           </q-item-section>
         </q-item>
       </q-slide-item>
-    </q-list> 
-
-    
+    </q-list>
   </q-page>
 </template>
 
@@ -226,7 +231,6 @@ const peopleOptions = computed(() => {
     value: index,
   }));
 });
-
 
 watch(
   () => store.currentSheetLedger, // Watch the `isReady` flag in the store

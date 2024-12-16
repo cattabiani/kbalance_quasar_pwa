@@ -16,25 +16,28 @@
       textOverflow: 'ellipsis',
     }"
   >
-  <template #prepend>
-      <q-icon 
-        name="person" 
+    <template #prepend>
+      <q-icon
+        name="person"
         :color="peopleOptions[localValue]?.isUser ? 'primary' : 'grey'"
-        :aria-label="peopleOptions[localValue]?.isUser ? 'Real user' : 'Fake user'"
+        :aria-label="
+          peopleOptions[localValue]?.isUser ? 'Real user' : 'Fake user'
+        "
       />
     </template>
 
     <template v-slot:option="scope">
-          <q-item v-bind="scope.itemProps">
-            <q-item-section avatar>
-              <q-icon name="person" 
-                :color="scope.opt.isUser ? 'primary' : 'grey'"
-                :aria-label="scope.opt.isUser ? 'Real user' : 'Fake user'"
-              /> 
-            </q-item-section>
-            <q-item-section> {{ scope.opt.label }} </q-item-section>
-          </q-item>
-        </template>
+      <q-item v-bind="scope.itemProps">
+        <q-item-section avatar>
+          <q-icon
+            name="person"
+            :color="scope.opt.isUser ? 'primary' : 'grey'"
+            :aria-label="scope.opt.isUser ? 'Real user' : 'Fake user'"
+          />
+        </q-item-section>
+        <q-item-section> {{ scope.opt.label }} </q-item-section>
+      </q-item>
+    </template>
   </q-select>
 </template>
 <script setup>

@@ -48,35 +48,28 @@
       </q-card-section>
     </q-card>
 
-        <q-list bordered class="q-mb-md">
-          <q-slide-item
-            v-for="(obj, index) in store.userSheets"
-            :key="index"
-            @left="(event) => onLeft(event, obj.id)"
-            @click="editSheet(obj.id)"
-            left-color="red"
-          >
-            <template v-slot:left>
-              <q-icon name="delete" />
-            </template>
-            <q-item
-              clickable
-              :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'"
-            >
-              <q-item-section>
-                {{ obj.name || "New Sheet" }}
-              </q-item-section>
-            </q-item>
-          </q-slide-item>
-        </q-list>
-
-    
+    <q-list bordered class="q-mb-md">
+      <q-slide-item
+        v-for="(obj, index) in store.userSheets"
+        :key="index"
+        @left="(event) => onLeft(event, obj.id)"
+        @click="editSheet(obj.id)"
+        left-color="red"
+      >
+        <template v-slot:left>
+          <q-icon name="delete" />
+        </template>
+        <q-item clickable :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'">
+          <q-item-section>
+            {{ obj.name || "New Sheet" }}
+          </q-item-section>
+        </q-item>
+      </q-slide-item>
+    </q-list>
 
     <div v-if="!store.userSheets.length" style="padding: 20px">
       <AboutContent />
     </div>
-
-    
   </q-page>
 
   <q-dialog v-model="isAboutDialogVisible" persistent>

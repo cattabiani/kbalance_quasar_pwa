@@ -1,5 +1,5 @@
-import { writeBatch } from "firebase/firestore";
-import { db } from "src/firebase/firebase";
+
+
 
 const Utils = {
   getDay(dateint) {
@@ -17,23 +17,6 @@ const Utils = {
 
   displayCurrency(currency, amount) {
     return `${currency} ${parseFloat(amount / 100).toFixed(2)}`;
-  },
-
-  async autoBatch(fn, ...args) {
-    const isStandalone = !args[args.length - 1];
-    if (isStandalone) {
-      args[args.length - 1] = writeBatch(db); // Create a new batch if not provided
-    }
-
-    // Call the original function with the provided arguments and batch
-    const result = await fn.apply(this, args);
-
-    // Commit the batch if it was created internally
-    if (isStandalone) {
-      await args[args.length - 1].commit();
-    }
-
-    return result;
   },
 
   truncate(name) {

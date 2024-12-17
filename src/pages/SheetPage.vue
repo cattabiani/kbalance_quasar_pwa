@@ -209,7 +209,6 @@ import { useStore } from "src/stores/store";
 import { useQuasar } from "quasar";
 import Utils from "src/utils/utils";
 import Results from "src/models/results";
-import { auth } from "src/firebase/firebase";
 import SelectPerson from "src/components/SelectPerson.vue";
 const $q = useQuasar();
 const store = useStore();
@@ -219,7 +218,7 @@ const nameInput = ref(null);
 const timer = ref(null);
 const name = ref(null);
 const selectedPerson = ref(
-  store.currentSheetPeople.indexOf(auth.currentUser.uid)
+  store.currentSheetPeople.indexOf(store.fbAuth.currentUser.uid)
 );
 
 // Compute the options based on the store

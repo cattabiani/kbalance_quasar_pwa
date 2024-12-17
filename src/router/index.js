@@ -6,11 +6,11 @@ import {
   createWebHashHistory,
 } from "vue-router";
 import routes from "./routes";
-// import { useStore } from "src/stores/store";
+import { useStore } from "src/stores/store";
 // import { auth } from "src/firebase/firebase";
 // import { watch } from "vue";
 
-export default route(function () {
+export default route(() => {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
     : process.env.VUE_ROUTER_MODE === "history"
@@ -23,7 +23,8 @@ export default route(function () {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
-  // const store = useStore(); // Get the store
+  const store = useStore();
+  let firstPass = true;
 
   // // Watch the currentSheet in the store
   // watch(
@@ -39,12 +40,31 @@ export default route(function () {
 
   // Protect routes with an auth check
   Router.beforeEach(async (to, from, next) => {
-    if (to.name === "FirebaseSettingsPage") {
+    if (firstPass) {
+      firstPass = false;
+      await store.init();
+    }
+
+    if (
+      to.matched.some((record) => record.meta.requiresFirebase) &&
+      !store.isFbActive
+    ) {
+      next({ name: "FirebaseSettingsPage" });
+    } else if (
+      to.matched.some((record) => record.meta.requiresAuth) &&
+      !store.isReady
+    ) {
+      next({ name: "IndexPage" });
+    } else {
       next();
     }
-    else {
-      next({ name: "FirebaseSettingsPage" });
-    }
+
+    // if (to.name === "FirebaseSettingsPage") {
+    //   next();
+    // }
+    // else {
+      
+    // }
     // // Wait until the auth state is determined
     // await store.init();
 

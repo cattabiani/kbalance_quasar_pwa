@@ -182,9 +182,8 @@
               {{
                 Utils.displayCurrency(
                   store.currentSheet.transactions[id].currency,
-                  store.currentSheet.transactions[id].amount -
-                    (store.currentSheet.transactions[id].debts[selectedPerson]
-                      ?.owedAmount ?? 0)
+                  store.currentSheet.transactions[id].debts[selectedPerson]
+                    ?.owedAmount
                 )
               }}
             </q-item-label>

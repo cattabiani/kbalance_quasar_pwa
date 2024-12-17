@@ -1,7 +1,9 @@
 <template>
   <div>
     <h5>About kBalance</h5>
-    <p>A simple balance-tracking app to manage your finances.</p>
+    <p>
+      A simple balance-tracking app to manage your finances with other users.
+    </p>
     <h6>Usage Tips:</h6>
     <ul>
       <li>

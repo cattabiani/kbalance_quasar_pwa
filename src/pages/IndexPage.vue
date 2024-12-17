@@ -164,7 +164,7 @@ const onLeft = ({ reset }, id) => {
 
 const logout = async () => {
   try {
-    await store.logoutUser();
+    await store.logout();
     router.push({ name: "LoginPage" });
   } catch (error) {
     $q.notify({

@@ -26,6 +26,8 @@ export default route(() => {
   const store = useStore();
   let firstPass = true;
 
+  console.log("TODO set watch");
+
   // // Watch the currentSheet in the store
   // watch(
   //   () => store.currentSheet,
@@ -42,45 +44,22 @@ export default route(() => {
   Router.beforeEach(async (to, from, next) => {
     if (firstPass) {
       firstPass = false;
-      console.log("I call init!")
       await store.init();
-      console.log("done!", store.isFbActive)
     }
 
     if (
       to.matched.some((record) => record.meta.requiresFirebase) &&
-      !store.isFbActive
+      !store.isFbActive()
     ) {
-      console.log("go to firebase")
       next({ name: "FirebaseSettingsPage" });
     } else if (
       to.matched.some((record) => record.meta.requiresAuth) &&
-      !store.isReady
+      !store.isAuthenticated()
     ) {
-      console.log("go to index")
       next({ name: "LoginPage" });
     } else {
       next();
     }
-
-    // if (to.name === "FirebaseSettingsPage") {
-    //   next();
-    // }
-    // else {
-      
-    // }
-    // // Wait until the auth state is determined
-    // await store.init();
-
-    // const isAuthenticated = store.isReady && !!auth.currentUser; // Check if the user is logged in
-    // if (
-    //   to.matched.some((record) => record.meta.requiresAuth) &&
-    //   !isAuthenticated
-    // ) {
-    //   next({ name: "LoginPage" }); // Redirect to login if not authenticated
-    // } else {
-    //   next(); // Proceed as normal
-    // }
   });
 
   return Router;

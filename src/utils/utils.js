@@ -1,6 +1,3 @@
-
-
-
 const Utils = {
   getDay(dateint) {
     const date = new Date(dateint);

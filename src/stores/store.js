@@ -13,8 +13,8 @@ import {
   signInWithEmailAndPassword,
 } from "firebase/auth";
 
-import { initializeApp, deleteApp } from "firebase/app";
-import { getAuth,  } from "firebase/auth";
+import { initializeApp, deleteApp, getApps } from "firebase/app";
+import { getAuth, getIdToken } from "firebase/auth";
 import {
   initializeFirestore,
   persistentLocalCache,
@@ -29,6 +29,10 @@ import Person from "src/models/person";
 import Utils from "src/utils/utils";
 import _ from "lodash";
 
+let fbApp = null;
+let fbAuth = null;
+let fbDb = null;
+
 export const useStore = defineStore("mainStore", {
   state: () => ({
     // router
@@ -36,17 +40,11 @@ export const useStore = defineStore("mainStore", {
 
     // local cache and admin
     fbLedger: null,
-    users: null,
     currentSheet: null,
-    currentSheetPeople: [],
-    currentSheetTransactions: [],
-    currentSheetResults: null,
 
     // firebase
     fbConfig: null,
-    fbApp: null,
     fbAuth: null,
-    fbDb: null,
 
     // listeners
     unsubscribeToFbLedger: null,
@@ -55,14 +53,45 @@ export const useStore = defineStore("mainStore", {
   }),
 
   getters: {
-
-    isReady() {
-      return !!this.fbLedger;
+    users() {
+      if (!this.fbLedger || !this.fbLedger.users) {
+        return [];
+      }
+      return Object.keys(this.fbLedger.users).sort((a, b) =>
+        this.username(a).localeCompare(this.username(b))
+      );
     },
 
-    isFbActive() {
-      console.log("trio: ", !!this.fbApp , !!this.fbAuth , !!this.fbDb)
-      return !!this.fbApp && !!this.fbAuth && !!this.fbDb;
+    currentSheetPeople() {
+      if (!this.currentSheet || !this.currentSheet.people) {
+        return [];
+      }
+      return Object.entries(this.currentSheet.people)
+        .sort(([, a], [, b]) => a.timestamp - b.timestamp) // Sort by timestamp (descending)
+        .map(([id]) => id); // Extract the keys (IDs)
+    },
+
+    currentSheetTransactions() {
+      if (!this.currentSheet || !this.currentSheet.transactions) {
+        return [];
+      }
+      return Object.entries(this.currentSheet.transactions)
+        .sort(([, a], [, b]) => b.timestamp - a.timestamp) // Sort by timestamp (ascending)
+        .map(([id]) => id); // Extract the keys (IDs)
+    },
+
+    currentSheetResults() {
+      if (
+        !this.currentSheet ||
+        !this.currentSheet.transactions ||
+        !this.currentSheetPeople
+      ) {
+        return [];
+      }
+      return Results.make(
+        this.currentSheet.transactions,
+        this.currentSheetPeople.length || 0
+      );
     },
 
     currentSheetLedger() {
@@ -74,9 +103,9 @@ export const useStore = defineStore("mainStore", {
     },
 
     userSheets() {
-      if (this.fbAuth.currentUser && this.fbLedger) {
+      if (fbAuth.currentUser && this.fbLedger) {
         const result = Object.keys(
-          this.fbLedger.users[this.fbAuth.currentUser.uid].sheets
+          this.fbLedger.users[fbAuth.currentUser.uid].sheets
         )
           .map((id) => ({
             id,
@@ -103,7 +132,7 @@ export const useStore = defineStore("mainStore", {
 
     username(id = null) {
       if (!id) {
-        id = this.fbAuth.currentUser?.uid;
+        id = fbAuth.currentUser?.uid;
       }
       if (!this.fbLedger || !id) {
         return "";
@@ -135,7 +164,7 @@ export const useStore = defineStore("mainStore", {
       return !!(
         !this.isUser(id) ||
         (this.currentSheetTransactions?.length === 0 &&
-          id !== this.fbAuth.currentUser.uid)
+          id !== fbAuth.currentUser.uid)
       );
     },
 
@@ -221,7 +250,7 @@ export const useStore = defineStore("mainStore", {
       if (!personId) {
         return;
       }
-      if (!force && personId === this.fbAuth.currentUser.uid) {
+      if (!force && personId === fbAuth.currentUser.uid) {
         throw new Error(
           "You cannot remove yourself from a sheet. Remove the sheet instead."
         );
@@ -241,8 +270,10 @@ export const useStore = defineStore("mainStore", {
       }
       if (
         this.isUser(personId) &&
-        this.fbLedger.sheets[sheetId].ntransactions !== 0
+        this.fbLedger.sheets[sheetId].ntransactions !== 0 &&
+        personId !== fbAuth.currentUser.uid
       ) {
+        console.log("force", force);
         throw new Error(
           "You cannot remove another user while the sheet contains transactions."
         );
@@ -255,7 +286,7 @@ export const useStore = defineStore("mainStore", {
           if (this.isUser(personId)) {
             if (
               this.fbLedger.sheets[sheetId].ntransactions === 0 ||
-              this.fbAuth.currentUser.uid === personId
+              fbAuth.currentUser.uid === personId
             ) {
               batch.update(ledgerRef, {
                 [`users.${personId}.sheets.${sheetId}`]: deleteField(),
@@ -268,7 +299,7 @@ export const useStore = defineStore("mainStore", {
 
             if (this.fbLedger.sheets[sheetId].ntransactions === 0) {
               batch.update(sheetRef, { [`people.${personId}`]: deleteField() });
-            } else if (this.fbAuth.currentUser.uid === personId) {
+            } else if (fbAuth.currentUser.uid === personId) {
               batch.update(sheetRef, { [`people.${personId}.active`]: false });
             }
           } else {
@@ -333,7 +364,7 @@ export const useStore = defineStore("mainStore", {
       return Transaction.make(
         this.currentSheetPeople,
         this.lastCurrency,
-        this.fbAuth.currentUser.uid,
+        fbAuth.currentUser.uid,
         this.currentSheet.people
       );
     },
@@ -355,14 +386,14 @@ export const useStore = defineStore("mainStore", {
 
     async addNewSheet(batch = null) {
       return await this.autoBatch(async (batch) => {
-        const [newSheet, newSheetLedger] = Sheet.make(this.fbAuth.currentUser.uid);
+        const [newSheet, newSheetLedger] = Sheet.make(fbAuth.currentUser.uid);
         const sheetRef = this.getSheetRef(newSheet.id);
         batch.set(sheetRef, newSheet);
 
         const ledgerRef = this.getLedgerRef();
         batch.update(ledgerRef, { [`sheets.${newSheet.id}`]: newSheetLedger });
         batch.update(ledgerRef, {
-          [`users.${this.fbAuth.currentUser.uid}.sheets.${newSheet.id}`]: null,
+          [`users.${fbAuth.currentUser.uid}.sheets.${newSheet.id}`]: null,
         });
       }, batch);
     },
@@ -377,7 +408,7 @@ export const useStore = defineStore("mainStore", {
           batch.delete(sheetRef);
           const ledgerRef = this.getLedgerRef();
           batch.update(ledgerRef, {
-            [`users.${this.fbAuth.currentUser.uid}.sheets.${id}`]: deleteField(),
+            [`users.${fbAuth.currentUser.uid}.sheets.${id}`]: deleteField(),
           });
           batch.update(ledgerRef, {
             [`sheets.${id}`]: deleteField(),
@@ -394,7 +425,7 @@ export const useStore = defineStore("mainStore", {
           if (this.fbLedger.sheets[id].nusers <= 1) {
             await this.removeSheet(id, batch);
           } else {
-            await this.removePerson(this.fbAuth.currentUser.uid, id, true, batch);
+            await this.removePerson(fbAuth.currentUser.uid, id, true, batch);
           }
         },
         id,
@@ -404,37 +435,325 @@ export const useStore = defineStore("mainStore", {
 
     // admin
 
-    async init(fbConfig = null) {
-      if (this.fbLedger && !fbConfig) {
-        return;
-      }
-      if (fbConfig) {
-        this.fbConfig = fbConfig;
-      }
-      await this.initFb();
-      await this.subscribeFbLedger();
+    getCurrentUserId() {
+      return fbAuth?.currentUser?.uid;
     },
 
-    async cleanup() {
-      await this.subscribeCurrentSheet();
-      await this.subscribeFbLedger();
+    isAuthenticated() {
+      return !!fbAuth.currentUser && !!this.fbLedger;
     },
+
+    // async cleanup() {
+    //   await this.subscribeCurrentSheet();
+    //   await this.subscribeFbLedger();
+    // },
 
     getLedgerRef() {
-      return doc(this.fbDb, "ledger", "ledger");
+      if (!fbDb) {
+        throw new Error("fbDb should be active here.");
+      }
+      return doc(fbDb, "ledger", "ledger");
     },
     getSheetRef(sheetid) {
-      return doc(this.fbDb, "sheets", sheetid);
+      if (!fbDb) {
+        throw new Error("fbDb should be active here.");
+      }
+      if (!sheetid) {
+        throw new Error("sheetid should be a proper id here.", sheetid);
+      }
+      return doc(fbDb, "sheets", sheetid);
     },
 
-    async registerUser(email, password) {
-      await createUserWithEmailAndPassword(this.fbAuth, email, password);
+    async setUsername(newName, batch = null) {
+      return await this.autoBatch(
+        async (newName, batch) => {
+          const ledgerRef = this.getLedgerRef();
+          batch.update(ledgerRef, {
+            [`users.${fbAuth.currentUser.uid}.name`]: newName,
+          });
+        },
+        newName,
+        batch
+      );
+    },
+
+    // async loginUser(email, password) {
+    //   this.requireFb();
+    //   console.log(this.isReady, this.isFbActive());
+    //   console.log("after require");
+    //   await signInWithEmailAndPassword(fbAuth, email, password);
+    //   console.log("signed in");
+    //   await this.subscribeFbLedger();
+    //   console.log("done!");
+    // },
+
+    // async logoutUser() {
+    //   this.requireFb();
+    //   await fbAuth.signOut();
+    //   await this.cleanup();
+    // },
+
+    // async subscribeFbLedger() {
+    //   this.unsubscribeToFbLedger?.();
+    //   this.unsubscribeToFbLedger = null;
+    //   this.fbLedger = null;
+    //   if (!this.isFbActive()) {
+    //     return;
+    //   }
+
+    //   await fbAuth.authStateReady();
+    //   if (!fbAuth.currentUser) {
+    //     return;
+    //   }
+
+    //   console.log("onSnapshot", this.isReady, !!this.fbLedger);
+    //   const ledgerRef = this.getLedgerRef();
+    //   await new Promise((resolve) => {
+    //     this.unsubscribeToFbLedger = onSnapshot(ledgerRef, (doc) => {
+    //       console.log("onSnapshot0");
+    //       const triggerResolve = this.fbLedger === null;
+    //       console.log("onSnapshot1");
+    //       this.fbLedger = doc.data();
+    //       console.log("onSnapshot2");
+
+    //       console.log("onSnapshot3");
+    //       if (triggerResolve) {
+    //         resolve();
+    //       }
+    //     });
+    //   });
+
+    //   console.log("/onSnapshot");
+    //   return;
+    // },
+
+    //////////////////
+
+    // requireFb() {
+    //   if (!this.isFbActive()) {
+    //     throw new Error(
+    //       "I was expecting initialized firebase objects. This is a bug."
+    //     );
+    //   }
+    // },
+    isFbActive() {
+      return !!fbApp && !!fbAuth && !!fbDb;
+    },
+
+    async initFb(config = null) {
+      await this.cleanupFb();
+
+      if (config) {
+        this.fbConfig = config;
+      }
+      if (!this.fbConfig) {
+        return;
+      }
+
+      fbApp = initializeApp(this.fbConfig);
+      fbAuth = getAuth(fbApp);
+      fbDb = initializeFirestore(fbApp, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager(),
+        }),
+      });
+    },
+
+    async cleanupFb() {
+      this.cleanup();
+      if (!this.isFbActive()) {
+        return;
+      }
+
+      // Attempt to terminate the Firebase app
+      if (getApps().length) {
+        await deleteApp(fbApp);
+      }
+
+      // Reset Firebase-related properties
+      fbApp = null;
+      fbAuth = null;
+      fbDb = null;
+    },
+
+    /////////////////// TODO remove
+    // async useFb() {
+    //   console.log("useFb");
+    //   if (!this.isFbActive()) {
+    //     console.log("/fbNotActive!");
+    //     return;
+    //   }
+
+    //   console.log("login");
+    //   await signInWithEmailAndPassword(fbAuth, "a@gmail.com", "123456");
+    //   console.log("/login");
+    //   const ledgerRef = this.getLedgerRef();
+    //   const doc = await getDoc(ledgerRef);
+    //   if (doc.exists()) {
+    //     console.log("doc:", doc.data());
+    //   } else {
+    //     console.log("no doc!");
+    //   }
+    //   console.log("logout");
+    //   await fbAuth.signOut();
+    //   console.log("/logout");
+
+    //   console.log("/useFb");
+    // },
+
+    // async debugCleanup() {
+    //   if (fbApp) {
+    //     console.log("remove old", getApps().length)
+    //     await deleteApp(fbApp);
+    //     fbApp = null;
+    //     fbAuth = null;
+    //     fbDb = null;
+    //   }
+    // },
+
+    // async debugInit(config) {
+    //   console.log("init", getApps().length)
+
+    //   fbApp = initializeApp(config);
+    //   fbAuth = getAuth(fbApp);
+    //   // fbDb = initializeFirestore(fbApp, {});
+    //   fbDb = initializeFirestore(fbApp, {
+    //         localCache: persistentLocalCache({
+    //           tabManager: persistentMultipleTabManager(),
+    //         }),
+    //       });
+    //   // await store.initFb(config.value);
+    //   // await  store.useFb();
+    //   console.log("n apps", getApps().length)
+    //   console.log(!!fbApp, !!fbAuth, !!fbDb)
+    // },
+
+    clearCurrentSheet() {
+      this.unsubscribeToCurrentSheet?.();
+      this.currentSheet = null;
+    },
+
+    clearFbLedger() {
+      this.unsubscribeToFbLedger?.();
+      this.fbLedger = null;
+    },
+
+    async logout() {
+      this.clearFbLedger();
+      this.clearCurrentSheet();
+      await fbAuth?.signOut();
+    },
+
+    async clearFb() {
+      await this.logout();
+      fbDb = null;
+      if (fbApp) {
+        await deleteApp(fbApp);
+      }
+      fbApp = null;
+    },
+
+    async setFbLedger() {
+      if (!this.isFbActive()) {
+        throw new Error("firebase should be active here.");
+      }
+      if (this.fbLedger) {
+        throw new Error("fbLedger should be null here.");
+      }
+      if (!fbAuth.currentUser) {
+        throw new Error("we should be logged in here.");
+      }
+
+      await new Promise((resolve) => {
+        const ledgerRef = this.getLedgerRef();
+        this.unsubscribeToFbLedger = onSnapshot(ledgerRef, (doc) => {
+          const triggerResolve = !!!this.fbLedger;
+          if (doc.exists()) {
+            this.fbLedger = doc.data();
+          }
+          if (triggerResolve) {
+            resolve();
+          }
+        });
+      });
+    },
+
+    async setCurrentSheetLedger(sheetid) {
+      if (!this.isFbActive()) {
+        throw new Error("firebase should be active here.");
+      }
+      if (this.currentSheetLedger) {
+        throw new Error("fbLedger should be null here.");
+      }
+      if (!fbAuth.currentUser) {
+        throw new Error("we should be logged in here.");
+      }
+
+      await new Promise((resolve) => {
+        const sheetRef = this.getLedgerRef(sheetid);
+        this.unsubscribeToCurrentSheetLedger = onSnapshot(sheetRef, (doc) => {
+          const triggerResolve = !!!this.currentSheet;
+          if (doc.exists()) {
+            this.currentSheet = doc.data();
+          }
+
+          if (triggerResolve) {
+            resolve();
+          }
+        });
+      });
+    },
+
+    async initFb(config = null) {
+      await this.clearFb();
+      if (config) {
+        this.fbConfig = config;
+      }
+      if (!this.fbConfig) {
+        return;
+      }
+
+      if (this.isFbActive()) {
+        throw new Error("Firebase should not be active here!");
+      }
+      fbApp = initializeApp(this.fbConfig);
+      fbAuth = getAuth(fbApp);
+      fbDb = initializeFirestore(fbApp, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager(),
+        }),
+      });
+    },
+
+    async init() {
+      await this.initFb();
+      await fbAuth?.authStateReady();
+      if (!this.isFbActive() || !fbAuth.currentUser) {
+        return;
+      }
+      await this.setFbLedger();
+    },
+
+    async login(username, password) {
+      if (!this.isFbActive()) {
+        console.log(!!fbApp, !!fbAuth, !!fbDb);
+        throw new Error("Firebase should be active here!");
+      }
+      await signInWithEmailAndPassword(fbAuth, username, password);
+      await this.setFbLedger();
+    },
+
+    async register(email, password) {
+      if (!this.isFbActive()) {
+        throw new Error("Firebase should be active here!");
+      }
+      await createUserWithEmailAndPassword(fbAuth, email, password);
       const ledgerRef = this.getLedgerRef();
       await setDoc(
         ledgerRef,
         {
           users: {
-            [`${this.fbAuth.currentUser.uid}`]: {
+            [`${fbAuth.currentUser.uid}`]: {
               name: "",
               email,
               sheets: {},
@@ -446,212 +765,28 @@ export const useStore = defineStore("mainStore", {
       await this.subscribeFbLedger();
     },
 
-    async setUsername(newName, batch = null) {
-      return await this.autoBatch(
-        async (newName, batch) => {
-          const ledgerRef = this.getLedgerRef();
-          batch.update(ledgerRef, {
-            [`users.${this.fbAuth.currentUser.uid}.name`]: newName,
-          });
-        },
-        newName,
-        batch
-      );
-    },
+    // utils
 
-    async loginUser(email, password) {
-      this.requireFb();
-      console.log(this.isReady, this.isFbActive);
-      console.log("after require");
-      await signInWithEmailAndPassword(this.fbAuth, email, password);
-      console.log("signed in");
-      await this.subscribeFbLedger();
-      console.log("done!");
-    },
-
-    async logoutUser() {
-      this.requireFb();
-      await this.fbAuth.signOut();
-      await this.cleanup();
-    },
-
-    async subscribeFbLedger() {
-      this.unsubscribeToFbLedger?.();
-      this.unsubscribeToFbLedger = null;
-      this.fbLedger = null;
-      if (!this.isFbActive) {
-        return;
+    async autoBatch(fn, ...args) {
+      const isStandalone = !args[args.length - 1];
+      if (isStandalone) {
+        args[args.length - 1] = writeBatch(fbDb); // Create a new batch if not provided
       }
 
-      
-      await this.fbAuth.authStateReady();
-      if (!this.fbAuth.currentUser) {
-        return;
+      // Call the original function with the provided arguments and batch
+      const result = await fn.apply(this, args);
+
+      // Commit the batch if it was created internally
+      if (isStandalone) {
+        await args[args.length - 1].commit();
       }
 
-      console.log("onSnapshot");
-      console.log(this.isReady, !!this.fbLedger);
-      const ledgerRef = this.getLedgerRef();
-      await new Promise((resolve) => {
-        this.unsubscribeToFbLedger = onSnapshot(ledgerRef, (doc) => {
-          const triggerResolve = this.fbLedger === null;
-          this.fbLedger = doc.data();
-          this.users = Object.keys(this.fbLedger.users).sort((a, b) =>
-            this.username(a).localeCompare(this.username(b))
-          );
-          if (triggerResolve) {
-            resolve();
-          }
-        });
-      });
-
-      console.log("/onSnapshot");
-      return;
+      return result;
     },
-
-    async subscribeCurrentSheet(sheetid) {
-      this.unsubscribeToCurrentSheet?.();
-      this.unsubscribeToCurrentSheet = null;
-
-      if (!sheetid) {
-        this.currentSheet = null;
-        this.currentSheetPeople = [];
-        this.currentSheetTransactions = [];
-        this.currentSheetResults = null;
-        return;
-      }
-
-      await new Promise((resolve) => {
-        const sheetRef = this.getSheetRef(sheetid);
-        this.unsubscribeToCurrentSheet = onSnapshot(
-          sheetRef,
-          (doc) => {
-            console.log("onSnapshot currentSheet");
-            const triggerResolve = this.currentSheet === null;
-            this.currentSheet = doc.data();
-
-            this.currentSheetPeople = Object.entries(this.currentSheet.people)
-              .sort(([, a], [, b]) => a.timestamp - b.timestamp) // Sort by timestamp (descending)
-              .map(([id]) => id); // Extract the keys (IDs)
-
-            this.currentSheetTransactions = Object.entries(
-              this.currentSheet.transactions
-            )
-              .sort(([, a], [, b]) => b.timestamp - a.timestamp) // Sort by timestamp (ascending)
-              .map(([id]) => id); // Extract the keys (IDs)
-
-            this.currentSheetResults = Results.make(
-              this.currentSheet.transactions,
-              this.currentSheetPeople?.length || 0
-            );
-
-            if (triggerResolve) {
-              resolve();
-            }
-          },
-          (error) => {
-            if (error.code === "permission-denied") {
-              this.subscribeCurrentSheet();
-            }
-          }
-        );
-      });
-    },
-
-//////////////////
-
-requireFb() {
-  if (!this.isFbActive) {
-    throw new Error("I was expecting initialized firebase objects. This is a bug.");
-  }
-},
-
-async initFb(config = null) {
-  console.log("initFb");
-  await this.cleanupFb();
-
-  if (config) {
-    this.fbConfig = config;
-  }
-  if (!this.fbConfig) { return; }
-
-  this.fbApp = initializeApp(this.fbConfig);
-  this.fbAuth = getAuth(this.fbApp);
-  this.fbDb = initializeFirestore(this.fbApp, {
-    localCache: persistentLocalCache({
-      tabManager: persistentMultipleTabManager(),
-    }),
-  });
-  console.log("/initFb");
-},
-
-async cleanupFb() {
-  console.log("cleanupFb");
-  this.cleanup();
-  if (!this.isFbActive) { return; }
-
-    // Attempt to terminate the Firebase app
-    await deleteApp(this.fbApp);
-
-    // Reset Firebase-related properties
-    this.fbApp = null;
-    this.fbAuth = null;
-    this.fbDb = null;
-
-  console.log("/cleanupFb");
-},
-
-// TODO remove
-async useFb() {
-  console.log("useFb");
-  if (!this.isFbActive) {
-    console.log("/fbNotActive!");
-    return;
-  }
-
-  console.log("login");
-  await signInWithEmailAndPassword(this.fbAuth, "a@gmail.com", "123456");
-  console.log("/login");
-  const ledgerRef = this.getLedgerRef();
-  const doc = await getDoc(ledgerRef);
-  if (doc.exists()) {
-    console.log("doc:", doc.data()); 
-  } else {
-    console.log("no doc!"); 
-  }
-  console.log("logout");
-  await this.fbAuth.signOut();
-  console.log("/logout");
-
-  console.log("/useFb");
-},
-
-// utils
-
-async autoBatch(fn, ...args) {
-  const isStandalone = !args[args.length - 1];
-  if (isStandalone) {
-    args[args.length - 1] = writeBatch(this.fbDb); // Create a new batch if not provided
-  }
-
-  // Call the original function with the provided arguments and batch
-  const result = await fn.apply(this, args);
-
-  // Commit the batch if it was created internally
-  if (isStandalone) {
-    await args[args.length - 1].commit();
-  }
-
-  return result;
-},
-
-
   },
-
-  
 
   persist: {
     key: "sessionData",
-    pick: [],
+    pick: ["fbLedger"],
   },
 });

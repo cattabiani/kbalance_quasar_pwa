@@ -1,11 +1,11 @@
 <template>
   <q-page class="flex flex-center">
-    <q-card class="q-pa-md" style="max-width: 400px; width: 100%">
+    <q-card class="q-pa-md" style="width: 80%">
       <q-card-section class="text-center" style="font-size: 28px">
         {{ isRegistering ? "Register" : "Login" }}
       </q-card-section>
 
-      <q-form @submit.prevent="handleSubmit">
+      <q-form @submit.prevent="submit">
         <q-card-section>
           <q-input
             v-model="email"
@@ -13,7 +13,6 @@
             type="email"
             :rules="emailRules"
             required
-            dense
             outlined
           />
           <q-input
@@ -22,7 +21,6 @@
             type="password"
             :rules="passwordRules"
             required
-            dense
             outlined
           />
           <q-input
@@ -31,8 +29,7 @@
             label="Confirm Password"
             :rules="[(val) => val === password || 'Passwords do not match']"
             type="password"
-            required
-            dense
+            requireds
             outlined
           />
         </q-card-section>
@@ -58,8 +55,15 @@
           @click="isRegistering = !isRegistering"
           class="full-width q-mt-md"
         />
+        <q-btn
+          label="Firebase Settings"
+          color="secondary"
+          @click="goToFirebaseSettings"
+          class="full-width q-mt-md"
+        />
       </q-card-actions>
     </q-card>
+    aa {{ store.isFbActive() }}
   </q-page>
 </template>
 
@@ -68,6 +72,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useQuasar } from "quasar";
 import { useStore } from "src/stores/store";
+import { AuthErrorCodes } from "firebase/auth";
 
 const store = useStore();
 const $q = useQuasar();
@@ -78,6 +83,14 @@ const isRegistering = ref(false);
 const email = ref("");
 const password = ref("");
 const confirmPassword = ref("");
+
+const authErrors = [
+  AuthErrorCodes.INVALID_PASSWORD, // "auth/wrong-password"
+  AuthErrorCodes.INVALID_EMAIL, // "auth/invalid-email"
+  AuthErrorCodes.USER_DELETED, // "auth/user-not-found"
+  AuthErrorCodes.USER_DISABLED, // "auth/user-disabled"
+  AuthErrorCodes.TOO_MANY_ATTEMPTS_TRY_LATER, // "auth/too-many-requests"
+];
 
 // Validation rules
 const emailRules = [
@@ -91,15 +104,31 @@ const passwordRules = [
 ];
 
 // Handle form submit (login or register)
-const handleSubmit = async () => {
+const submit = async () => {
   try {
     if (isRegistering.value) {
-      await store.registerUser(email.value, password.value);
+      await store.register(email.value, password.value);
     } else {
-      await store.loginUser(email.value, password.value);
+      await store.login(email.value, password.value);
     }
 
     router.push({ name: "IndexPage" });
+  } catch (error) {
+    $q.notify({
+      message: error.message || error,
+    });
+    if (!authErrors.includes(error)) {
+      store.fbConfig = null;
+      await goToFirebaseSettings();
+    }
+  }
+};
+
+const goToFirebaseSettings = async () => {
+  try {
+    await store.clearFb();
+
+    router.push({ name: "FirebaseSettingsPage" });
   } catch (error) {
     $q.notify({
       message: error.message || error,

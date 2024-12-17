@@ -42,19 +42,23 @@ export default route(() => {
   Router.beforeEach(async (to, from, next) => {
     if (firstPass) {
       firstPass = false;
+      console.log("I call init!")
       await store.init();
+      console.log("done!", store.isFbActive)
     }
 
     if (
       to.matched.some((record) => record.meta.requiresFirebase) &&
       !store.isFbActive
     ) {
+      console.log("go to firebase")
       next({ name: "FirebaseSettingsPage" });
     } else if (
       to.matched.some((record) => record.meta.requiresAuth) &&
       !store.isReady
     ) {
-      next({ name: "IndexPage" });
+      console.log("go to index")
+      next({ name: "LoginPage" });
     } else {
       next();
     }

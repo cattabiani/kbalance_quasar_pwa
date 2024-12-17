@@ -408,8 +408,9 @@ export const useStore = defineStore("mainStore", {
       if (this.fbLedger && !fbConfig) {
         return;
       }
-
-      this.fbConfig = fbConfig;
+      if (fbConfig) {
+        this.fbConfig = fbConfig;
+      }
       await this.initFb();
       await this.subscribeFbLedger();
     },
@@ -651,6 +652,6 @@ async autoBatch(fn, ...args) {
 
   persist: {
     key: "sessionData",
-    pick: ["fbConfig"],
+    pick: [],
   },
 });

@@ -63,7 +63,6 @@
         />
       </q-card-actions>
     </q-card>
-    aa {{ store.isFbActive() }}
   </q-page>
 </template>
 
@@ -83,14 +82,6 @@ const isRegistering = ref(false);
 const email = ref("");
 const password = ref("");
 const confirmPassword = ref("");
-
-const authErrors = [
-  AuthErrorCodes.INVALID_PASSWORD, // "auth/wrong-password"
-  AuthErrorCodes.INVALID_EMAIL, // "auth/invalid-email"
-  AuthErrorCodes.USER_DELETED, // "auth/user-not-found"
-  AuthErrorCodes.USER_DISABLED, // "auth/user-disabled"
-  AuthErrorCodes.TOO_MANY_ATTEMPTS_TRY_LATER, // "auth/too-many-requests"
-];
 
 // Validation rules
 const emailRules = [
@@ -117,7 +108,8 @@ const submit = async () => {
     $q.notify({
       message: error.message || error,
     });
-    if (!authErrors.includes(error)) {
+
+    if (error.code !== "auth/invalid-credential") {
       store.fbConfig = null;
       await goToFirebaseSettings();
     }

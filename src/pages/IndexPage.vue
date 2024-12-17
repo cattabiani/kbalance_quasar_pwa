@@ -4,6 +4,7 @@
       <q-toolbar-title style="font-size: 28px"> Sheets </q-toolbar-title>
       <q-btn
         flat
+        v-if="Utils.isDev()"
         icon="bug_report"
         @click="debug()"
         class="q-ml-md bg-white text-primary"
@@ -84,6 +85,7 @@
 
 <script setup>
 import AboutContent from "src/components/AboutContent.vue";
+import Utils from "src/utils/utils";
 import { ref, watch } from "vue";
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
@@ -98,8 +100,7 @@ const usernameRef = ref(null);
 const username = ref("");
 
 const debug = () => {
-  const aaa = store.getEditablePerson();
-  console.log(aaa);
+  console.log("TODO");
 };
 
 watch(
@@ -139,7 +140,7 @@ const showAbout = () => {
 
 const editSheet = async (id) => {
   try {
-    await store.subscribeCurrentSheet(id);
+    await store.setCurrentSheet(id);
     router.push({ name: "SheetPage" });
   } catch (error) {
     $q.notify({

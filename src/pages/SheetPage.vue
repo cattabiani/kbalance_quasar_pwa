@@ -217,8 +217,9 @@ const nameInput = ref(null);
 
 const timer = ref(null);
 const name = ref(null);
+
 const selectedPerson = ref(
-  store.currentSheetPeople.indexOf(store.fbAuth.currentUser.uid)
+  store.currentSheetPeople.indexOf(store.getCurrentUserId())
 );
 
 // Compute the options based on the store
@@ -284,7 +285,7 @@ const goToTransaction = (id = null) => {
 };
 
 const goBack = async () => {
-  await store.subscribeCurrentSheet();
+  await store.clearCurrentSheet();
   router.go(-1); // Go back to the previous page
 };
 

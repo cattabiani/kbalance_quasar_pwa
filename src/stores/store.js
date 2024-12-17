@@ -13,8 +13,8 @@ import {
   signInWithEmailAndPassword,
 } from "firebase/auth";
 
-import { initializeApp, deleteApp, getApps } from "firebase/app";
-import { getAuth, getIdToken } from "firebase/auth";
+import { initializeApp, deleteApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
 import {
   initializeFirestore,
   persistentLocalCache,
@@ -49,7 +49,6 @@ export const useStore = defineStore("mainStore", {
     // listeners
     unsubscribeToFbLedger: null,
     unsubscribeToCurrentSheet: null,
-    unsubscribeAuth: null,
   }),
 
   getters: {
@@ -273,7 +272,6 @@ export const useStore = defineStore("mainStore", {
         this.fbLedger.sheets[sheetId].ntransactions !== 0 &&
         personId !== fbAuth.currentUser.uid
       ) {
-        console.log("force", force);
         throw new Error(
           "You cannot remove another user while the sheet contains transactions."
         );
@@ -443,11 +441,6 @@ export const useStore = defineStore("mainStore", {
       return !!fbAuth.currentUser && !!this.fbLedger;
     },
 
-    // async cleanup() {
-    //   await this.subscribeCurrentSheet();
-    //   await this.subscribeFbLedger();
-    // },
-
     getLedgerRef() {
       if (!fbDb) {
         throw new Error("fbDb should be active here.");
@@ -477,71 +470,12 @@ export const useStore = defineStore("mainStore", {
       );
     },
 
-    // async loginUser(email, password) {
-    //   this.requireFb();
-    //   console.log(this.isReady, this.isFbActive());
-    //   console.log("after require");
-    //   await signInWithEmailAndPassword(fbAuth, email, password);
-    //   console.log("signed in");
-    //   await this.subscribeFbLedger();
-    //   console.log("done!");
-    // },
-
-    // async logoutUser() {
-    //   this.requireFb();
-    //   await fbAuth.signOut();
-    //   await this.cleanup();
-    // },
-
-    // async subscribeFbLedger() {
-    //   this.unsubscribeToFbLedger?.();
-    //   this.unsubscribeToFbLedger = null;
-    //   this.fbLedger = null;
-    //   if (!this.isFbActive()) {
-    //     return;
-    //   }
-
-    //   await fbAuth.authStateReady();
-    //   if (!fbAuth.currentUser) {
-    //     return;
-    //   }
-
-    //   console.log("onSnapshot", this.isReady, !!this.fbLedger);
-    //   const ledgerRef = this.getLedgerRef();
-    //   await new Promise((resolve) => {
-    //     this.unsubscribeToFbLedger = onSnapshot(ledgerRef, (doc) => {
-    //       console.log("onSnapshot0");
-    //       const triggerResolve = this.fbLedger === null;
-    //       console.log("onSnapshot1");
-    //       this.fbLedger = doc.data();
-    //       console.log("onSnapshot2");
-
-    //       console.log("onSnapshot3");
-    //       if (triggerResolve) {
-    //         resolve();
-    //       }
-    //     });
-    //   });
-
-    //   console.log("/onSnapshot");
-    //   return;
-    // },
-
-    //////////////////
-
-    // requireFb() {
-    //   if (!this.isFbActive()) {
-    //     throw new Error(
-    //       "I was expecting initialized firebase objects. This is a bug."
-    //     );
-    //   }
-    // },
     isFbActive() {
       return !!fbApp && !!fbAuth && !!fbDb;
     },
 
     async initFb(config = null) {
-      await this.cleanupFb();
+      await this.clearFb();
 
       if (config) {
         this.fbConfig = config;
@@ -550,6 +484,12 @@ export const useStore = defineStore("mainStore", {
         return;
       }
 
+      if (getApps().length) {
+        throw new Error("There should not be firebase instances active");
+      }
+
+      console.log("init fb");
+
       fbApp = initializeApp(this.fbConfig);
       fbAuth = getAuth(fbApp);
       fbDb = initializeFirestore(fbApp, {
@@ -557,76 +497,8 @@ export const useStore = defineStore("mainStore", {
           tabManager: persistentMultipleTabManager(),
         }),
       });
+      console.log("/init fb", this.isFbActive());
     },
-
-    async cleanupFb() {
-      this.cleanup();
-      if (!this.isFbActive()) {
-        return;
-      }
-
-      // Attempt to terminate the Firebase app
-      if (getApps().length) {
-        await deleteApp(fbApp);
-      }
-
-      // Reset Firebase-related properties
-      fbApp = null;
-      fbAuth = null;
-      fbDb = null;
-    },
-
-    /////////////////// TODO remove
-    // async useFb() {
-    //   console.log("useFb");
-    //   if (!this.isFbActive()) {
-    //     console.log("/fbNotActive!");
-    //     return;
-    //   }
-
-    //   console.log("login");
-    //   await signInWithEmailAndPassword(fbAuth, "a@gmail.com", "123456");
-    //   console.log("/login");
-    //   const ledgerRef = this.getLedgerRef();
-    //   const doc = await getDoc(ledgerRef);
-    //   if (doc.exists()) {
-    //     console.log("doc:", doc.data());
-    //   } else {
-    //     console.log("no doc!");
-    //   }
-    //   console.log("logout");
-    //   await fbAuth.signOut();
-    //   console.log("/logout");
-
-    //   console.log("/useFb");
-    // },
-
-    // async debugCleanup() {
-    //   if (fbApp) {
-    //     console.log("remove old", getApps().length)
-    //     await deleteApp(fbApp);
-    //     fbApp = null;
-    //     fbAuth = null;
-    //     fbDb = null;
-    //   }
-    // },
-
-    // async debugInit(config) {
-    //   console.log("init", getApps().length)
-
-    //   fbApp = initializeApp(config);
-    //   fbAuth = getAuth(fbApp);
-    //   // fbDb = initializeFirestore(fbApp, {});
-    //   fbDb = initializeFirestore(fbApp, {
-    //         localCache: persistentLocalCache({
-    //           tabManager: persistentMultipleTabManager(),
-    //         }),
-    //       });
-    //   // await store.initFb(config.value);
-    //   // await  store.useFb();
-    //   console.log("n apps", getApps().length)
-    //   console.log(!!fbApp, !!fbAuth, !!fbDb)
-    // },
 
     clearCurrentSheet() {
       this.unsubscribeToCurrentSheet?.();
@@ -678,20 +550,20 @@ export const useStore = defineStore("mainStore", {
       });
     },
 
-    async setCurrentSheetLedger(sheetid) {
+    async setCurrentSheet(sheetid) {
       if (!this.isFbActive()) {
         throw new Error("firebase should be active here.");
       }
-      if (this.currentSheetLedger) {
-        throw new Error("fbLedger should be null here.");
+      if (this.currentSheet) {
+        throw new Error("currentSheet should be null here.");
       }
       if (!fbAuth.currentUser) {
         throw new Error("we should be logged in here.");
       }
 
       await new Promise((resolve) => {
-        const sheetRef = this.getLedgerRef(sheetid);
-        this.unsubscribeToCurrentSheetLedger = onSnapshot(sheetRef, (doc) => {
+        const sheetRef = this.getSheetRef(sheetid);
+        this.unsubscribeToCurrentSheet = onSnapshot(sheetRef, (doc) => {
           const triggerResolve = !!!this.currentSheet;
           if (doc.exists()) {
             this.currentSheet = doc.data();
@@ -762,7 +634,7 @@ export const useStore = defineStore("mainStore", {
         },
         { merge: true }
       );
-      await this.subscribeFbLedger();
+      await this.setFbLedger();
     },
 
     // utils
@@ -787,6 +659,6 @@ export const useStore = defineStore("mainStore", {
 
   persist: {
     key: "sessionData",
-    pick: ["fbLedger"],
+    pick: ["fbConfig"],
   },
 });

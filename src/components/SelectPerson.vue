@@ -41,7 +41,7 @@
   </q-select>
 </template>
 <script setup>
-import { computed, defineProps, defineEmits } from "vue";
+import { computed } from "vue";
 import { useStore } from "src/stores/store";
 const store = useStore();
 

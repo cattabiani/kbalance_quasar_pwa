@@ -55,7 +55,7 @@
         </q-card-actions>
       </q-form>
 
-      <q-card-actions>
+      <!-- <q-card-actions>
         <q-btn
           v-if="Utils.isDev()"
           label="Use .env Configuration (dev)"
@@ -63,7 +63,7 @@
           class="full-width q-mt-md"
           @click="setDotenvConfig"
         />
-      </q-card-actions>
+      </q-card-actions> -->
     </q-card>
   </q-page>
 </template>
@@ -86,19 +86,6 @@ const config = ref({
   messagingSenderId: store.fbConfig?.messagingSenderId,
   appId: store.fbConfig?.appId,
 });
-
-const setDotenvConfig = () => {
-  if (!Utils.isDev()) {
-    return;
-  }
-  config.value.apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
-  config.value.authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN;
-  config.value.projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
-  config.value.storageBucket = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET;
-  config.value.messagingSenderId =
-    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID;
-  config.value.appId = import.meta.env.VITE_FIREBASE_APP_ID;
-};
 
 const submit = async () => {
   try {

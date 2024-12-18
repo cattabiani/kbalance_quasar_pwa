@@ -165,7 +165,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "src/stores/store.js";
 import { useQuasar } from "quasar";
@@ -187,6 +187,16 @@ const currencySelect = ref(null);
 const debug = () => {
   console.log(tr.value);
 };
+
+watch(
+  () => store.currentSheet, // Watch the `isReady` flag in the store
+  (newValue) => {
+    if (!newValue) {
+      router.push({ name: "IndexPage" });
+    }
+  },
+  { immediate: true } // Run immediately to set the username if already ready
+);
 
 // Map the currency codes into a format compatible with Quasar's q-select
 const currencies = currencyCodes.data.map((currency) => ({

@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import {
   doc,
-  getDoc,
   setDoc,
   onSnapshot,
   deleteField,
@@ -13,7 +12,7 @@ import {
   signInWithEmailAndPassword,
 } from "firebase/auth";
 
-import { initializeApp, deleteApp } from "firebase/app";
+import { initializeApp, deleteApp, getApps } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import {
   initializeFirestore,
@@ -27,11 +26,14 @@ import Transaction from "src/models/transaction";
 import Results from "src/models/results";
 import Person from "src/models/person";
 import Utils from "src/utils/utils";
+import FbConfig from "src/models/fbConfig";
 import _ from "lodash";
 
+// keep these not-reactive and out of the store!
 let fbApp = null;
 let fbAuth = null;
 let fbDb = null;
+// keep these not-reactive and out of the store!
 
 export const useStore = defineStore("mainStore", {
   state: () => ({
@@ -43,7 +45,7 @@ export const useStore = defineStore("mainStore", {
     currentSheet: null,
 
     // firebase
-    fbConfig: null,
+    fbConfig: FbConfig.make(),
     fbAuth: null,
 
     // listeners
@@ -433,6 +435,12 @@ export const useStore = defineStore("mainStore", {
 
     // admin
 
+    setNewConfig(newConfig) {
+      if (FbConfig.isCompatible(newConfig)) {
+        this.fbConfig = newConfig;
+      }
+    },
+
     getCurrentUserId() {
       return fbAuth?.currentUser?.uid;
     },
@@ -488,16 +496,18 @@ export const useStore = defineStore("mainStore", {
         throw new Error("There should not be firebase instances active");
       }
 
-      console.log("init fb");
-
-      fbApp = initializeApp(this.fbConfig);
-      fbAuth = getAuth(fbApp);
-      fbDb = initializeFirestore(fbApp, {
-        localCache: persistentLocalCache({
-          tabManager: persistentMultipleTabManager(),
-        }),
-      });
-      console.log("/init fb", this.isFbActive());
+      try {
+        fbApp = initializeApp(this.fbConfig);
+        fbAuth = getAuth(fbApp);
+        fbDb = initializeFirestore(fbApp, {
+          localCache: persistentLocalCache({
+            tabManager: persistentMultipleTabManager(),
+          }),
+        });
+      } catch (error) {
+        this.config = FbConfig.make();
+        await this.clearFb();
+      }
     },
 
     clearCurrentSheet() {
@@ -561,39 +571,33 @@ export const useStore = defineStore("mainStore", {
         throw new Error("we should be logged in here.");
       }
 
-      await new Promise((resolve) => {
+      let isResolved = false;
+      await new Promise((resolve, reject) => {
         const sheetRef = this.getSheetRef(sheetid);
-        this.unsubscribeToCurrentSheet = onSnapshot(sheetRef, (doc) => {
-          const triggerResolve = !!!this.currentSheet;
-          if (doc.exists()) {
-            this.currentSheet = doc.data();
+        this.unsubscribeToCurrentSheet = onSnapshot(
+          sheetRef,
+          (doc) => {
+            if (doc.exists()) {
+              this.currentSheet = doc.data();
+            } else {
+              this.clearCurrentSheet();
+              if (!isResolved) {
+                isResolved = true;
+                reject(new Error(`Current Sheet ${sheetid} does not exist.`));
+              }
+            }
+
+            if (!isResolved) {
+              isResolved = true;
+              resolve();
+            }
+          },
+          (error) => {
+            isResolved = true;
+            this.clearCurrentSheet();
+            reject(error);
           }
-
-          if (triggerResolve) {
-            resolve();
-          }
-        });
-      });
-    },
-
-    async initFb(config = null) {
-      await this.clearFb();
-      if (config) {
-        this.fbConfig = config;
-      }
-      if (!this.fbConfig) {
-        return;
-      }
-
-      if (this.isFbActive()) {
-        throw new Error("Firebase should not be active here!");
-      }
-      fbApp = initializeApp(this.fbConfig);
-      fbAuth = getAuth(fbApp);
-      fbDb = initializeFirestore(fbApp, {
-        localCache: persistentLocalCache({
-          tabManager: persistentMultipleTabManager(),
-        }),
+        );
       });
     },
 

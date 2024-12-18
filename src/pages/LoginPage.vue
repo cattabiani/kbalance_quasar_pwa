@@ -71,7 +71,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useQuasar } from "quasar";
 import { useStore } from "src/stores/store";
-import { AuthErrorCodes } from "firebase/auth";
+import FbConfig from "src/models/fbConfig";
 
 const store = useStore();
 const $q = useQuasar();
@@ -110,7 +110,7 @@ const submit = async () => {
     });
 
     if (error.code !== "auth/invalid-credential") {
-      store.fbConfig = null;
+      store.fbConfig = FbConfig.make();
       await goToFirebaseSettings();
     }
   }

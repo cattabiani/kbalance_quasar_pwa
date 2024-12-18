@@ -129,6 +129,16 @@ watch(selectedPerson, (newValue) => {
   }
 });
 
+watch(
+  () => store.currentSheet, // Watch the `isReady` flag in the store
+  (newValue) => {
+    if (!newValue) {
+      router.push({ name: "IndexPage" });
+    }
+  },
+  { immediate: true } // Run immediately to set the username if already ready
+);
+
 const resetToFakeUser = () => {
   selectedPerson.value = null;
   editablePerson.value.id = oldPersonId;

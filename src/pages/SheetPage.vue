@@ -232,6 +232,16 @@ const peopleOptions = computed(() => {
 });
 
 watch(
+  () => store.currentSheet, // Watch the `isReady` flag in the store
+  (newValue) => {
+    if (!newValue) {
+      router.push({ name: "IndexPage" });
+    }
+  },
+  { immediate: true } // Run immediately to set the username if already ready
+);
+
+watch(
   () => store.currentSheetLedger, // Watch the `isReady` flag in the store
   (newValue) => {
     name.value = newValue?.name;

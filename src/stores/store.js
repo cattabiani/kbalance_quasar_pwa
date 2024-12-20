@@ -435,10 +435,13 @@ export const useStore = defineStore("mainStore", {
 
     // admin
 
-    setNewConfig(newConfig) {
+    setFbConfig(newConfig) {
       if (FbConfig.isCompatible(newConfig)) {
         this.fbConfig = newConfig;
+        return;
       }
+
+      throw new Error("fbConfig not compatible!");
     },
 
     getCurrentUserId() {

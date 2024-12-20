@@ -1,6 +1,6 @@
 <template>
   <q-page class="flex flex-center">
-    <q-card class="q-pa-md" style="width: 98%">
+    <q-card class="q-pa-md q-mb-md" style="width: 98%">
       <q-card-section class="text-center" style="font-size: 28px">
         Firebase Settings
       </q-card-section>
@@ -52,6 +52,7 @@
 
         <q-card-actions>
           <q-btn
+            icon="send"
             label="Submit"
             color="primary"
             type="submit"
@@ -59,174 +60,97 @@
           />
         </q-card-actions>
       </q-form>
+    </q-card>
+    <q-card class="q-pa-md" style="width: 98%">
       <q-card-actions>
         <q-btn
-          label="Import/Export via String"
+          icon="qr_code"
           color="secondary"
+          label="Share via QR Code / String"
           class="full-width q-mb-md"
-          @click="isImportByStringVisible = !isImportByStringVisible"
+          @click="qrCodeUrl = JSON.stringify(store.fbConfig)"
         />
         <q-btn
-        v-if="!isScanning"
+          icon="qr_code_scanner"
           label="Import via QR code"
           color="secondary"
-          class="full-width"
-          @click="isScanning=true"
+          class="full-width q-mb-md"
+          @click="qrCodeContent = true"
+        />
+        <q-btn
+          icon="text_fields"
+          label="Import via String"
+          color="secondary"
+          class="full-width q-mb-md"
+          @click="importViaString"
+        />
+        <q-input
+          ref="stringRef"
+          class="full-width q-mb-md"
+          outlined
+          label="String Import"
+          v-model="stringImport"
+          @focus="stringRef.select()"
         />
       </q-card-actions>
-    </q-card>
-    <q-card
-      v-if="qrCodeUrl"
-      class="q-my-md"
-      :style="{ width: '100%', height: 'auto' }"
-    >
-      <q-card-section class="text-center" style="font-size: 28px">
-        Share with the QR Code
-      </q-card-section>
-      <q-card-section>
-        <img
-          :src="qrCodeUrl"
-          alt="QR Code"
-          :style="{ width: '100%', height: 'auto' }"
-        />
-      </q-card-section>
     </q-card>
   </q-page>
 
-  <q-dialog
-    v-model="isImportByStringVisible"
-    persistent
-    @before-show="onStringDialogOpen"
-  >
-    <q-card>
-      <q-card-section>
-        <q-input
-          ref="inputRef"
-          v-model="stringDialog"
-          type="textarea"
-          label="Config by String"
-          :autoresize="true"
-        />
-      </q-card-section>
-      <q-card-actions align="center">
-        <q-btn icon="close" color="red" @click="closeStringDialog" />
-        <q-btn icon="check" color="primary" @click="setAndCloseStringDialog" />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+  <ShareQRCodeDialog v-model="qrCodeUrl" />
 
-  <q-dialog
-    v-model="isScanning"
-    persistent
-  >
-    <q-card>
-      <q-card-section>
-        <qrcode-stream
-        @detect="onScanDetect"
-        @init="onScanInit"
-        class="scanner"
-      />
-
-      </q-card-section>
-      <q-card-actions align="center">
-        <q-btn
-        label="Stop Scanning"
-        class="q-mt-md"
-        @click="isScanning = false"
-      />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+  <ReadQRCodeDialog v-model="qrCodeContent" />
 </template>
 
 <script setup>
 import { useRouter } from "vue-router";
-import { useQuasar } from "quasar";
+
 import { useStore } from "src/stores/store";
-import { ref, nextTick, watch } from "vue";
-import FbConfig from "src/models/fbConfig";
-import QRCode from "qrcode";
-import { QrcodeStream } from 'vue-qrcode-reader';
+import { ref, watch } from "vue";
+
+import ShareQRCodeDialog from "src/components/ShareQRCodeDialog.vue";
+import ReadQRCodeDialog from "src/components/ReadQRCodeDialog.vue";
+import { useQuasar } from "quasar";
+const $q = useQuasar();
 
 const store = useStore();
-const $q = useQuasar();
+
 const router = useRouter();
-const isImportByStringVisible = ref(false);
-const inputRef = ref(null);
-const stringDialog = ref("");
-const isScanning = ref(false);
+const stringImport = ref(null);
+const stringRef = ref(null);
 const qrCodeUrl = ref("");
+const qrCodeContent = ref("");
 
-
-
-const onScanDetect = (detectionData) => {
-  if (detectionData && detectionData.length > 0) {
-    const detectedQR = detectionData[0]; 
-    if (detectedQR.rawValue) {
-      store.setNewConfig(JSON.parse(detectedQR.rawValue));
-      isScanning.value = false;
-    } 
+const importViaString = () => {
+  if (!stringImport.value) {
+    $q.notify("String import is empty!");
+    return;
   }
-}
 
-const onScanInit = (promise) => {
-  promise.catch((error) => {
-    isScanning.value = false;
-    $q.notify({
-          message: error.message || error,
-        });
-  });
-}
-
-
-// Compute the options based on the store
-const generateQRCode = () => {
-  if (!FbConfig.isEmpty(store.fbConfig)) {
-    const newCode = JSON.stringify(store.fbConfig);
-
-    QRCode.toDataURL(newCode, (error, url) => {
-      if (error) {
-        $q.notify({
-          message: error.message || error,
-        });
-        console.log("error", error);
-      } else {
-        qrCodeUrl.value = url; // Update the reactive qrCodeUrl reference
-      }
-    });
+  try {
+    store.setNewConfig(JSON.parse(stringImport.value));
+    stringImport.value = null;
+    $q.notify("String import successful!");
+  } catch (error) {
+    $q.notify(error.message || error);
   }
 };
 
 watch(
-  () => store.fbConfig,
-  () => {
-    generateQRCode(); // Call generateQRCode when store.fbConfig changes
+  qrCodeContent,
+  (newValue) => {
+    if (typeof newValue === "string" && newValue.trim()) {
+      try {
+        store.setFbConfig(JSON.parse(newValue));
+      } catch (error) {
+        $q.notify({
+          message: error.message || error,
+        });
+        qrCodeContent.value = null;
+      }
+    }
   },
-  { immediate: true } // Optionally, run it immediately on mount if fbConfig is not empty
+  { immediate: true }
 );
-
-const onStringDialogOpen = () => {
-  if (!FbConfig.isEmpty(store.fbConfig)) {
-    stringDialog.value = JSON.stringify(store.fbConfig);
-  }
-
-  nextTick(() => {
-    inputRef.value?.focus();
-    inputRef.value?.select();
-  });
-};
-
-
-
-const setAndCloseStringDialog = () => {
-  store.setNewConfig(JSON.parse(stringDialog.value));
-
-  closeStringDialog();
-};
-
-const closeStringDialog = () => {
-  isImportByStringVisible.value = false;
-};
 
 const submit = async () => {
   try {

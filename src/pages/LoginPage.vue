@@ -36,6 +36,7 @@
 
         <q-card-actions>
           <q-btn
+            icon="send"
             :label="isRegistering ? 'Register' : 'Login'"
             color="primary"
             type="submit"
@@ -54,12 +55,14 @@
           color="secondary"
           @click="isRegistering = !isRegistering"
           class="full-width q-mt-md"
+          icon="account_circle"
         />
         <q-btn
           label="Firebase Settings"
           color="secondary"
           @click="goToFirebaseSettings"
           class="full-width q-mt-md"
+          icon="settings"
         />
       </q-card-actions>
     </q-card>

@@ -11,51 +11,37 @@
       <q-toolbar-title style="font-size: 28px"> Transaction </q-toolbar-title>
       <q-btn
         flat
-        icon="bug_report"
-        @click="debug()"
-        class="q-ml-md bg-white text-primary"
-        aria-label="Debug"
-      />
-      <q-btn
-        flat
-        :icon="showOnlyActive ? 'visibility_off' : 'visibility'"
-        @click="showOnlyActive = !showOnlyActive"
+        :icon="seeInactive ? 'visibility_off' : 'visibility'"
+        :label="seeInactive ? 'Hide Inactive People' : 'See Inactive People'"
+        @click="seeInactive = !seeInactive"
         class="q-ml-md bg-white text-primary"
         aria-label="Toggle active state"
       />
       <q-btn
         flat
-        icon="close"
-        @click="goBack"
-        class="q-ml-md bg-red text-white"
-        aria-label="Cancel"
-      />
-      <q-btn
-        flat
-        icon="check"
+        icon="done"
+        label="Confirm"
         @click="saveAndGoBack"
-        class="q-ml-md bg-green text-white"
+        class="q-ml-md bg-white text-primary"
         aria-label="Save"
       />
     </q-toolbar>
   </q-header>
   <q-page>
-    <q-card class="q-my-md q-mr-md q-ml-md">
+    <q-card>
       <q-card-section>
         <q-input
           ref="nameInput"
           v-model="tr.name"
-          label="Description"
-          autogrow
+          label="Transaction Name"
           outlined
           @focus="nameInput.select()"
         />
       </q-card-section>
-      <q-card-section
-        class="row"
-        style="justify-content: space-between; align-items: center"
-      >
+
+      <q-card-section class="row" style="align-items: center">
         <q-select
+          class="q-mr-md"
           ref="currencySelect"
           label="Select a Currency"
           filled
@@ -68,33 +54,14 @@
           use-input
           input-debounce="0"
           @filter="filterFn"
+          :style="{ maxWidth: '200px' }"
         />
         <CurrencyInput
-          class="q-ml-md custom-disabled"
           v-model="tr.amount"
           :currency="'XXX'"
-          @change="Transaction.split(tr)"
           style="flex: 1"
+          @update:model-value="split(true)"
         />
-        <q-card-section
-          class="column dense"
-          style="margin-left: auto; text-align: center"
-        >
-          <div class="text-caption">
-            <q-icon name="event" size="sm" class="text-grey-7" />
-          </div>
-          <div class="text-caption">
-            {{ Utils.getYear(tr.timestamp) }}
-          </div>
-        </q-card-section>
-        <q-card-section class="column dense" style="text-align: center">
-          <div class="text-caption">
-            {{ Utils.getMonth(tr.timestamp) }}
-          </div>
-          <div class="text-caption">
-            {{ Utils.getDay(tr.timestamp) }}
-          </div>
-        </q-card-section>
       </q-card-section>
     </q-card>
     <q-list class="q-my-md q-mr-md q-ml-md">
@@ -104,101 +71,59 @@
         :class="index % 2 === 0 ? 'bg-grey-1' : 'bg-white'"
         v-show="
           store.currentSheet.people[id].active ||
-          !showOnlyActive ||
+          seeInactive ||
           tr.payer === index ||
           tr.debts[index].owedAmount !== 0 ||
           tr.debts[index].isDebtor
         "
       >
+        <div class="q-mr-md" style="display: flex; align-items: center">
+          <q-radio
+            v-model="tr.payer"
+            :val="index"
+            @update:model-value="split(false)"
+          />
+        </div>
         <q-item-section>
-          <div
-            class="q-gutter-sm"
-            style="
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-            "
-          >
-            <div style="display: flex; justify-content: flex-start">
-              <q-radio v-model="tr.payer" :val="index" />
-            </div>
-            <div
-              style="
-                display: flex;
-                align-items: center;
-                justify-content: center;
-              "
-            >
-              <q-item-label
-                :style="{
-                  textDecoration:
-                    store.currentSheet.people[id].active === false
-                      ? 'line-through'
-                      : 'none',
-                }"
-                >{{ store.username(id) }}</q-item-label
-              >
-            </div>
-            <div
-              style="
-                display: flex;
-                align-items: center;
-                justify-content: flex-end;
-              "
-            >
-              <q-checkbox
-                v-model="tr.debts[index].isDebtor"
-                class="q-mr-md justify-end"
-                @update:model-value="Transaction.split(tr)"
-              />
-              <q-card flat bordered class="q-pl-sm q-pr-sm">
-                <div>
-                  {{ Utils.displayCurrency("", tr.debts[index].owedAmount) }}
-                </div>
-              </q-card>
-            </div>
-          </div>
+          <person-item :id="id" />
         </q-item-section>
+        <q-checkbox
+          v-model="tr.debts[index].isDebtor"
+          class="q-mr-md"
+          @update:model-value="split(true)"
+        />
+        <CurrencyInput
+          v-model="tr.debts[index].owedAmount"
+          :currency="'XXX'"
+          :style="{ maxWidth: '200px' }"
+          @blur="customEditing(index)"
+        />
       </q-item>
     </q-list>
   </q-page>
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "src/stores/store.js";
 import { useQuasar } from "quasar";
-import Utils from "src/utils/utils";
+import PersonItem from "src/components/PersonItem.vue";
 import CurrencyInput from "src/components/CurrencyInput.vue";
 import currencyCodes from "currency-codes";
 import Transaction from "src/models/transaction";
+import Utils from "src/utils/utils";
+import { ref, watch } from "vue";
 
 const $q = useQuasar();
 const store = useStore();
 const router = useRouter();
 
-// editable transaction
 const tr = ref(store.getEditableTransaction());
-const showOnlyActive = ref(true);
-const nameInput = ref(null);
+const seeInactive = ref(false);
 const currencySelect = ref(null);
+const nameInput = ref(null);
+const isCustomEditing = ref(false);
 
-const debug = () => {
-  console.log(tr.value);
-};
-
-watch(
-  () => store.currentSheet, // Watch the `isReady` flag in the store
-  (newValue) => {
-    if (!newValue) {
-      router.push({ name: "IndexPage" });
-    }
-  },
-  { immediate: true } // Run immediately to set the username if already ready
-);
-
-// Map the currency codes into a format compatible with Quasar's q-select
 const currencies = currencyCodes.data.map((currency) => ({
   label: `${currency.code} - ${currency.currency}`,
   value: currency.code,
@@ -234,6 +159,23 @@ const filterFn = (val, update) => {
   });
 };
 
+const customEditing = (index) => {
+  if (!isCustomEditing.value) {
+    isCustomEditing.value = true;
+    Transaction.clearOwedAmounts(tr.value, index);
+  }
+  if (Transaction.fillLastOwedAmount(tr.value)) {
+    $q.notify("The amount has been increased to match the sum of the shares.");
+  }
+};
+
+const split = (override) => {
+  if (override || !isCustomEditing.value) {
+    isCustomEditing.value = false;
+    Transaction.split(tr.value);
+  }
+};
+
 const goBack = () => {
   store.transactionId = null;
   router.go(-1);
@@ -241,14 +183,16 @@ const goBack = () => {
 
 const saveAndGoBack = async () => {
   try {
+    Transaction.check(tr.value);
     await store.addTransaction(tr.value);
+    store.transactionId = null;
+    goBack();
   } catch (error) {
     $q.notify({
       message: error.message || error,
+      color: "negative",
     });
     return;
   }
-
-  goBack();
 };
 </script>

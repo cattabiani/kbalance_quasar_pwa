@@ -47,20 +47,16 @@
 
       <q-card-actions class="justify-center">
         <q-btn
-          :label="
-            isRegistering
-              ? 'Already have an account? Login'
-              : 'Don\'t have an account? Register'
-          "
+          :label="isRegistering ? 'Go to Login' : 'Go to Register'"
           color="secondary"
           @click="isRegistering = !isRegistering"
           class="full-width q-mt-md"
           icon="account_circle"
         />
         <q-btn
-          label="Firebase Settings"
+          label="Settings"
           color="secondary"
-          @click="goToFirebaseSettings"
+          @click="goToSettings"
           class="full-width q-mt-md"
           icon="settings"
         />
@@ -70,11 +66,14 @@
 </template>
 
 <script setup>
+defineOptions({
+  name: "LoginPage",
+});
+
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useQuasar } from "quasar";
 import { useStore } from "src/stores/store";
-import FbConfig from "src/models/fbConfig";
 
 const store = useStore();
 const $q = useQuasar();
@@ -106,27 +105,29 @@ const submit = async () => {
       await store.login(email.value, password.value);
     }
 
+    await store.init();
     router.push({ name: "IndexPage" });
   } catch (error) {
     $q.notify({
       message: error.message || error,
+      color: "negative",
     });
 
     if (error.code !== "auth/invalid-credential") {
-      store.fbConfig = FbConfig.make();
-      await goToFirebaseSettings();
+      await goToSettings();
     }
   }
 };
 
-const goToFirebaseSettings = async () => {
+const goToSettings = async () => {
   try {
-    await store.clearFb();
+    await store.clearFirebase();
 
-    router.push({ name: "FirebaseSettingsPage" });
+    router.push({ name: "SettingsPage" });
   } catch (error) {
     $q.notify({
       message: error.message || error,
+      color: "negative",
     });
   }
 };

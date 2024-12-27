@@ -4,9 +4,15 @@ const routes = [
     component: () => import("layouts/MainLayout.vue"),
     children: [
       {
-        path: "",
+        path: "/",
         name: "IndexPage",
         component: () => import("pages/IndexPage.vue"),
+        meta: { requiresAuth: true, requiresFirebase: true }, // Protect this route
+      },
+      {
+        path: "/newSheetWizard",
+        name: "NewSheetWizardPage",
+        component: () => import("pages/NewSheetWizardPage.vue"),
         meta: { requiresAuth: true, requiresFirebase: true }, // Protect this route
       },
       {
@@ -33,9 +39,9 @@ const routes = [
         component: () => import("pages/LoginPage.vue"),
       },
       {
-        path: "/firebaseSettings",
-        name: "FirebaseSettingsPage",
-        component: () => import("pages/FirebaseSettingsPage.vue"),
+        path: "/settings",
+        name: "SettingsPage",
+        component: () => import("pages/SettingsPage.vue"),
       },
     ],
   },

@@ -20,16 +20,16 @@
         style="display: flex; justify-content: center; align-items: center"
       >
         <q-btn
-          color="primary"
-          icon="content_copy"
-          @click="copyToClipboard(modelRef)"
-          label="Copy"
-        />
-        <q-btn
           icon="close"
           label="Close"
           color="red"
           @click="modelRef = null"
+        />
+        <q-btn
+          color="primary"
+          icon="content_copy"
+          @click="copyToClipboard(modelRef)"
+          label="Copy"
         />
       </q-card-actions>
     </q-card>

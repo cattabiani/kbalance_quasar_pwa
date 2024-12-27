@@ -1,4 +1,4 @@
-const FbConfig = {
+const Config = {
   make() {
     return {
       apiKey: null,
@@ -8,18 +8,6 @@ const FbConfig = {
       messagingSenderId: null,
       appId: null,
     };
-  },
-
-  isEmpty(config) {
-    return (
-      !!!config &&
-      !!!config?.apiKey &&
-      !!!config?.authDomain &&
-      !!!config?.projectId &&
-      !!!config?.storageBucket &&
-      !!!config?.messagingSenderId &&
-      !!!config?.appId
-    );
   },
 
   isCompatible(config) {
@@ -44,4 +32,4 @@ const FbConfig = {
   },
 };
 
-export default FbConfig;
+export default Config;

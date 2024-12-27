@@ -18,9 +18,65 @@ const Transaction = {
     return { name, id, amount, payer, currency, debts, timestamp };
   },
 
+  // position for the focus person for this transaction
+  position(transaction, idx) {
+    if (transaction.payer === idx) {
+      return transaction.amount - transaction.debts[idx].owedAmount;
+    }
+    return -transaction.debts[idx].owedAmount;
+  },
+
   updatePeople(transaction, nPeople) {
     for (let i = transaction.debts.length; i < nPeople; i++) {
       transaction.debts.push({ isDebtor: false, owedAmount: 0 });
+    }
+  },
+
+  clearOwedAmounts(transaction, id) {
+    transaction.debts.forEach((debt, index) => {
+      if (index !== id) {
+        debt.owedAmount = 0;
+      }
+    });
+  },
+
+  fillLastOwedAmount(transaction) {
+    const zeroDebtors = transaction.debts
+      .map((debt, index) => ({ debt, index }))
+      .filter(({ debt }) => debt.isDebtor && debt.owedAmount === 0);
+    const v = transaction.debts.reduce((acc, debt) => acc + debt.owedAmount, 0);
+    const d = transaction.amount - v;
+    let isAmountChanged = false;
+    if (d < 0) {
+      transaction.amount -= d;
+      isAmountChanged = true;
+    }
+    if (zeroDebtors.length !== 1 || d <= 0) {
+      return isAmountChanged;
+    }
+
+    const { index } = zeroDebtors[0];
+    transaction.debts[index].owedAmount = d;
+    return isAmountChanged;
+  },
+
+  check(transaction) {
+    let v = 0;
+    transaction.debts.forEach((debt, index) => {
+      if (debt.owedAmount > 0 && !debt.isDebtor) {
+        throw new Error(`The person ${index} is not a debtor but owes money!`);
+      }
+      v += debt.owedAmount;
+    });
+
+    if (v !== transaction.amount) {
+      throw new Error(
+        `The owed amounts: ${
+          v / 100
+        } do not sum up to the transaction amount: ${
+          transaction.amount / 100
+        }! Probably you need to fix either the shares or the total amount.`
+      );
     }
   },
 
@@ -36,17 +92,17 @@ const Transaction = {
     const q = Math.floor(transaction.amount / nDebtors);
     let r = transaction.amount % nDebtors;
 
-    for (let i = transaction.debts.length - 1; i >= 0; --i) {
-      if (transaction.debts[i].isDebtor) {
-        transaction.debts[i].owedAmount = q;
-        if (r > 0) {
-          transaction.debts[i].owedAmount += 1;
+    transaction.debts.forEach((debt, index) => {
+      if (debt.isDebtor) {
+        debt.owedAmount = q;
+        if (r > 0 && index !== transaction.payer) {
+          debt.owedAmount += 1;
           --r;
         }
       } else {
-        transaction.debts[i].owedAmount = 0;
+        debt.owedAmount = 0;
       }
-    }
+    });
   },
 };
 

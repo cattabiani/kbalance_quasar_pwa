@@ -12,6 +12,8 @@
 import { useCurrencyInput } from "vue-currency-input";
 import { watch } from "vue";
 
+const emit = defineEmits(["change", "update:modelValue"]);
+
 // Props
 const props = defineProps({
   modelValue: Number,
@@ -22,7 +24,11 @@ const { inputRef, formattedValue, setValue, setOptions } = useCurrencyInput({
   currency: props.currency,
   currencyDisplay: "hidden",
   valueScaling: "precision",
-  allowNegative: false,
+  valueRange: {
+    min: 0,
+    max: undefined,
+  },
+  autoSign: true,
 });
 
 watch(

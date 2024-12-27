@@ -13,7 +13,7 @@ const Utils = {
   },
 
   displayCurrency(currency, amount) {
-    return `${currency} ${parseFloat(amount / 100).toFixed(2)}`;
+    return `${currency} ${parseFloat(amount / 100)}`;
   },
 
   truncate(name) {

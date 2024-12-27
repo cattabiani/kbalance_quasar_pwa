@@ -7,7 +7,7 @@ import {
 } from "vue-router";
 import routes from "./routes";
 import { useStore } from "src/stores/store";
-import { watch } from "vue";
+import { useQuasar } from "quasar";
 
 export default route(() => {
   const createHistory = process.env.SERVER
@@ -23,23 +23,23 @@ export default route(() => {
   });
 
   const store = useStore();
-  let firstPass = true;
+  let isInit = true;
 
   // Protect routes with an auth check
   Router.beforeEach(async (to, from, next) => {
-    if (firstPass) {
-      firstPass = false;
+    if (isInit) {
       await store.init();
+      isInit = false;
     }
 
     if (
       to.matched.some((record) => record.meta.requiresFirebase) &&
-      !store.isFbActive()
+      !store.isFirebaseReady()
     ) {
-      next({ name: "FirebaseSettingsPage" });
+      next({ name: "SettingsPage" });
     } else if (
       to.matched.some((record) => record.meta.requiresAuth) &&
-      !store.isAuthenticated()
+      !store.isReady()
     ) {
       next({ name: "LoginPage" });
     } else {

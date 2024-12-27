@@ -20,7 +20,7 @@ const Utils = {
     if (!name) {
       return name;
     }
-    const maxLength = 40;
+    const maxLength = 13;
     if (name.length > maxLength) {
       return name.substring(0, maxLength - 3) + "...";
     }

@@ -16,7 +16,7 @@
         flat
         class="q-ml-md bg-white text-primary"
         :icon="seeInactive ? 'visibility_off' : 'visibility'"
-        :label="seeInactive ? 'Hide Inactive People' : 'See Inactive People'"
+        :label="seeInactive ? 'Hide' : 'Show'"
         @click="seeInactive = !seeInactive"
       />
       <q-btn

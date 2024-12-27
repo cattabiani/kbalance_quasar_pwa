@@ -23,7 +23,7 @@
       <q-btn
         class="q-ml-md bg-white text-primary"
         icon="note_add"
-        label="Add Transaction"
+        label="Add Entry"
         @click="addTransaction"
       />
     </q-toolbar>

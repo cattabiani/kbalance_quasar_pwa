@@ -6,9 +6,9 @@
       :aria-label="store.isUserOrFriend(props.id) ? 'Real user' : 'Fake user'"
     />
     <div style="display: flex; flex-direction: column; align-items: flex-start">
-      <q-item-label>{{ store.getName(props.id, props?.people) }}</q-item-label>
+      <q-item-label>{{ Utils.truncate(store.getName(props.id, props?.people)) }}</q-item-label>
       <q-item-label v-if="store.isCaption(props.id, props?.people)" caption>{{
-        store.getEmail(props.id, props?.people)
+        Utils.truncate(store.getEmail(props.id, props?.people))
       }}</q-item-label>
     </div>
   </div>
@@ -16,6 +16,7 @@
 
 <script setup>
 import { useStore } from "src/stores/store";
+import Utils from "src/utils/utils";
 const store = useStore();
 
 const props = defineProps({

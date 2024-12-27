@@ -26,9 +26,6 @@
         aria-label="Save"
       />
     </q-toolbar>
-    <q-toolbar>
-      <q-toolbar-title style="font-size: 28px"> Transaction </q-toolbar-title>
-    </q-toolbar>
   </q-header>
   <q-page>
     <q-card>
@@ -57,7 +54,7 @@
           use-input
           input-debounce="0"
           @filter="filterFn"
-          :style="{ maxWidth: '150px' }"
+          :style="{ maxWidth: '130px' }"
         />
         <CurrencyInput
           v-model="tr.amount"
@@ -80,7 +77,7 @@
           tr.debts[index].isDebtor
         "
       >
-        <div class="q-mr-md" style="display: flex; align-items: center">
+        <div class="q-mr-sx" style="display: flex;">
           <q-radio
             v-model="tr.payer"
             :val="index"
@@ -92,7 +89,7 @@
         </q-item-section>
         <q-checkbox
           v-model="tr.debts[index].isDebtor"
-          class="q-mr-md"
+          class="q-mr-sx"
           @update:model-value="split(true)"
         />
         <CurrencyInput

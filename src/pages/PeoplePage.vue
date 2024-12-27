@@ -8,9 +8,7 @@
         aria-label="Go Back"
         class="bg-white text-primary"
       />
-      <q-toolbar-title style="font-size: 28px">
-        People
-      </q-toolbar-title>
+      <q-space/>
       <q-btn
         flat
         class="q-ml-md bg-white text-primary"

@@ -2,8 +2,7 @@
   <q-header elevated class="bg-primary text-white">
     <q-toolbar>
       <q-toolbar-title style="font-size: 28px">
-        index
-        <div class="text-subtitle2">{{ store.user.email }}</div>
+        Index
       </q-toolbar-title>
 
       <q-btn
@@ -27,7 +26,11 @@
 
   <q-page>
     <q-card>
-      <q-card-section class="row q-gutter-sm">
+      <q-card-section class="q-pt-xs q-pb-xs text-grey-7">
+      {{ store.user.email }}
+    </q-card-section>
+
+      <q-card-section class="row q-gutter-sm q-pt-none">
         <q-input
           ref="usernameRef"
           outlined

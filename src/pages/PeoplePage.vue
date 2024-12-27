@@ -10,7 +10,6 @@
       />
       <q-toolbar-title style="font-size: 28px">
         People
-        <div class="text-subtitle2">{{ store.user.email }}</div>
       </q-toolbar-title>
       <q-btn
         flat

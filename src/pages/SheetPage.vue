@@ -18,6 +18,7 @@
         aria-label="Edit people"
       />
       <q-btn
+        flat
         class="q-ml-md bg-white text-primary"
         icon="note_add"
         label="Add Entry"

@@ -8,11 +8,10 @@
         aria-label="Go Back"
         class="bg-white text-primary"
       />
-      <q-toolbar-title style="font-size: 28px">
-        Sheet
-      </q-toolbar-title>
+      <q-space/>
       <q-btn
         flat
+        dense
         icon="people"
         @click="goToPeople"
         label="People"
@@ -21,10 +20,16 @@
       />
       <q-btn
         class="q-ml-md bg-white text-primary"
+        dense
         icon="note_add"
         label="Add Entry"
         @click="addTransaction"
       />
+    </q-toolbar>
+    <q-toolbar>
+      <q-toolbar-title style="font-size: 28px">
+        Sheet
+      </q-toolbar-title>
     </q-toolbar>
   </q-header>
 

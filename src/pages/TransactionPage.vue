@@ -8,7 +8,7 @@
         aria-label="Go Back"
         class="bg-white text-primary"
       />
-      <q-toolbar-title style="font-size: 28px"> Transaction </q-toolbar-title>
+      <q-space/>
       <q-btn
         flat
         :icon="seeInactive ? 'visibility_off' : 'visibility'"
@@ -25,6 +25,9 @@
         class="q-ml-md bg-white text-primary"
         aria-label="Save"
       />
+    </q-toolbar>
+    <q-toolbar>
+      <q-toolbar-title style="font-size: 28px"> Transaction </q-toolbar-title>
     </q-toolbar>
   </q-header>
   <q-page>
@@ -54,7 +57,7 @@
           use-input
           input-debounce="0"
           @filter="filterFn"
-          :style="{ maxWidth: '200px' }"
+          :style="{ maxWidth: '150px' }"
         />
         <CurrencyInput
           v-model="tr.amount"
@@ -95,7 +98,7 @@
         <CurrencyInput
           v-model="tr.debts[index].owedAmount"
           :currency="'XXX'"
-          :style="{ maxWidth: '200px' }"
+          :style="{ maxWidth: '100px' }"
           @blur="customEditing(index)"
         />
       </q-item>

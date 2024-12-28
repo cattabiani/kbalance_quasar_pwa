@@ -8,7 +8,7 @@
         aria-label="Go Back"
         class="bg-white text-primary"
       />
-      <q-space/>
+      <q-space />
       <q-btn
         flat
         icon="people"

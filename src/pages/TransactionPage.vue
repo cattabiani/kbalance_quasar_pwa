@@ -8,7 +8,7 @@
         aria-label="Go Back"
         class="bg-white text-primary"
       />
-      <q-space/>
+      <q-space />
       <q-btn
         flat
         :icon="seeInactive ? 'visibility_off' : 'visibility'"
@@ -77,7 +77,7 @@
           tr.debts[index].isDebtor
         "
       >
-        <div class="q-mr-sx" style="display: flex;">
+        <div class="q-mr-sx" style="display: flex">
           <q-radio
             v-model="tr.payer"
             :val="index"
@@ -85,7 +85,7 @@
           />
         </div>
         <q-item-section>
-          <person-item :id="id" />
+          <person-item :id="id" :max-length="13" />
         </q-item-section>
         <q-checkbox
           v-model="tr.debts[index].isDebtor"

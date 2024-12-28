@@ -15,7 +15,12 @@
       <span v-if="isFixedLabel">{{
         props.isUpgrade ? "Upgrade" : "Add User"
       }}</span>
-      <person-item v-else :id="props.modelValue" :people="props.people" />
+      <person-item
+        v-else
+        :id="props.modelValue"
+        :people="props.people"
+        :max-length="13"
+      />
     </template>
 
     <q-list>
@@ -27,7 +32,7 @@
         :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'"
       >
         <q-item-section>
-          <person-item :id="id" :people="props.people" />
+          <person-item :id="id" :people="props.people" :max-length="13" />
         </q-item-section>
       </q-item>
     </q-list>
@@ -38,8 +43,6 @@
 import Person from "src/models/person";
 import PersonItem from "src/components/PersonItem.vue";
 import { computed, ref } from "vue";
-
-
 
 const addUserRef = ref(null);
 

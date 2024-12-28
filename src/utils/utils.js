@@ -16,11 +16,10 @@ const Utils = {
     return `${currency} ${parseFloat(amount / 100)}`;
   },
 
-  truncate(name) {
-    if (!name) {
+  truncate(name, maxLength = null) {
+    if (!name || !maxLength) {
       return name;
     }
-    const maxLength = 13;
     if (name.length > maxLength) {
       return name.substring(0, maxLength - 3) + "...";
     }

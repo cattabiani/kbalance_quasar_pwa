@@ -1,9 +1,7 @@
 <template>
   <q-header elevated class="bg-primary text-white">
     <q-toolbar>
-      <q-toolbar-title style="font-size: 28px">
-        Index
-      </q-toolbar-title>
+      <q-toolbar-title style="font-size: 28px"> Index </q-toolbar-title>
 
       <q-btn
         flat
@@ -27,8 +25,8 @@
   <q-page>
     <q-card>
       <q-card-section class="q-pt-xs q-pb-xs text-grey-7">
-      {{ store.user.email }}
-    </q-card-section>
+        {{ store.user.email }}
+      </q-card-section>
 
       <q-card-section class="row q-gutter-sm q-pt-none">
         <q-input
@@ -119,14 +117,7 @@
               :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'"
             >
               <q-item-section>
-                <q-item-label>{{
-                  store.getName(id)
-                }}</q-item-label>
-                <q-item-label
-                  v-if="store.isCaption(id)"
-                  caption
-                  >{{ store.getEmail(id) }}</q-item-label
-                >
+                <person-item :id="id" :people="store.friends" />
               </q-item-section>
             </q-item>
           </q-slide-item>
@@ -196,6 +187,7 @@ defineOptions({
 import ShareString from "src/components/ShareString.vue";
 import ReceiveString from "src/components/ReceiveString.vue";
 import AboutContent from "src/components/AboutContent.vue";
+import PersonItem from "src/components/PersonItem.vue";
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
 import { useStore } from "src/stores/store";

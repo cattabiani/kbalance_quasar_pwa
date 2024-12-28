@@ -108,24 +108,24 @@ const installPromptHandler = (event) => {
   notification = $q.notify({
     actions: [
       {
-        label: 'Install',
-        color: 'white',
+        label: "Install",
+        color: "white",
         handler: () => {
           if (event) {
             event.prompt(); // Show the install prompt
             notification.close(); // Dismiss the notification
           }
-        }
+        },
       },
       {
-        label: 'Dismiss',
-        color: 'white',
+        label: "Dismiss",
+        color: "white",
         handler: () => {
           notification.close(); // Dismiss the notification
-        }
-      }
+        },
+      },
     ],
-    timeout: 0,  // Prevent it from auto-closing
+    timeout: 0, // Prevent it from auto-closing
   });
 };
 

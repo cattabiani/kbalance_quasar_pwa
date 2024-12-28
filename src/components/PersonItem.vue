@@ -6,9 +6,11 @@
       :aria-label="store.isUserOrFriend(props.id) ? 'Real user' : 'Fake user'"
     />
     <div style="display: flex; flex-direction: column; align-items: flex-start">
-      <q-item-label>{{ Utils.truncate(store.getName(props.id, props?.people)) }}</q-item-label>
+      <q-item-label>{{
+        Utils.truncate(store.getName(props.id, props?.people), props.maxLength)
+      }}</q-item-label>
       <q-item-label v-if="store.isCaption(props.id, props?.people)" caption>{{
-        Utils.truncate(store.getEmail(props.id, props?.people))
+        Utils.truncate(store.getEmail(props.id, props?.people), props.maxLength)
       }}</q-item-label>
     </div>
   </div>
@@ -26,6 +28,10 @@ const props = defineProps({
   },
   people: {
     type: Object,
+    default: null,
+  },
+  maxLength: {
+    type: Number,
     default: null,
   },
 });

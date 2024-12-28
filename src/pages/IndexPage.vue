@@ -120,13 +120,12 @@
             >
               <q-item-section>
                 <q-item-label>{{
-                  store.userLedger.friends[id].name ||
-                  store.userLedger.friends[id].email
+                  store.getName(id)
                 }}</q-item-label>
                 <q-item-label
-                  v-if="store.userLedger.friends[id].name"
+                  v-if="store.isCaption(id)"
                   caption
-                  >{{ store.userLedger.friends[id].email }}</q-item-label
+                  >{{ store.getEmail(id) }}</q-item-label
                 >
               </q-item-section>
             </q-item>

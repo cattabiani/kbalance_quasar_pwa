@@ -45,7 +45,7 @@ defineOptions({
 import { useRouter } from "vue-router";
 
 import { useStore } from "src/stores/store";
-import { ref, watch } from "vue";
+import { ref, watch, onBeforeUnmount } from "vue";
 
 import ShareString from "src/components/ShareString.vue";
 import ReceiveString from "src/components/ReceiveString.vue";
@@ -101,4 +101,37 @@ const submit = async () => {
     });
   }
 };
+
+const installPromptHandler = (event) => {
+  event.preventDefault(); // Prevent the default prompt from appearing
+
+  notification = $q.notify({
+    actions: [
+      {
+        label: 'Install',
+        color: 'white',
+        handler: () => {
+          if (event) {
+            event.prompt(); // Show the install prompt
+            notification.close(); // Dismiss the notification
+          }
+        }
+      },
+      {
+        label: 'Dismiss',
+        color: 'white',
+        handler: () => {
+          notification.close(); // Dismiss the notification
+        }
+      }
+    ],
+    timeout: 0,  // Prevent it from auto-closing
+  });
+};
+
+window.addEventListener("beforeinstallprompt", installPromptHandler);
+
+onBeforeUnmount(() => {
+  window.removeEventListener("beforeinstallprompt", installPromptHandler);
+});
 </script>

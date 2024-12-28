@@ -90,104 +90,119 @@
       </div>
     </q-card>
     <q-list>
-      <q-item
+      <q-slide-item
         v-for="(id, index) in store.currentSheetTransactions"
         :key="id"
         clickable
         :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'"
         @click="editTransaction(id)"
+        @left="() => removeTransaction(id)"
+        left-color="red"
       >
-        <q-card flat bordered class="q-ml-sm q-mr-sm q-pl-sm q-pr-sm">
-          <q-card-section
-            class="column q-pa-none"
-            style="display: flex; justify-content: center; align-items: center"
-          >
-            <div>
-              {{
-                Utils.getMonth(store.currentSheet.transactions[id].timestamp)
-              }}
-            </div>
-            <div>
-              {{ Utils.getDay(store.currentSheet.transactions[id].timestamp) }}
-            </div>
-          </q-card-section>
-        </q-card>
+        <template v-slot:left>
+          <q-icon name="delete" />
+        </template>
+        <q-item>
+          <q-card flat bordered class="q-ml-sm q-mr-sm q-pl-sm q-pr-sm">
+            <q-card-section
+              class="column q-pa-none"
+              style="
+                display: flex;
+                justify-content: center;
+                align-items: center;
+              "
+            >
+              <div>
+                {{
+                  Utils.getMonth(store.currentSheet.transactions[id].timestamp)
+                }}
+              </div>
+              <div>
+                {{
+                  Utils.getDay(store.currentSheet.transactions[id].timestamp)
+                }}
+              </div>
+            </q-card-section>
+          </q-card>
 
-        <q-item-section>
-          <q-item-label>
-            {{ store.currentSheet.transactions[id].name || "New Transaction" }}
-          </q-item-label>
-          <q-item-label caption>
-            {{ store.getName(store.payerId(id)) }} payed
-            {{
-              Utils.displayCurrency(
-                store.currentSheet.transactions[id].currency,
-                store.currentSheet.transactions[id].amount
-              )
-            }}
-          </q-item-label>
-        </q-item-section>
-        <q-item-section side>
-          <q-item-label
-            caption
-            v-if="
-              Transaction.position(
-                store.currentSheet.transactions[id],
-                selectedPersonIdx
-              ) > 0
-            "
-            :style="{ color: 'green' }"
-          >
-            {{ store.getName(selectedPerson) }} lent
-          </q-item-label>
-          <q-item-label
-            caption
-            v-if="
-              Transaction.position(
-                store.currentSheet.transactions[id],
-                selectedPersonIdx
-              ) < 0
-            "
-            :style="{ color: 'red' }"
-          >
-            {{ store.getName(selectedPerson) }} borrowed
-          </q-item-label>
-          <q-item-label
-            v-if="
-              Transaction.position(
-                store.currentSheet.transactions[id],
-                selectedPersonIdx
-              ) === 0
-            "
-          >
-            Not Involved
-          </q-item-label>
-          <q-item-label
-            v-else
-            :style="{
-              color:
+          <q-item-section>
+            <q-item-label>
+              {{
+                store.currentSheet.transactions[id].name || "New Transaction"
+              }}
+            </q-item-label>
+            <q-item-label caption>
+              {{ store.getName(store.payerId(id)) }} payed
+              {{
+                Utils.displayCurrency(
+                  store.currentSheet.transactions[id].currency,
+                  store.currentSheet.transactions[id].amount
+                )
+              }}
+            </q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <q-item-label
+              caption
+              v-if="
                 Transaction.position(
                   store.currentSheet.transactions[id],
                   selectedPersonIdx
-                ) >= 0
-                  ? 'green'
-                  : 'red',
-            }"
-          >
-            {{
-              Utils.displayCurrency(
-                store.currentSheet.transactions[id].currency,
-                Math.abs(
+                ) > 0
+              "
+              :style="{ color: 'green' }"
+            >
+              {{ store.getName(selectedPerson) }} lent
+            </q-item-label>
+            <q-item-label
+              caption
+              v-if="
+                Transaction.position(
+                  store.currentSheet.transactions[id],
+                  selectedPersonIdx
+                ) < 0
+              "
+              :style="{ color: 'red' }"
+            >
+              {{ store.getName(selectedPerson) }} borrowed
+            </q-item-label>
+            <q-item-label
+              v-if="
+                Transaction.position(
+                  store.currentSheet.transactions[id],
+                  selectedPersonIdx
+                ) === 0
+              "
+            >
+              Not Involved
+            </q-item-label>
+            <q-item-label
+              v-else
+              :style="{
+                color:
                   Transaction.position(
                     store.currentSheet.transactions[id],
                     selectedPersonIdx
+                  ) >= 0
+                    ? 'green'
+                    : 'red',
+              }"
+            >
+              {{
+                Utils.displayCurrency(
+                  store.currentSheet.transactions[id].currency,
+                  Math.abs(
+                    Transaction.position(
+                      store.currentSheet.transactions[id],
+                      selectedPersonIdx
+                    )
                   )
                 )
-              )
-            }}
-          </q-item-label>
-        </q-item-section>
-      </q-item>
+              }}
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+      </q-slide-item>
     </q-list>
   </q-page>
 </template>
@@ -241,6 +256,18 @@ const negativeSummaryDisplay = computed(() => {
     .map(([currency, amount]) => Utils.displayCurrency(currency, -amount)) // Format the string
     .join(" + ");
 });
+
+const removeTransaction = async (id) => {
+  try {
+    store.removeTransaction(id);
+  } catch (error) {
+    $q.notify({
+      message: error.message || error,
+      color: "negative",
+    });
+    return;
+  }
+};
 
 const editTransaction = (id) => {
   store.transactionId = id;

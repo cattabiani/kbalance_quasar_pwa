@@ -174,7 +174,7 @@
                 ) === 0
               "
             >
-              Not Involved
+              {{selectedPersonIdx !== store.currentSheet.transactions[id].payer ? 'Not Involved' : 'Personal Expense'}}
             </q-item-label>
             <q-item-label
               v-else

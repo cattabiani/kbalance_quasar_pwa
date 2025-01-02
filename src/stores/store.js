@@ -53,6 +53,10 @@ export const useStore = defineStore("mainStore", {
   }),
 
   getters: {
+    isSheet() {
+      return this.currentSheet !== null;
+    },
+
     lastCurrency() {
       if (this.currentSheet && this.currentSheetTransactions?.length) {
         return this.currentSheet.transactions[this.currentSheetTransactions[0]]

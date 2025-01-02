@@ -42,6 +42,11 @@ export default route(() => {
       !store.isReady()
     ) {
       next({ name: "LoginPage" });
+    } else if (
+      to.matched.some((record) => record.meta.requiresSheet) &&
+      !store.isSheet
+    ) {
+      next({ name: "IndexPage" });
     } else {
       next();
     }

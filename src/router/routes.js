@@ -19,19 +19,31 @@ const routes = [
         path: "/sheet",
         name: "SheetPage",
         component: () => import("pages/SheetPage.vue"),
-        meta: { requiresAuth: true, requiresFirebase: true }, // Protect this route
+        meta: {
+          requiresAuth: true,
+          requiresFirebase: true,
+          requiresSheet: true,
+        }, // Protect this route
       },
       {
         path: "/sheet/people",
         name: "PeoplePage",
         component: () => import("pages/PeoplePage.vue"),
-        meta: { requiresAuth: true, requiresFirebase: true }, // Protect this route
+        meta: {
+          requiresAuth: true,
+          requiresFirebase: true,
+          requiresSheet: true,
+        }, // Protect this route
       },
       {
         path: "/sheet/transaction",
         name: "TransactionPage",
         component: () => import("pages/TransactionPage.vue"),
-        meta: { requiresAuth: true, requiresFirebase: true }, // Protect this route
+        meta: {
+          requiresAuth: true,
+          requiresFirebase: true,
+          requiresSheet: true,
+        }, // Protect this route
       },
       {
         path: "/login",

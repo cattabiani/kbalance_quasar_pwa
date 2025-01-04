@@ -40,6 +40,7 @@ let db = null;
 export const useStore = defineStore("mainStore", {
   state: () => ({
     transactionId: null,
+    currentSheetId: null,
 
     userLedger: null,
     currentSheet: null,
@@ -475,7 +476,9 @@ export const useStore = defineStore("mainStore", {
         await this.subscribeUserLedger();
       }
 
-      return !!auth?.currentUser && this.userLedger;
+      if (this.currentSheetId) {
+        await this.subscribeCurrentSheet(this.currentSheetId);
+      }
     },
 
     setConfig(newConfig) {
@@ -570,6 +573,7 @@ export const useStore = defineStore("mainStore", {
     clearCurrentSheet() {
       this.unsubscribeCurrentSheet?.();
       this.currentSheet = null;
+      this.currentSheetId = null;
     },
 
     async subscribeCurrentSheet(id) {
@@ -591,6 +595,8 @@ export const useStore = defineStore("mainStore", {
           }
         });
       });
+
+      this.currentSheetId = this.currentSheet.id || null;
     },
 
     async updateFriends(batch = null) {
@@ -655,6 +661,6 @@ export const useStore = defineStore("mainStore", {
 
   persist: {
     key: "sessionData",
-    pick: ["config"],
+    pick: ["config", "currentSheetId", "transactionId"],
   },
 });

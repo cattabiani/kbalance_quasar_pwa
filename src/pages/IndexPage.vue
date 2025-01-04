@@ -135,8 +135,6 @@
         </div>
       </q-tab-panel>
     </q-tab-panels>
-
-    {{ store.currentSheetId || "none" }}
   </q-page>
 
   <share-string v-model="shareString" />

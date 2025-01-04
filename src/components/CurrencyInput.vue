@@ -3,7 +3,7 @@
     ref="inputRef"
     v-model="formattedValue"
     outlined
-    label="Amount"
+    :label="props.label"
     @focus="inputRef.select()"
   />
 </template>
@@ -18,6 +18,7 @@ const emit = defineEmits(["change", "update:modelValue"]);
 const props = defineProps({
   modelValue: Number,
   currency: String,
+  label: String,
 });
 
 const { inputRef, formattedValue, setValue, setOptions } = useCurrencyInput({

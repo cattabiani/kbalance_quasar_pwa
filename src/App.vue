@@ -15,7 +15,7 @@ const store = useStore();
 // });
 
 // Handle cleanup in onBeforeUnmount lifecycle hook
-onBeforeUnmount(async () => {
-  await store.cleanupFb(); // Call the cleanup method in the store to clean up when the app is destroyed
+onBeforeUnmount(() => {
+  store.clearAll(); // Call the cleanup method in the store to clean up when the app is destroyed
 });
 </script>

@@ -545,10 +545,14 @@ export const useStore = defineStore("mainStore", {
       await setDoc(userLedgerRef, UserLedger.make());
     },
 
-    // subscriptionsetUserLe
+    clearAll() {
+      this.clearUserLedger();
+      this.cleacCurrentSheet();
+    },
 
     clearUserLedger() {
       this.unsubscribeUserLedger?.();
+      this.unsubscribeUserLedger = null;
       this.userLedger = null;
     },
 
@@ -572,6 +576,7 @@ export const useStore = defineStore("mainStore", {
 
     clearCurrentSheet() {
       this.unsubscribeCurrentSheet?.();
+      this.unsubscribeCurrentSheet = null;
       this.currentSheet = null;
       this.currentSheetId = null;
     },
@@ -661,6 +666,12 @@ export const useStore = defineStore("mainStore", {
 
   persist: {
     key: "sessionData",
-    pick: ["config", "currentSheetId", "transactionId"],
+    pick: [
+      "config",
+      "currentSheetId",
+      "transactionId",
+      "unsubscribeUserLedger",
+      "unsubscribeCurrentSheet",
+    ],
   },
 });

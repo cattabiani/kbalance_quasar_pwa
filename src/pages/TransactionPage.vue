@@ -60,10 +60,20 @@
           v-model="tr.amount"
           :currency="'XXX'"
           style="flex: 1"
+          label="Amount"
           @update:model-value="split(true)"
         />
       </q-card-section>
+      <q-card-section>
+        <div class="row text-bold">
+          <div class="col-auto q-mr-md q-ml-sm">Payer</div>
+          <div class="col">Person</div>
+          <div class="col-auto q-mr-md">Debtor</div>
+          <div class="col-auto q-mr-lg">Amount</div>
+        </div>
+      </q-card-section>
     </q-card>
+
     <q-list class="q-my-md q-mr-md q-ml-md">
       <q-item
         v-for="(id, index) in store.currentSheetPeople"

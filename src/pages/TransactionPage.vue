@@ -64,6 +64,84 @@
           @update:model-value="split(true)"
         />
       </q-card-section>
+
+      <q-card-section
+        class="q-gutter-md"
+        v-if="store.currentSheetPeople.length === 2"
+      >
+        <div class="column items-center justify-center q-mt-md">
+          <q-btn
+            class="q-pa-xs col"
+            style="width: 80%; margin: 0 auto"
+            @click="splitFor2(0)"
+          >
+            <div class="q-gutter-none">
+              <div class="text-center">You paid, split equally</div>
+              <div class="text-center text-green text-caption">
+                {{ store.getName(otherId) }} owes you
+                {{
+                  Utils.displayCurrency(
+                    tr.currency,
+                    (tr.amount + (tr.amount % 2)) / 2
+                  )
+                }}
+              </div>
+            </div>
+          </q-btn>
+
+          <q-btn
+            class="q-pa-xs col"
+            style="width: 80%; margin: 0 auto"
+            @click="splitFor2(1)"
+          >
+            <div class="q-gutter-none">
+              <div class="text-center">You are owed the full amount</div>
+              <div class="text-center text-green text-caption">
+                {{ store.getName(otherId) }} owes you
+                {{ Utils.displayCurrency(tr.currency, tr.amount) }}
+              </div>
+            </div>
+          </q-btn>
+
+          <q-btn
+            class="q-pa-xs col"
+            style="width: 80%; margin: 0 auto"
+            @click="splitFor2(2)"
+          >
+            <div class="q-gutter-none">
+              <div class="text-center">
+                {{ store.getName(otherId) }} paid, split equally
+              </div>
+              <div class="text-center text-red text-caption">
+                You owe {{ store.getName(otherId) }}
+                {{
+                  Utils.displayCurrency(
+                    tr.currency,
+                    (tr.amount + (tr.amount % 2)) / 2
+                  )
+                }}
+              </div>
+            </div>
+          </q-btn>
+
+          <q-btn
+            class="q-pa-xs col"
+            style="width: 80%; margin: 0 auto"
+            @click="splitFor2(3)"
+          >
+            <div class="q-gutter-none">
+              <div class="text-center">
+                {{ store.getName(otherId) }} is owed the full amount
+              </div>
+              <div class="text-center text-red text-caption">
+                You owe {{ store.getName(otherId) }}
+                {{ Utils.displayCurrency(tr.currency, tr.amount) }}
+              </div>
+            </div>
+          </q-btn>
+        </div>
+      </q-card-section>
+
       <q-card-section>
         <div class="row text-bold">
           <div class="col-auto q-mr-md q-ml-sm">Payer</div>
@@ -134,12 +212,48 @@ const currencySelect = ref(null);
 const nameInput = ref(null);
 const isCustomEditing = ref(false);
 
+const otherId = store.currentSheetPeople.find((item) => item !== store.user.id);
+const otherIdx = store.currentSheetPeople.findIndex(
+  (item) => item !== store.user.id
+);
+const youIdx = store.currentSheetPeople.findIndex(
+  (item) => item === store.user.id
+);
+
 const currencies = currencyCodes.data.map((currency) => ({
   label: `${currency.code} - ${currency.currency}`,
   value: currency.code,
 }));
 
 const currencyOptions = ref(currencies);
+
+const splitFor2 = (idx) => {
+  switch (idx) {
+    case 0:
+      tr.value.payer = youIdx;
+      tr.value.debts[0].isDebtor = true;
+      tr.value.debts[1].isDebtor = true;
+      break;
+    case 1:
+      tr.value.payer = youIdx;
+      tr.value.debts[youIdx].isDebtor = false;
+      tr.value.debts[otherIdx].isDebtor = true;
+      break;
+    case 2:
+      tr.value.payer = otherIdx;
+      tr.value.debts[0].isDebtor = true;
+      tr.value.debts[1].isDebtor = true;
+      break;
+    case 3:
+      tr.value.payer = otherIdx;
+      tr.value.debts[youIdx].isDebtor = true;
+      tr.value.debts[otherIdx].isDebtor = false;
+      break;
+    default:
+      return;
+  }
+  split(true);
+};
 
 const filterFn = (val, update) => {
   if (val === "") {

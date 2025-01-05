@@ -66,7 +66,7 @@
       </q-card-section>
 
       <q-card-section class="column items-center" v-if="tr.debts.length === 2">
-        <q-btn-dropdown :style="{ width: '80%' }">
+        <q-btn-dropdown class="full-width">
           <template v-slot:label>
             <div class="q-gutter-none">
               <div class="text-center">

@@ -65,81 +65,106 @@
         />
       </q-card-section>
 
-      <q-card-section
-        class="q-gutter-md"
-        v-if="store.currentSheetPeople.length === 2"
-      >
-        <div class="column items-center justify-center q-mt-md">
-          <q-btn
-            class="q-pa-xs col"
-            style="width: 80%; margin: 0 auto"
-            @click="splitFor2(0)"
-          >
-            <div class="q-gutter-none">
-              <div class="text-center">You paid, split equally</div>
-              <div class="text-center text-green text-caption">
-                {{ store.getName(otherId) }} owes you
-                {{
-                  Utils.displayCurrency(
-                    tr.currency,
-                    (tr.amount + (tr.amount % 2)) / 2
-                  )
-                }}
-              </div>
-            </div>
-          </q-btn>
-
-          <q-btn
-            class="q-pa-xs col"
-            style="width: 80%; margin: 0 auto"
-            @click="splitFor2(1)"
-          >
-            <div class="q-gutter-none">
-              <div class="text-center">You are owed the full amount</div>
-              <div class="text-center text-green text-caption">
-                {{ store.getName(otherId) }} owes you
-                {{ Utils.displayCurrency(tr.currency, tr.amount) }}
-              </div>
-            </div>
-          </q-btn>
-
-          <q-btn
-            class="q-pa-xs col"
-            style="width: 80%; margin: 0 auto"
-            @click="splitFor2(2)"
-          >
+      <q-card-section class="column items-center" v-if="tr.debts.length === 2">
+        <q-btn-dropdown :style="{ width: '80%' }">
+          <template v-slot:label>
             <div class="q-gutter-none">
               <div class="text-center">
-                {{ store.getName(otherId) }} paid, split equally
+                {{ split2topLine(state2, tr.payer) }}
               </div>
-              <div class="text-center text-red text-caption">
-                You owe {{ store.getName(otherId) }}
-                {{
-                  Utils.displayCurrency(
-                    tr.currency,
-                    (tr.amount + (tr.amount % 2)) / 2
-                  )
-                }}
+              <div
+                class="text-center text-caption"
+                :class="tr.payer === youIdx ? 'text-green' : 'text-red'"
+                v-if="state2 !== -1 && tr.amount !== 0"
+              >
+                {{ split2bottomLine(state2, tr.payer) }}
               </div>
             </div>
-          </q-btn>
+          </template>
 
-          <q-btn
-            class="q-pa-xs col"
-            style="width: 80%; margin: 0 auto"
-            @click="splitFor2(3)"
-          >
-            <div class="q-gutter-none">
-              <div class="text-center">
-                {{ store.getName(otherId) }} is owed the full amount
-              </div>
-              <div class="text-center text-red text-caption">
-                You owe {{ store.getName(otherId) }}
-                {{ Utils.displayCurrency(tr.currency, tr.amount) }}
-              </div>
-            </div>
-          </q-btn>
-        </div>
+          <q-list>
+            <q-item
+              clickable
+              v-close-popup
+              class="bg-white"
+              @click="splitFor2(0)"
+            >
+              <q-item-section>
+                <div class="q-gutter-none">
+                  <div class="text-center">
+                    {{ split2topLine(1, youIdx) }}
+                  </div>
+                  <div
+                    class="text-center text-caption text-green"
+                    v-if="tr.amount"
+                  >
+                    {{ split2bottomLine(1, youIdx) }}
+                  </div>
+                </div>
+              </q-item-section>
+            </q-item>
+            <q-item
+              clickable
+              v-close-popup
+              class="bg-grey-3"
+              @click="splitFor2(1)"
+            >
+              <q-item-section>
+                <div class="q-gutter-none">
+                  <div class="text-center">
+                    {{ split2topLine(0, youIdx) }}
+                  </div>
+                  <div
+                    class="text-center text-caption text-green"
+                    v-if="tr.amount"
+                  >
+                    {{ split2bottomLine(0, youIdx) }}
+                  </div>
+                </div>
+              </q-item-section>
+            </q-item>
+            <q-item
+              clickable
+              v-close-popup
+              class="bg-white"
+              @click="splitFor2(2)"
+            >
+              <q-item-section>
+                <div class="q-gutter-none">
+                  <div class="text-center">
+                    {{ split2topLine(1, otherIdx) }}
+                  </div>
+                  <div
+                    class="text-center text-caption text-red"
+                    v-if="tr.amount"
+                  >
+                    {{ split2bottomLine(1, otherIdx) }}
+                  </div>
+                </div>
+              </q-item-section>
+            </q-item>
+            <q-item
+              clickable
+              v-close-popup
+              class="bg-grey-3"
+              @click="splitFor2(3)"
+            >
+              <q-item-section>
+                <div class="q-gutter-none">
+                  <div class="text-center">
+                    {{ split2topLine(0, otherIdx) }}
+                  </div>
+                  <div
+                    class="text-center text-caption text-red"
+                    v-if="tr.amount"
+                  >
+                    {{ split2bottomLine(0, otherIdx) }}
+                  </div>
+                </div>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
       </q-card-section>
 
       <q-card-section>
@@ -200,7 +225,7 @@ import CurrencyInput from "src/components/CurrencyInput.vue";
 import currencyCodes from "currency-codes";
 import Transaction from "src/models/transaction";
 import Utils from "src/utils/utils";
-import { ref, watch } from "vue";
+import { ref, computed } from "vue";
 
 const $q = useQuasar();
 const store = useStore();
@@ -212,6 +237,13 @@ const currencySelect = ref(null);
 const nameInput = ref(null);
 const isCustomEditing = ref(false);
 
+const currencies = currencyCodes.data.map((currency) => ({
+  label: `${currency.code} - ${currency.currency}`,
+  value: currency.code,
+}));
+
+const currencyOptions = ref(currencies);
+
 const otherId = store.currentSheetPeople.find((item) => item !== store.user.id);
 const otherIdx = store.currentSheetPeople.findIndex(
   (item) => item !== store.user.id
@@ -220,12 +252,44 @@ const youIdx = store.currentSheetPeople.findIndex(
   (item) => item === store.user.id
 );
 
-const currencies = currencyCodes.data.map((currency) => ({
-  label: `${currency.code} - ${currency.currency}`,
-  value: currency.code,
-}));
+const state2 = computed(() => {
+  return Transaction.state(tr.value);
+});
 
-const currencyOptions = ref(currencies);
+const split2topLine = (state, payer) => {
+  switch (state) {
+    case 0:
+      return (
+        (payer === youIdx ? "You are" : `${store.getName(otherId)} is`) +
+        " owed the full amount"
+      );
+    case 1:
+      return (
+        (payer === youIdx ? "You" : store.getName(otherId)) +
+        " paid, split equally"
+      );
+    default:
+      return "Custom";
+  }
+};
+
+const split2bottomLine = (state, payer) => {
+  const amount =
+    state === 0
+      ? tr.value.amount
+      : (tr.value.amount + (tr.value.amount % 2)) / 2;
+  if (payer === youIdx) {
+    return `${store.getName(otherId)} owes you ${Utils.displayCurrency(
+      tr.value.currency,
+      amount
+    )}`;
+  }
+
+  return `You owe ${store.getName(otherId)} ${Utils.displayCurrency(
+    tr.value.currency,
+    amount
+  )}`;
+};
 
 const splitFor2 = (idx) => {
   switch (idx) {

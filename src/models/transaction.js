@@ -104,6 +104,43 @@ const Transaction = {
       }
     });
   },
+
+  state(transaction) {
+    if (transaction.debts.length !== 2) {
+      return -1;
+    }
+
+    if (
+      transaction.debts[0].isDebtor &&
+      !transaction.debts[1].isDebtor &&
+      transaction.payer === 1 &&
+      transaction.debts[0].owedAmount === transaction.amount
+    ) {
+      return 0;
+    }
+
+    if (
+      transaction.debts[1].isDebtor &&
+      !transaction.debts[0].isDebtor &&
+      transaction.payer === 0 &&
+      transaction.debts[1].owedAmount === transaction.amount
+    ) {
+      return 0;
+    }
+
+    if (transaction.debts[0].isDebtor && transaction.debts[1].isDebtor) {
+      const idxOther = 1 - transaction.payer;
+      const valOther = (transaction.amount + (transaction.amount % 2)) / 2;
+      const valPayer = (transaction.amount - (transaction.amount % 2)) / 2;
+      if (
+        transaction.debts[transaction.payer].owedAmount === valPayer &&
+        transaction.debts[idxOther].owedAmount === valOther
+      )
+        return 1;
+    }
+
+    return -1;
+  },
 };
 
 export default Transaction;

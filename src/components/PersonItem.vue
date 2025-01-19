@@ -40,9 +40,9 @@ const isActive = (id) => {
   if (props.people?.[id]?.active === false) {
     return false;
   }
-  if (store.currentSheet?.people?.[id]?.active === false) {
-    return false;
-  }
+  // if (store.currentSheet?.people?.[id]?.active === false) {
+  //   return false;
+  // }
 
   return true;
 };

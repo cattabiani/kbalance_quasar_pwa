@@ -5,8 +5,14 @@
         Settings
       </q-card-section>
 
+      <q-card-section v-if="!Config.isCompatible(store.config)">
+        Welcome to kBalance! First, you need to set up your Firebase account. You can either <strong>import</strong> a friend's settings (and rely on their Firebase account) or create your own. For more info on this second method, check the 
+        <a href="https://github.com/cattabiani/kbalance_quasar_pwa/blob/main/README.md" target="_blank" class="text-primary">kBalance README</a>.
+      </q-card-section>
+
       <q-card-actions>
         <q-btn
+          v-if="Config.isCompatible(store.config)"
           icon="qr_code"
           color="secondary"
           label="Share"

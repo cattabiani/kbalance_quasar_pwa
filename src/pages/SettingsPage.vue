@@ -21,12 +21,12 @@
           @click="isReceiving = true"
         />
         <q-btn
+          v-if="Config.isCompatible(store.config)"
           icon="send"
-          label="Submit"
+          label="Go to Log In"
           color="primary"
           class="full-width"
           @click="submit"
-          :disable="!Config.isCompatible(store.config)"
         />
       </q-card-actions>
     </q-card>

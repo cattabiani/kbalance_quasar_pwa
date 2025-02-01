@@ -31,7 +31,7 @@ Visit [GitHub Pages](https://cattabiani.github.io/kbalance_quasar_pwa/) to use o
   1. Go to [Firebase Console](https://console.firebase.google.com/).  
   2. Create a new project (takes ~5 mins). The free tier is sufficient.  
   3. Enable **Email/Password** under **Authentication**.  
-  4. Set up **Firestore Database** in test mode. For production, secure it using the rules in the [Firestore Security Rules](#closed_lock_with_key-firestore-security-rules) section.  
+  4. Set up **Firestore Database** in test mode. For production, secure it using the rules in the [Firestore Security Rules](#-firestore-security-rules) section.  
   5. Copy the Firebase config keys and pass them to the app via JSON or QR code.  
      - **Note:** Firebase provides these keys in `.env` format, but kBalance requires them in JSON. Use an online converter, an AI, or format them manually.  
   6. (Optional) Share the configuration with friends using the in-app QR code feature for easy onboarding.

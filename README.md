@@ -1,6 +1,6 @@
 # kBalance - Quasar PWA for Balance Sheets Among Friends
 
-**kBalance** is an open-source Progressive Web App (PWA) built with [Quasar](https://quasar.dev/) and powered by [Firebase](https://firebase.google.com/). It allows friends to manage balance sheets effortlessly, offering a simple, privacy-focused alternative to apps like Splitwise—without any payment integrations.
+**kBalance** is an open-source Progressive Web App (PWA) built with [Quasar](https://quasar.dev/) and powered by [Firebase](https://firebase.google.com/). It allows friends to manage balance sheets effortlessly, offering a simple, privacy-focused and free alternative to apps like Splitwise.
 
 ## 🚀 Features
 
@@ -93,6 +93,24 @@ service cloud.firestore {
   }
 }
 ```
+
+## 🚀 Testing Locally and Deployment
+
+To test your application locally, you can use the Quasar development server. Run the following command:
+
+```bash
+quasar dev
+```
+
+This will start the local development server, and you can preview your application in the browser.
+
+Once you're ready to deploy, you can build the app and deploy it with:
+
+```bash
+npm run deploy
+```
+
+This command will build the app for production and deploy it to the [GitHub Pages](https://cattabiani.github.io/kbalance_quasar_pwa/).
 
 ## 📄 License
 

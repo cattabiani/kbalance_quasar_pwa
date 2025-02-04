@@ -3,22 +3,32 @@
     <q-toolbar>
       <q-toolbar-title style="font-size: 28px"> Index </q-toolbar-title>
 
-      <q-btn
-        flat
-        icon="info"
-        label="About"
-        @click="showAbout = true"
-        class="q-ml-md bg-white text-primary"
-        aria-label="About kBalance"
-      />
-      <q-btn
-        flat
-        icon="logout"
-        label="Logout"
-        @click="logout"
-        class="q-ml-md bg-white text-primary"
-        aria-label="Log out"
-      />
+      <q-btn-dropdown icon="settings" flat label="Settings" class="q-ml-md bg-white text-primary">
+        <q-list>
+          <q-item clickable v-ripple @click="shareFirebaseSettings">
+            <q-item-section avatar class="text-primary">
+              <q-icon name="qr_code" />
+            </q-item-section>
+            <q-item-section class="text-primary">
+              <div class="text-center">Share<br>Settings</div>
+            </q-item-section>
+          </q-item>
+          <q-item clickable v-ripple @click="showAbout = true">
+            <q-item-section avatar class="text-primary">
+              <q-icon name="info" />
+            </q-item-section>
+            <q-item-section class="text-primary">About</q-item-section>
+          </q-item>
+          <q-item clickable v-ripple @click="logout">
+            <q-item-section avatar class="text-primary">
+              <q-icon name="logout" />
+            </q-item-section>
+            <q-item-section class="text-primary">Logout</q-item-section>
+          </q-item>
+        </q-list>
+      </q-btn-dropdown>
+
+
     </q-toolbar>
   </q-header>
 
@@ -40,7 +50,7 @@
         />
         <q-btn
           icon="qr_code"
-          label="Share"
+          label="Share User"
           color="primary"
           class="col-auto"
           @click="shareUsername"
@@ -267,6 +277,10 @@ const onLeftFriend = async (id) => {
       color: "negative",
     });
   }
+};
+
+const shareFirebaseSettings = () => {
+  shareString.value = JSON.stringify(store.config);
 };
 
 const shareUsername = () => {

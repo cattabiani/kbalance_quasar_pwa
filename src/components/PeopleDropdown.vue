@@ -13,7 +13,7 @@
   >
     <template #label>
       <span v-if="isFixedLabel">{{
-        props.isUpgrade ? "Upgrade" : "Add User"
+        props.isUpgrade ? 'Upgrade' : 'Add User'
       }}</span>
       <person-item
         v-else
@@ -40,9 +40,9 @@
 </template>
 
 <script setup>
-import Person from "src/models/person";
-import PersonItem from "src/components/PersonItem.vue";
-import { computed, ref } from "vue";
+import Person from 'src/models/person';
+import PersonItem from 'src/components/PersonItem.vue';
+import { computed, ref } from 'vue';
 
 const addUserRef = ref(null);
 
@@ -69,11 +69,11 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["itemClick", "update:modelValue"]);
+const emit = defineEmits(['itemClick', 'update:modelValue']);
 
 const handleClick = (id) => {
-  emit("update:modelValue", id);
-  emit("itemClick", id);
+  emit('update:modelValue', id);
+  emit('itemClick', id);
   addUserRef.value.hide();
 };
 

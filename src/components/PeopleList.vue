@@ -53,19 +53,18 @@
     v-model="editPersonName"
     v-model:isVisible="isEditPersonDialog"
   />
-
 </template>
 
 <script setup>
-import { useRouter } from "vue-router";
-import { useStore } from "src/stores/store.js";
-import { event, useQuasar } from "quasar";
-import { ref, computed, watch } from "vue";
-import ReceiveString from "src/components/ReceiveString.vue";
-import PeopleDropdown from "src/components/PeopleDropdown.vue";
-import PersonItem from "src/components/PersonItem.vue";
-import Person from "src/models/person";
-import _ from "lodash";
+import { useRouter } from 'vue-router';
+import { useStore } from 'src/stores/store.js';
+import { event, useQuasar } from 'quasar';
+import { ref, computed, watch } from 'vue';
+import ReceiveString from 'src/components/ReceiveString.vue';
+import PeopleDropdown from 'src/components/PeopleDropdown.vue';
+import PersonItem from 'src/components/PersonItem.vue';
+import Person from 'src/models/person';
+import _ from 'lodash';
 
 const store = useStore();
 const router = useRouter();
@@ -89,7 +88,7 @@ const peopleList = computed(() => {
     return props.seeInactive || people.value[id].active;
   });
   return filteredPeople.sort(
-    (a, b) => people.value[a].timestamp - people.value[b].timestamp
+    (a, b) => people.value[a].timestamp - people.value[b].timestamp,
   );
 });
 const friends = computed(() => {
@@ -120,8 +119,8 @@ const downgradeUser = (event, id) => {
   const newPerson = Person.make(
     null,
     people.value[id].name,
-    "",
-    people.value[id].timestamp
+    '',
+    people.value[id].timestamp,
   );
   people.value[newPerson.id] = newPerson;
   delete people.value[id];
@@ -140,7 +139,7 @@ const editPerson = (id) => {
 };
 
 const addPerson = () => {
-  editPersonName.value = "";
+  editPersonName.value = '';
   isEditPersonDialog.value = true;
   editPersonId.value = null;
 };
@@ -163,13 +162,13 @@ const removePerson = ({ reset }, id) => {
     if (store.currentSheet) {
       $q.notify({
         message:
-          "You cannot remove yourself from the sheet! Remove the sheet instead.",
-        color: "negative",
+          'You cannot remove yourself from the sheet! Remove the sheet instead.',
+        color: 'negative',
       });
     } else {
       $q.notify({
-        message: "You cannot remove yourself from the sheet!",
-        color: "negative",
+        message: 'You cannot remove yourself from the sheet!',
+        color: 'negative',
       });
     }
 
@@ -179,12 +178,12 @@ const removePerson = ({ reset }, id) => {
   if (store.isPersonFullyRemovable(id)) {
     delete people.value[id];
     $q.notify({
-      message: "Person removed.",
+      message: 'Person removed.',
     });
   } else {
     people.value[id].active = false;
     $q.notify({
-      message: "Person marked as inactive.",
+      message: 'Person marked as inactive.',
     });
     if (props.seeInactive) {
       finalize(reset);
@@ -215,6 +214,6 @@ watch(
       }
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 </script>

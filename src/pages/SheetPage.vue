@@ -128,7 +128,7 @@
           <q-item-section>
             <q-item-label>
               {{
-                store.currentSheet.transactions[id].name || "New Transaction"
+                store.currentSheet.transactions[id].name || 'New Transaction'
               }}
             </q-item-label>
             <q-item-label caption>
@@ -136,7 +136,7 @@
               {{
                 Utils.displayCurrency(
                   store.currentSheet.transactions[id].currency,
-                  store.currentSheet.transactions[id].amount
+                  store.currentSheet.transactions[id].amount,
                 )
               }}
             </q-item-label>
@@ -147,7 +147,7 @@
               v-if="
                 Transaction.position(
                   store.currentSheet.transactions[id],
-                  selectedPersonIdx
+                  selectedPersonIdx,
                 ) > 0
               "
               :style="{ color: 'green' }"
@@ -159,7 +159,7 @@
               v-if="
                 Transaction.position(
                   store.currentSheet.transactions[id],
-                  selectedPersonIdx
+                  selectedPersonIdx,
                 ) < 0
               "
               :style="{ color: 'red' }"
@@ -170,14 +170,14 @@
               v-if="
                 Transaction.position(
                   store.currentSheet.transactions[id],
-                  selectedPersonIdx
+                  selectedPersonIdx,
                 ) === 0
               "
             >
               {{
                 selectedPersonIdx !== store.currentSheet.transactions[id].payer
-                  ? "Not Involved"
-                  : "Personal"
+                  ? 'Not Involved'
+                  : 'Personal'
               }}
             </q-item-label>
             <q-item-label
@@ -186,7 +186,7 @@
                 color:
                   Transaction.position(
                     store.currentSheet.transactions[id],
-                    selectedPersonIdx
+                    selectedPersonIdx,
                   ) >= 0
                     ? 'green'
                     : 'red',
@@ -198,9 +198,9 @@
                   Math.abs(
                     Transaction.position(
                       store.currentSheet.transactions[id],
-                      selectedPersonIdx
-                    )
-                  )
+                      selectedPersonIdx,
+                    ),
+                  ),
                 )
               }}
             </q-item-label>
@@ -213,17 +213,17 @@
 
 <script setup>
 defineOptions({
-  name: "SheetPage",
+  name: 'SheetPage',
 });
 
-import { useQuasar } from "quasar";
-import { useRouter } from "vue-router";
-import { useStore } from "src/stores/store";
-import PeopleDropdown from "src/components/PeopleDropdown.vue";
-import Utils from "src/utils/utils";
-import Transaction from "src/models/transaction";
-import Results from "src/models/results";
-import { ref, watch, computed } from "vue";
+import { useQuasar } from 'quasar';
+import { useRouter } from 'vue-router';
+import { useStore } from 'src/stores/store';
+import PeopleDropdown from 'src/components/PeopleDropdown.vue';
+import Utils from 'src/utils/utils';
+import Transaction from 'src/models/transaction';
+import Results from 'src/models/results';
+import { ref, watch, computed } from 'vue';
 
 const store = useStore();
 const router = useRouter();
@@ -231,13 +231,13 @@ const $q = useQuasar();
 const name = ref(store.userLedger?.sheets[store.currentSheet?.id]?.name);
 const selectedPerson = ref(store.user.id);
 const selectedPersonIdx = computed(() =>
-  store.currentSheetPeople.indexOf(selectedPerson.value)
+  store.currentSheetPeople.indexOf(selectedPerson.value),
 );
 
 const summaries = computed(() => {
   const { ans, totals } = Results.getSummary(
     store.currentSheetResults,
-    selectedPersonIdx.value
+    selectedPersonIdx.value,
   );
 
   const detail = ans.map((item, index) => ({
@@ -251,14 +251,14 @@ const positiveSummaryDisplay = computed(() => {
   return Object.entries(summaries.value.totals)
     .filter(([_, amount]) => amount > 0) // Filter for positive values
     .map(([currency, amount]) => Utils.displayCurrency(currency, amount)) // Format the string
-    .join(" + ");
+    .join(' + ');
 });
 
 const negativeSummaryDisplay = computed(() => {
   return Object.entries(summaries.value.totals)
     .filter(([_, amount]) => amount < 0) // Filter for positive values
     .map(([currency, amount]) => Utils.displayCurrency(currency, -amount)) // Format the string
-    .join(" + ");
+    .join(' + ');
 });
 
 const removeTransaction = async (id) => {
@@ -267,7 +267,7 @@ const removeTransaction = async (id) => {
   } catch (error) {
     $q.notify({
       message: error.message || error,
-      color: "negative",
+      color: 'negative',
     });
     return;
   }
@@ -275,12 +275,12 @@ const removeTransaction = async (id) => {
 
 const editTransaction = (id) => {
   store.transactionId = id;
-  router.push({ name: "TransactionPage" });
+  router.push({ name: 'TransactionPage' });
 };
 
 const addTransaction = () => {
   store.transactionId = null;
-  router.push({ name: "TransactionPage" });
+  router.push({ name: 'TransactionPage' });
 };
 
 const setSheetName = async () => {
@@ -289,13 +289,13 @@ const setSheetName = async () => {
   } catch (error) {
     $q.notify({
       message: error.message || error,
-      color: "negative",
+      color: 'negative',
     });
   }
 };
 
 const goToPeople = () => {
-  router.push({ name: "PeoplePage" });
+  router.push({ name: 'PeoplePage' });
 };
 
 const goBack = () => {
@@ -305,7 +305,7 @@ const goBack = () => {
   } catch (error) {
     $q.notify({
       message: error.message || error,
-      color: "negative",
+      color: 'negative',
     });
     return;
   }
@@ -318,17 +318,17 @@ watch(
       goBack();
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const logout = async () => {
   try {
     await store.logout();
-    router.push({ name: "LoginPage" });
+    router.push({ name: 'LoginPage' });
   } catch (error) {
     $q.notify({
       message: error.message || error,
-      color: "negative",
+      color: 'negative',
     });
     return;
   }
@@ -341,6 +341,6 @@ watch(
       await logout();
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 </script>

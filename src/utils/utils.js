@@ -1,11 +1,11 @@
 const Utils = {
   getDay(dateint) {
     const date = new Date(dateint);
-    return date.getDate().toString().padStart(2, "0");
+    return date.getDate().toString().padStart(2, '0');
   },
   getMonth(dateint) {
     const date = new Date(dateint);
-    return new Intl.DateTimeFormat("en-GB", { month: "short" }).format(date);
+    return new Intl.DateTimeFormat('en-GB', { month: 'short' }).format(date);
   },
   getYear(dateint) {
     const date = new Date(dateint);
@@ -21,7 +21,7 @@ const Utils = {
       return name;
     }
     if (name.length > maxLength) {
-      return name.substring(0, maxLength - 3) + "...";
+      return name.substring(0, maxLength - 3) + '...';
     }
     return name;
   },

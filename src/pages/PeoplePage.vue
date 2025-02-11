@@ -37,14 +37,14 @@
 
 <script setup>
 defineOptions({
-  name: "PeoplePage",
+  name: 'PeoplePage',
 });
 
-import { useQuasar } from "quasar";
-import { useRouter } from "vue-router";
-import { useStore } from "src/stores/store";
-import PeopleList from "src/components/PeopleList.vue";
-import { ref, watch } from "vue";
+import { useQuasar } from 'quasar';
+import { useRouter } from 'vue-router';
+import { useStore } from 'src/stores/store';
+import PeopleList from 'src/components/PeopleList.vue';
+import { ref, watch } from 'vue';
 
 const store = useStore();
 const router = useRouter();
@@ -58,7 +58,7 @@ const confirm = async () => {
   } catch (error) {
     $q.notify({
       message: error.message || error,
-      color: "negative",
+      color: 'negative',
     });
     return;
   }
@@ -76,17 +76,17 @@ watch(
       goBack();
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const logout = async () => {
   try {
     await store.logout();
-    router.push({ name: "LoginPage" });
+    router.push({ name: 'LoginPage' });
   } catch (error) {
     $q.notify({
       message: error.message || error,
-      color: "negative",
+      color: 'negative',
     });
     return;
   }
@@ -99,6 +99,6 @@ watch(
       await logout();
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 </script>

@@ -1,5 +1,5 @@
 const UserLedger = {
-  make(name = "") {
+  make(name = '') {
     return {
       name,
       friends: {},

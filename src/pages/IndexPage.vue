@@ -3,14 +3,19 @@
     <q-toolbar>
       <q-toolbar-title style="font-size: 28px"> Index </q-toolbar-title>
 
-      <q-btn-dropdown icon="settings" flat label="Settings" class="q-ml-md bg-white text-primary">
+      <q-btn-dropdown
+        icon="settings"
+        flat
+        label="Settings"
+        class="q-ml-md bg-white text-primary"
+      >
         <q-list>
           <q-item clickable v-ripple @click="shareFirebaseSettings">
             <q-item-section avatar class="text-primary">
               <q-icon name="qr_code" />
             </q-item-section>
             <q-item-section class="text-primary">
-              <div class="text-center">Share<br>Settings</div>
+              <div class="text-center">Share<br />Settings</div>
             </q-item-section>
           </q-item>
           <q-item clickable v-ripple @click="showAbout = true">
@@ -27,12 +32,29 @@
           </q-item>
         </q-list>
       </q-btn-dropdown>
-
-
     </q-toolbar>
   </q-header>
 
   <q-page>
+    <q-banner
+      v-if="!store.user.emailVerified"
+      dense
+      class="bg-orange-2 text-orange-10 q-mb-md row justify-between"
+    >
+      <q-toolbar>
+        <q-icon name="warning" class="q-mr-sm" />
+        <span class="text-body1 q-mr-auto">Email not verified!</span>
+        <q-btn
+          flat
+          color="orange-10"
+          label="Send Email"
+          icon="email"
+          @click="sendVerificationEmail"
+          class="bg-white"
+        />
+      </q-toolbar>
+    </q-banner>
+
     <q-card>
       <q-card-section class="q-pt-xs q-pb-xs text-grey-7">
         {{ store.user.email }}
@@ -161,11 +183,11 @@
         Confirm Delete
       </q-card-section>
       <q-card-section class="flex flex-center" v-if="nUsers <= 1">
-        {{ "This sheet will be completely deleted. Do you want to proceed?" }}
+        {{ 'This sheet will be completely deleted. Do you want to proceed?' }}
       </q-card-section>
       <q-card-section class="flex flex-center" v-else>
         {{
-          "This sheet will be deleted only for you since there are still some users involved. Do you want to proceed?"
+          'This sheet will be deleted only for you since there are still some users involved. Do you want to proceed?'
         }}
       </q-card-section>
 
@@ -191,28 +213,28 @@
 
 <script setup>
 defineOptions({
-  name: "IndexPage",
+  name: 'IndexPage',
 });
 
-import ShareString from "src/components/ShareString.vue";
-import ReceiveString from "src/components/ReceiveString.vue";
-import AboutContent from "src/components/AboutContent.vue";
-import PersonItem from "src/components/PersonItem.vue";
-import { useQuasar } from "quasar";
-import { useRouter } from "vue-router";
-import { useStore } from "src/stores/store";
-import { ref, watch, computed } from "vue";
+import ShareString from 'src/components/ShareString.vue';
+import ReceiveString from 'src/components/ReceiveString.vue';
+import AboutContent from 'src/components/AboutContent.vue';
+import PersonItem from 'src/components/PersonItem.vue';
+import { useQuasar } from 'quasar';
+import { useRouter } from 'vue-router';
+import { useStore } from 'src/stores/store';
+import { ref, watch, computed } from 'vue';
 
 const store = useStore();
 const router = useRouter();
 const $q = useQuasar();
 const showAbout = ref(false);
-const activeTab = ref("Sheets");
-const receiveString = ref("");
+const activeTab = ref('Sheets');
+const receiveString = ref('');
 const isReceiving = ref(false);
-const username = ref("");
+const username = ref('');
 const usernameRef = ref(null);
-const shareString = ref("");
+const shareString = ref('');
 const editFriendNameId = ref(null);
 const isEditFriendName = ref(false);
 const newFriendName = ref(null);
@@ -220,6 +242,20 @@ const timer = ref(null);
 const nUsers = ref(null);
 const removeSheetId = ref(null);
 const isRemoveSheetDialog = computed(() => removeSheetId.value !== null);
+
+const sendVerificationEmail = async () => {
+  try {
+    await store.sendVerificationEmail();
+    $q.notify({
+      message: 'Email sent!',
+    });
+  } catch (error) {
+    $q.notify({
+      message: error.message || error,
+      color: 'negative',
+    });
+  }
+};
 
 const onLeftSheet = async ({ reset }, id) => {
   try {
@@ -229,7 +265,7 @@ const onLeftSheet = async ({ reset }, id) => {
   } catch (error) {
     $q.notify({
       message: error.message || error,
-      color: "negative",
+      color: 'negative',
     });
   }
 };
@@ -246,7 +282,7 @@ const removeSheet = async () => {
   } catch (error) {
     $q.notify({
       message: error.message || error,
-      color: "negative",
+      color: 'negative',
     });
   }
 };
@@ -259,7 +295,7 @@ const finalize = (reset) => {
 
 const editSheet = async (id) => {
   await store.subscribeCurrentSheet(id);
-  router.push({ name: "SheetPage" });
+  router.push({ name: 'SheetPage' });
 };
 
 const editFriendName = (id) => {
@@ -274,7 +310,7 @@ const onLeftFriend = async (id) => {
   } catch (error) {
     $q.notify({
       message: error.message || error,
-      color: "negative",
+      color: 'negative',
     });
   }
 };
@@ -288,7 +324,7 @@ const shareUsername = () => {
 };
 
 const goToNewSheetWizard = () => {
-  router.push({ name: "NewSheetWizardPage" });
+  router.push({ name: 'NewSheetWizardPage' });
 };
 
 const setUsername = async () => {
@@ -297,7 +333,7 @@ const setUsername = async () => {
   } catch (error) {
     $q.notify({
       message: error.message || error,
-      color: "negative",
+      color: 'negative',
     });
   }
 };
@@ -307,7 +343,7 @@ watch(
   (newValue) => {
     username.value = newValue;
   },
-  { immediate: true } // Run immediately to set the username if already ready
+  { immediate: true }, // Run immediately to set the username if already ready
 );
 
 watch(
@@ -317,16 +353,16 @@ watch(
       try {
         await store.addFriend(JSON.parse(newValue));
 
-        $q.notify({ message: "Friend added successfully!" });
+        $q.notify({ message: 'Friend added successfully!' });
       } catch (error) {
         $q.notify({
           message: error.message || error,
-          color: "negative",
+          color: 'negative',
         });
       }
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 watch(
@@ -338,22 +374,22 @@ watch(
       } catch (error) {
         $q.notify({
           message: error.message || error,
-          color: "negative",
+          color: 'negative',
         });
       }
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const logout = async () => {
   try {
     await store.logout();
-    router.push({ name: "LoginPage" });
+    router.push({ name: 'LoginPage' });
   } catch (error) {
     $q.notify({
       message: error.message || error,
-      color: "negative",
+      color: 'negative',
     });
     return;
   }
@@ -366,6 +402,6 @@ watch(
       await logout();
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 </script>

@@ -6,8 +6,16 @@
       </q-card-section>
 
       <q-card-section v-if="!Config.isCompatible(store.config)">
-        Welcome to kBalance! First, you need to set up your Firebase account. You can either <strong>import</strong> a friend's settings (and rely on their Firebase account) or create your own. For more info on this second method, check the 
-        <a href="https://github.com/cattabiani/kbalance_quasar_pwa/blob/main/README.md" target="_blank" class="text-primary">kBalance README</a>.
+        Welcome to kBalance! First, you need to set up your Firebase account.
+        You can either <strong>import</strong> a friend's settings (and rely on
+        their Firebase account) or create your own. For more info on this second
+        method, check the
+        <a
+          href="https://github.com/cattabiani/kbalance_quasar_pwa/blob/main/README.md"
+          target="_blank"
+          class="text-primary"
+          >kBalance README</a
+        >.
       </q-card-section>
 
       <q-card-actions>
@@ -45,25 +53,25 @@
 
 <script setup>
 defineOptions({
-  name: "SettingsPage",
+  name: 'SettingsPage',
 });
 
-import { useRouter } from "vue-router";
+import { useRouter } from 'vue-router';
 
-import { useStore } from "src/stores/store";
-import { ref, watch, onBeforeUnmount } from "vue";
+import { useStore } from 'src/stores/store';
+import { ref, watch, onBeforeUnmount } from 'vue';
 
-import ShareString from "src/components/ShareString.vue";
-import ReceiveString from "src/components/ReceiveString.vue";
-import Config from "src/models/config";
-import { useQuasar } from "quasar";
+import ShareString from 'src/components/ShareString.vue';
+import ReceiveString from 'src/components/ReceiveString.vue';
+import Config from 'src/models/config';
+import { useQuasar } from 'quasar';
 const $q = useQuasar();
 
 const store = useStore();
 
 const router = useRouter();
-const shareString = ref("");
-const receiveString = ref("");
+const shareString = ref('');
+const receiveString = ref('');
 const isReceiving = ref(false);
 
 const startSharing = () => {
@@ -71,8 +79,8 @@ const startSharing = () => {
     shareString.value = JSON.stringify(store.config);
   } else {
     $q.notify({
-      message: "The current config is corrupted or empty!",
-      color: "negative",
+      message: 'The current config is corrupted or empty!',
+      color: 'negative',
     });
   }
 };
@@ -84,26 +92,26 @@ watch(
       try {
         store.setConfig(JSON.parse(newValue));
 
-        $q.notify({ message: "Config set successfully!" });
+        $q.notify({ message: 'Config set successfully!' });
       } catch (error) {
         $q.notify({
           message: error.message || error,
-          color: "negative",
+          color: 'negative',
         });
       }
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const submit = async () => {
   try {
     await store.init();
-    router.push({ name: "IndexPage" });
+    router.push({ name: 'IndexPage' });
   } catch (error) {
     $q.notify({
       message: error.message || error,
-      color: "negative",
+      color: 'negative',
     });
   }
 };
@@ -114,8 +122,8 @@ const installPromptHandler = (event) => {
   notification = $q.notify({
     actions: [
       {
-        label: "Install",
-        color: "white",
+        label: 'Install',
+        color: 'white',
         handler: () => {
           if (event) {
             event.prompt(); // Show the install prompt
@@ -124,8 +132,8 @@ const installPromptHandler = (event) => {
         },
       },
       {
-        label: "Dismiss",
-        color: "white",
+        label: 'Dismiss',
+        color: 'white',
         handler: () => {
           notification.close(); // Dismiss the notification
         },
@@ -135,9 +143,9 @@ const installPromptHandler = (event) => {
   });
 };
 
-window.addEventListener("beforeinstallprompt", installPromptHandler);
+window.addEventListener('beforeinstallprompt', installPromptHandler);
 
 onBeforeUnmount(() => {
-  window.removeEventListener("beforeinstallprompt", installPromptHandler);
+  window.removeEventListener('beforeinstallprompt', installPromptHandler);
 });
 </script>

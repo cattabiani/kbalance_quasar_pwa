@@ -1,4 +1,4 @@
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia';
 import {
   doc,
   setDoc,
@@ -6,30 +6,34 @@ import {
   onSnapshot,
   deleteField,
   runTransaction,
-} from "firebase/firestore";
+} from 'firebase/firestore';
 // import { db, auth } from "src/firebase/firebase";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-} from "firebase/auth";
+} from 'firebase/auth';
 
-import { initializeApp, deleteApp, getApps } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeApp, deleteApp, getApps } from 'firebase/app';
+import {
+  getAuth,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+} from 'firebase/auth';
 import {
   initializeFirestore,
   persistentLocalCache,
   persistentMultipleTabManager,
   writeBatch,
-} from "firebase/firestore";
+} from 'firebase/firestore';
 
-import Sheet from "src/models/sheet";
-import UserLedger from "src/models/userLedger";
-import Transaction from "src/models/transaction";
-import Results from "src/models/results";
-import Person from "src/models/person";
-import Utils from "src/utils/utils";
-import Config from "src/models/config";
-import _ from "lodash";
+import Sheet from 'src/models/sheet';
+import UserLedger from 'src/models/userLedger';
+import Transaction from 'src/models/transaction';
+import Results from 'src/models/results';
+import Person from 'src/models/person';
+import Utils from 'src/utils/utils';
+import Config from 'src/models/config';
+import _ from 'lodash';
 
 // keep these not-reactive and out of the store!
 let app = null;
@@ -37,7 +41,7 @@ let auth = null;
 let db = null;
 // keep these not-reactive and out of the store!
 
-export const useStore = defineStore("mainStore", {
+export const useStore = defineStore('mainStore', {
   state: () => ({
     transactionId: null,
     currentSheetId: null,
@@ -63,14 +67,15 @@ export const useStore = defineStore("mainStore", {
         return this.currentSheet.transactions[this.currentSheetTransactions[0]]
           .currency;
       }
-      return "USD";
+      return 'USD';
     },
 
     user() {
       return Person.makeUser(
         auth?.currentUser?.uid,
         this.userLedger?.name,
-        auth?.currentUser?.email
+        auth?.currentUser?.email,
+        auth?.currentUser?.emailVerified,
       );
     },
 
@@ -121,7 +126,7 @@ export const useStore = defineStore("mainStore", {
       }
       return Results.make(
         this.currentSheet.transactions,
-        this.currentSheetPeople.length || 0
+        this.currentSheetPeople.length || 0,
       );
     },
   },
@@ -130,7 +135,7 @@ export const useStore = defineStore("mainStore", {
 
     payerId(transactionId) {
       return this.personIdx2Id(
-        this.currentSheet.transactions[transactionId].payer
+        this.currentSheet.transactions[transactionId].payer,
       );
     },
 
@@ -152,7 +157,7 @@ export const useStore = defineStore("mainStore", {
           });
         },
         transaction,
-        batch
+        batch,
       );
     },
 
@@ -166,7 +171,7 @@ export const useStore = defineStore("mainStore", {
           batch.update(sheetRef, { [`transactions.${id}`]: deleteField() });
         },
         id,
-        batch
+        batch,
       );
     },
 
@@ -174,17 +179,17 @@ export const useStore = defineStore("mainStore", {
 
     async setPeople(people, batch = null) {
       if (!this.currentSheet) {
-        throw new Error("Current sheet should be set here.");
+        throw new Error('Current sheet should be set here.');
       }
 
       const users = Object.fromEntries(
         Object.keys(people)
           .filter((id) => this.isUserOrFriend(id))
-          .map((id) => [id, "owner"])
+          .map((id) => [id, 'owner']),
       );
 
       const addUsers = Object.keys(users).filter(
-        (id) => !(id in this.currentSheet.users)
+        (id) => !(id in this.currentSheet.users),
       );
 
       return await this.autoBatch(
@@ -211,7 +216,7 @@ export const useStore = defineStore("mainStore", {
         people,
         users,
         addUsers,
-        batch
+        batch,
       );
     },
 
@@ -225,7 +230,7 @@ export const useStore = defineStore("mainStore", {
         this.currentSheetPeople,
         this.lastCurrency,
         auth.currentUser.uid,
-        this.currentSheet.people
+        this.currentSheet.people,
       );
     },
 
@@ -238,7 +243,7 @@ export const useStore = defineStore("mainStore", {
           });
         },
         newName,
-        batch
+        batch,
       );
     },
 
@@ -300,7 +305,7 @@ export const useStore = defineStore("mainStore", {
       }
 
       return Object.values(this.currentSheet.transactions).every(
-        (obj) => idx >= obj.debts.length
+        (obj) => idx >= obj.debts.length,
       );
     },
 
@@ -309,7 +314,7 @@ export const useStore = defineStore("mainStore", {
       const users = Object.fromEntries(
         Object.keys(people)
           .filter((id) => this.isUserOrFriend(id))
-          .map((id) => [id, "owner"])
+          .map((id) => [id, 'owner']),
       );
       const newSheet = Sheet.make(name, people, users);
       await this.autoBatch(
@@ -317,7 +322,7 @@ export const useStore = defineStore("mainStore", {
           await this.addSheet(newSheet, batch);
         },
         newSheet,
-        batch
+        batch,
       );
       return newSheet;
     },
@@ -342,7 +347,7 @@ export const useStore = defineStore("mainStore", {
         },
         id,
         nUsers,
-        batch
+        batch,
       );
     },
 
@@ -373,7 +378,7 @@ export const useStore = defineStore("mainStore", {
           batch.set(sheetRef, newSheet);
         },
         newSheet,
-        batch
+        batch,
       );
     },
 
@@ -383,7 +388,7 @@ export const useStore = defineStore("mainStore", {
 
     async removeFriend(id, batch = null) {
       if (!(id in this.userLedger.friends)) {
-        throw new Error("This user is not your friend!");
+        throw new Error('This user is not your friend!');
       }
       return await this.autoBatch(
         async (id, batch) => {
@@ -393,7 +398,7 @@ export const useStore = defineStore("mainStore", {
           });
         },
         id,
-        batch
+        batch,
       );
     },
 
@@ -410,16 +415,16 @@ export const useStore = defineStore("mainStore", {
         },
         newName,
         id,
-        batch
+        batch,
       );
     },
 
     async addFriend(newFriend, batch = null) {
       if (newFriend.id in this.userLedger.friends) {
-        throw new Error("This user is already a friend!");
+        throw new Error('This user is already a friend!');
       }
       if (newFriend.id === auth.currentUser.uid) {
-        throw new Error("You cannot add youself as friend!");
+        throw new Error('You cannot add youself as friend!');
       }
 
       return await this.autoBatch(
@@ -435,7 +440,7 @@ export const useStore = defineStore("mainStore", {
           // });
         },
         newFriend,
-        batch
+        batch,
       );
     },
 
@@ -458,7 +463,7 @@ export const useStore = defineStore("mainStore", {
           });
         },
         newName,
-        batch
+        batch,
       );
     },
 
@@ -483,7 +488,7 @@ export const useStore = defineStore("mainStore", {
 
     setConfig(newConfig) {
       if (!Config.isCompatible(newConfig)) {
-        throw new Error("fbConfig not compatible!");
+        throw new Error('fbConfig not compatible!');
       }
       this.config = newConfig;
     },
@@ -494,7 +499,7 @@ export const useStore = defineStore("mainStore", {
       }
       await this.clearFirebase();
       if (getApps().length > 0) {
-        throw new Error("There should not be firebase instances active");
+        throw new Error('There should not be firebase instances active');
       }
 
       app = initializeApp(this.config);
@@ -543,6 +548,14 @@ export const useStore = defineStore("mainStore", {
       // new
       const userLedgerRef = this.getUserLedgerRef();
       await setDoc(userLedgerRef, UserLedger.make());
+    },
+
+    async sendVerificationEmail() {
+      await sendEmailVerification(auth.currentUser);
+    },
+
+    async resetPassword(email) {
+      await sendPasswordResetEmail(auth, email); // Send password reset email
     },
 
     clearAll() {
@@ -627,7 +640,7 @@ export const useStore = defineStore("mainStore", {
           }
         },
         newFriends, // Pass `newFriends` correctly
-        batch
+        batch,
       );
     },
 
@@ -637,11 +650,11 @@ export const useStore = defineStore("mainStore", {
       if (!id) {
         id = auth.currentUser.uid;
       }
-      return doc(db, "users", id);
+      return doc(db, 'users', id);
     },
 
     getSheetRef(id) {
-      return doc(db, "sheets", id);
+      return doc(db, 'sheets', id);
     },
 
     // utils
@@ -665,13 +678,13 @@ export const useStore = defineStore("mainStore", {
   },
 
   persist: {
-    key: "sessionData",
+    key: 'sessionData',
     pick: [
-      "config",
-      "currentSheetId",
-      "transactionId",
-      "unsubscribeUserLedger",
-      "unsubscribeCurrentSheet",
+      'config',
+      'currentSheetId',
+      'transactionId',
+      'unsubscribeUserLedger',
+      'unsubscribeCurrentSheet',
     ],
   },
 });

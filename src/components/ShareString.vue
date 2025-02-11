@@ -37,9 +37,9 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from "vue";
-import QRCode from "qrcode";
-import { useQuasar } from "quasar";
+import { ref, watch, computed } from 'vue';
+import QRCode from 'qrcode';
+import { useQuasar } from 'quasar';
 const $q = useQuasar();
 
 // Props for the value to encode in the QR code
@@ -48,7 +48,7 @@ const props = defineProps({
 });
 
 // Emit event to notify parent of changes
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits(['update:modelValue']);
 
 // Reactive property for the QR code URL
 const qrCodeUrl = ref(null);
@@ -57,7 +57,7 @@ const qrCodeUrl = ref(null);
 const modelRef = computed({
   get: () => props.modelValue,
   set: (value) => {
-    emit("update:modelValue", value);
+    emit('update:modelValue', value);
   },
 });
 
@@ -81,17 +81,17 @@ watch(
       qrCodeUrl.value = null;
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const copyToClipboard = (text) => {
   navigator.clipboard
     .writeText(text)
     .then(() => {
-      $q.notify("Copied to clipboard!");
+      $q.notify('Copied to clipboard!');
     })
     .catch(() => {
-      $q.notify("Failed to copy!");
+      $q.notify('Failed to copy!');
     });
 };
 </script>

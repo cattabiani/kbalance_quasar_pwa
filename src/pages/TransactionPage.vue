@@ -217,15 +217,15 @@
 </template>
 
 <script setup>
-import { useRouter } from "vue-router";
-import { useStore } from "src/stores/store.js";
-import { useQuasar } from "quasar";
-import PersonItem from "src/components/PersonItem.vue";
-import CurrencyInput from "src/components/CurrencyInput.vue";
-import currencyCodes from "currency-codes";
-import Transaction from "src/models/transaction";
-import Utils from "src/utils/utils";
-import { ref, computed } from "vue";
+import { useRouter } from 'vue-router';
+import { useStore } from 'src/stores/store.js';
+import { useQuasar } from 'quasar';
+import PersonItem from 'src/components/PersonItem.vue';
+import CurrencyInput from 'src/components/CurrencyInput.vue';
+import currencyCodes from 'currency-codes';
+import Transaction from 'src/models/transaction';
+import Utils from 'src/utils/utils';
+import { ref, computed } from 'vue';
 
 const $q = useQuasar();
 const store = useStore();
@@ -246,10 +246,10 @@ const currencyOptions = ref(currencies);
 
 const otherId = store.currentSheetPeople.find((item) => item !== store.user.id);
 const otherIdx = store.currentSheetPeople.findIndex(
-  (item) => item !== store.user.id
+  (item) => item !== store.user.id,
 );
 const youIdx = store.currentSheetPeople.findIndex(
-  (item) => item === store.user.id
+  (item) => item === store.user.id,
 );
 
 const state2 = computed(() => {
@@ -260,16 +260,16 @@ const split2topLine = (state, payer) => {
   switch (state) {
     case 0:
       return (
-        (payer === youIdx ? "You are" : `${store.getName(otherId)} is`) +
-        " owed the full amount"
+        (payer === youIdx ? 'You are' : `${store.getName(otherId)} is`) +
+        ' owed the full amount'
       );
     case 1:
       return (
-        (payer === youIdx ? "You" : store.getName(otherId)) +
-        " paid, split equally"
+        (payer === youIdx ? 'You' : store.getName(otherId)) +
+        ' paid, split equally'
       );
     default:
-      return "Custom";
+      return 'Custom';
   }
 };
 
@@ -281,13 +281,13 @@ const split2bottomLine = (state, payer) => {
   if (payer === youIdx) {
     return `${store.getName(otherId)} owes you ${Utils.displayCurrency(
       tr.value.currency,
-      amount
+      amount,
     )}`;
   }
 
   return `You owe ${store.getName(otherId)} ${Utils.displayCurrency(
     tr.value.currency,
-    amount
+    amount,
   )}`;
 };
 
@@ -320,25 +320,25 @@ const splitFor2 = (idx) => {
 };
 
 const filterFn = (val, update) => {
-  if (val === "") {
+  if (val === '') {
     update(() => {
       currencyOptions.value = currencies;
     });
     return;
   }
 
-  tr.value.currency = "";
+  tr.value.currency = '';
   const needle = val.toLowerCase();
   update(() => {
     const filtered = currencies.filter((v) =>
-      v.value.toLowerCase().includes(needle)
+      v.value.toLowerCase().includes(needle),
     );
     currencyOptions.value = filtered;
 
     if (currencyOptions.value.length === 1) {
       tr.value.currency = currencyOptions.value[0].value;
       if (currencySelect.value) {
-        currencySelect.value.updateInputValue(""); // Clear input
+        currencySelect.value.updateInputValue(''); // Clear input
         setTimeout(() => {
           currencySelect.value.hidePopup(); // Close the dropdown
         }, 0);
@@ -353,7 +353,7 @@ const customEditing = (index) => {
     Transaction.clearOwedAmounts(tr.value, index);
   }
   if (Transaction.fillLastOwedAmount(tr.value)) {
-    $q.notify("The amount has been increased to match the sum of the shares.");
+    $q.notify('The amount has been increased to match the sum of the shares.');
   }
 };
 
@@ -378,7 +378,7 @@ const saveAndGoBack = async () => {
   } catch (error) {
     $q.notify({
       message: error.message || error,
-      color: "negative",
+      color: 'negative',
     });
     return;
   }

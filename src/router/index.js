@@ -1,18 +1,18 @@
-import { route } from "quasar/wrappers";
+import { route } from 'quasar/wrappers';
 import {
   createRouter,
   createMemoryHistory,
   createWebHistory,
   createWebHashHistory,
-} from "vue-router";
-import routes from "./routes";
-import { useStore } from "src/stores/store";
-import { useQuasar } from "quasar";
+} from 'vue-router';
+import routes from './routes';
+import { useStore } from 'src/stores/store';
+import { useQuasar } from 'quasar';
 
 export default route(() => {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
-    : process.env.VUE_ROUTER_MODE === "history"
+    : process.env.VUE_ROUTER_MODE === 'history'
     ? createWebHistory
     : createWebHashHistory;
 
@@ -36,17 +36,17 @@ export default route(() => {
       to.matched.some((record) => record.meta.requiresFirebase) &&
       !store.isFirebaseReady()
     ) {
-      next({ name: "SettingsPage" });
+      next({ name: 'SettingsPage' });
     } else if (
       to.matched.some((record) => record.meta.requiresAuth) &&
       !store.isReady()
     ) {
-      next({ name: "LoginPage" });
+      next({ name: 'LoginPage' });
     } else if (
       to.matched.some((record) => record.meta.requiresSheet) &&
       !store.isSheet
     ) {
-      next({ name: "IndexPage" });
+      next({ name: 'IndexPage' });
     } else {
       next();
     }

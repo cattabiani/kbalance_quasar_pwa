@@ -17,8 +17,8 @@
 </template>
 
 <script setup>
-import { useStore } from "src/stores/store";
-import Utils from "src/utils/utils";
+import { useStore } from 'src/stores/store';
+import Utils from 'src/utils/utils';
 const store = useStore();
 
 const props = defineProps({

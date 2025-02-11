@@ -1,9 +1,9 @@
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from 'uuid';
 
 const Transaction = {
   make(peopleids, currency, payerid, people) {
     const nPeople = peopleids.length;
-    let name = "";
+    let name = '';
     const id = uuidv4();
     let amount = 0;
     let payer = peopleids.indexOf(payerid);
@@ -75,7 +75,7 @@ const Transaction = {
           v / 100
         } do not sum up to the transaction amount: ${
           transaction.amount / 100
-        }! Probably you need to fix either the shares or the total amount.`
+        }! Probably you need to fix either the shares or the total amount.`,
       );
     }
   },

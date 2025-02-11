@@ -57,8 +57,8 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from "vue";
-import { useQuasar } from "quasar";
+import { computed, onMounted } from 'vue';
+import { useQuasar } from 'quasar';
 
 // Props for the dialog state
 const props = defineProps({
@@ -69,13 +69,13 @@ const props = defineProps({
 });
 
 // Emit event to notify parent of changes
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits(['update:modelValue']);
 
 // Computed property to handle two-way binding
 const modelValue = computed({
   get: () => props.modelValue,
   set: (value) => {
-    emit("update:modelValue", value);
+    emit('update:modelValue', value);
   },
 });
 
@@ -91,9 +91,9 @@ const $q = useQuasar();
 function checkConnection() {
   if (!navigator.onLine) {
     $q.notify({
-      message: "No internet connection. Some features may not work.",
-      color: "negative",
-      icon: "wifi_off",
+      message: 'No internet connection. Some features may not work.',
+      color: 'negative',
+      icon: 'wifi_off',
     });
   }
 }

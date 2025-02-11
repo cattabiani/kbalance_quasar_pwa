@@ -2,11 +2,20 @@
   <q-page class="flex flex-center">
     <q-card class="q-pa-md" style="width: 80%">
       <q-card-section class="text-center" style="font-size: 28px">
-        {{ isRegistering ? "Register" : "Login" }}
+        {{ isRegistering ? 'Register' : 'Login' }}
       </q-card-section>
 
       <q-form @submit.prevent="submit">
         <q-card-section>
+          <q-banner
+            v-if="isRegistering"
+            dense
+            class="bg-orange-2 text-orange-10 q-mb-md"
+          >
+            <q-icon name="warning" class="q-mr-sm" />
+            Using a fake email is at your own risk—password recovery won't be
+            possible.
+          </q-banner>
           <q-input
             v-model="email"
             label="Email"
@@ -47,6 +56,15 @@
 
       <q-card-actions class="justify-center">
         <q-btn
+          v-if="!isRegistering"
+          label="Forgot your password?"
+          color="primary"
+          @click="resetPassword"
+          class="full-width q-mt-md"
+          icon="key"
+        />
+
+        <q-btn
           :label="isRegistering ? 'Go to Login' : 'Go to Register'"
           color="secondary"
           @click="isRegistering = !isRegistering"
@@ -67,13 +85,13 @@
 
 <script setup>
 defineOptions({
-  name: "LoginPage",
+  name: 'LoginPage',
 });
 
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import { useQuasar } from "quasar";
-import { useStore } from "src/stores/store";
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useQuasar } from 'quasar';
+import { useStore } from 'src/stores/store';
 
 const store = useStore();
 const $q = useQuasar();
@@ -81,19 +99,19 @@ const router = useRouter();
 
 // Reactive states for form fields and register/login toggle
 const isRegistering = ref(false);
-const email = ref("");
-const password = ref("");
-const confirmPassword = ref("");
+const email = ref('');
+const password = ref('');
+const confirmPassword = ref('');
 
 // Validation rules
 const emailRules = [
-  (val) => !!val || "Please enter an email",
-  (val) => /.+@.+\..+/.test(val) || "Please enter a valid email",
+  (val) => !!val || 'Please enter an email',
+  (val) => /.+@.+\..+/.test(val) || 'Please enter a valid email',
 ];
 
 const passwordRules = [
-  (val) => !!val || "Please enter a password",
-  (val) => val.length >= 6 || "Password should be at least 6 characters",
+  (val) => !!val || 'Please enter a password',
+  (val) => val.length >= 6 || 'Password should be at least 6 characters',
 ];
 
 // Handle form submit (login or register)
@@ -106,16 +124,30 @@ const submit = async () => {
     }
 
     await store.init();
-    router.push({ name: "IndexPage" });
+    router.push({ name: 'IndexPage' });
   } catch (error) {
     $q.notify({
       message: error.message || error,
-      color: "negative",
+      color: 'negative',
     });
 
-    if (error.code !== "auth/invalid-credential") {
+    if (error.code !== 'auth/invalid-credential') {
       await goToSettings();
     }
+  }
+};
+
+const resetPassword = async () => {
+  try {
+    await store.resetPassword(email.value);
+    $q.notify({
+      message: 'Email sent!',
+    });
+  } catch (error) {
+    $q.notify({
+      message: error.message || error,
+      color: 'negative',
+    });
   }
 };
 
@@ -123,11 +155,11 @@ const goToSettings = async () => {
   try {
     await store.clearFirebase();
 
-    router.push({ name: "SettingsPage" });
+    router.push({ name: 'SettingsPage' });
   } catch (error) {
     $q.notify({
       message: error.message || error,
-      color: "negative",
+      color: 'negative',
     });
   }
 };

@@ -9,10 +9,10 @@
 </template>
 
 <script setup>
-import { useCurrencyInput } from "vue-currency-input";
-import { watch } from "vue";
+import { useCurrencyInput } from 'vue-currency-input';
+import { watch } from 'vue';
 
-const emit = defineEmits(["change", "update:modelValue"]);
+const emit = defineEmits(['change', 'update:modelValue']);
 
 // Props
 const props = defineProps({
@@ -23,8 +23,8 @@ const props = defineProps({
 
 const { inputRef, formattedValue, setValue, setOptions } = useCurrencyInput({
   currency: props.currency,
-  currencyDisplay: "hidden",
-  valueScaling: "precision",
+  currencyDisplay: 'hidden',
+  valueScaling: 'precision',
   valueRange: {
     min: 0,
     max: undefined,
@@ -36,13 +36,13 @@ watch(
   () => props.modelValue,
   (value) => {
     setValue(value);
-  }
+  },
 );
 
 watch(
   () => props.currency,
   (currency) => {
     setOptions({ currency });
-  }
+  },
 );
 </script>

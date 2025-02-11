@@ -48,15 +48,15 @@
 
 <script setup>
 defineOptions({
-  name: "PeoplePage",
+  name: 'PeoplePage',
 });
 
-import { useQuasar } from "quasar";
-import { useRouter } from "vue-router";
-import { useStore } from "src/stores/store";
-import PeopleList from "src/components/PeopleList.vue";
-import Person from "src/models/person";
-import { ref, watch } from "vue";
+import { useQuasar } from 'quasar';
+import { useRouter } from 'vue-router';
+import { useStore } from 'src/stores/store';
+import PeopleList from 'src/components/PeopleList.vue';
+import Person from 'src/models/person';
+import { ref, watch } from 'vue';
 
 const store = useStore();
 const router = useRouter();
@@ -64,7 +64,7 @@ const $q = useQuasar();
 const userPerson = Person.user2person(store.user);
 const people = ref({ [userPerson.id]: userPerson });
 const seeInactive = ref(true);
-const name = ref("");
+const name = ref('');
 const nameRef = ref(null);
 const formRef = ref(null);
 const peopleListRef = ref(null);
@@ -76,11 +76,11 @@ const goBack = () => {
 const logout = async () => {
   try {
     await store.logout();
-    router.push({ name: "LoginPage" });
+    router.push({ name: 'LoginPage' });
   } catch (error) {
     $q.notify({
       message: error.message || error,
-      color: "negative",
+      color: 'negative',
     });
     return;
   }
@@ -93,7 +93,7 @@ watch(
       await logout();
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const submit = async () => {
@@ -108,15 +108,15 @@ const submit = async () => {
     const newPeople = peopleListRef.value.getPeople();
     const newSheet = await store.addSheetFromNameAndPeople(
       name.value,
-      newPeople
+      newPeople,
     );
     $q.notify(`Sheet ${newSheet.name} added successfully`);
     await store.subscribeCurrentSheet(newSheet.id);
-    router.replace({ name: "SheetPage" });
+    router.replace({ name: 'SheetPage' });
   } catch (error) {
     $q.notify({
       message: error.message || error,
-      color: "negative",
+      color: 'negative',
     });
   }
 };

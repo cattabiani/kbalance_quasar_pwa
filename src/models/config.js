@@ -17,17 +17,17 @@ const Config = {
 
     // Define the required fields
     const requiredFields = [
-      "apiKey",
-      "authDomain",
-      "projectId",
-      "storageBucket",
-      "messagingSenderId",
-      "appId",
+      'apiKey',
+      'authDomain',
+      'projectId',
+      'storageBucket',
+      'messagingSenderId',
+      'appId',
     ];
 
     // Check if all required fields are present and not empty
     return requiredFields.every(
-      (field) => config[field] && config[field].trim() !== ""
+      (field) => config[field] && config[field].trim() !== '',
     );
   },
 };

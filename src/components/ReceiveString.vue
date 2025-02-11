@@ -41,8 +41,8 @@
 </template>
 
 <script setup>
-import { QrcodeStream } from "vue-qrcode-reader";
-import { ref, computed, nextTick, hydrateOnIdle } from "vue";
+import { QrcodeStream } from 'vue-qrcode-reader';
+import { ref, computed, nextTick, hydrateOnIdle } from 'vue';
 
 // Props for the value to encode in the QR code
 const props = defineProps({
@@ -60,17 +60,17 @@ const isScanning = ref(false);
 const inputRef = ref(null);
 
 // Emit event to notify parent of changes
-const emit = defineEmits(["update:modelValue", "update:isVisible"]);
+const emit = defineEmits(['update:modelValue', 'update:isVisible']);
 
 const isVisible = computed({
   get: () => props.isVisible,
   set: (value) => {
-    emit("update:isVisible", value);
+    emit('update:isVisible', value);
   },
 });
 
 const saveAndCloseDialog = () => {
-  emit("update:modelValue", modelRef.value);
+  emit('update:modelValue', modelRef.value);
   closeDialog();
 };
 
@@ -101,7 +101,7 @@ const onScanDetect = (detectionData) => {
 // Handle scan initialization errors
 const onScanInit = (promise) => {
   promise.catch((error) => {
-    modelRef.value = "";
+    modelRef.value = '';
     isScanning.value = false;
     $q.notify({
       message: error.message || error,

@@ -1,7 +1,7 @@
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from 'uuid';
 
 const Person = {
-  make(id = "", name = "", email = "", timestamp = null) {
+  make(id = '', name = '', email = '', timestamp = null) {
     if (!id) {
       id = uuidv4();
     }
@@ -14,8 +14,8 @@ const Person = {
   user2person(user) {
     return this.make(user.id, user.name, user.email);
   },
-  makeUser(id = "", name = "", email = "") {
-    return { id, name, email };
+  makeUser(id = '', name = '', email = '', emailVerified = false) {
+    return { id, name, email, emailVerified };
   },
 
   username(person) {

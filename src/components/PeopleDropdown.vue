@@ -1,19 +1,19 @@
 <template>
-  <q-btn-dropdown
-    v-if="filteredPeople.length"
-    :color="props.isFixedLabel ? 'primary' : void 0"
-    :icon="
-      props.isFixedLabel
-        ? props.isUpgrade
-          ? 'arrow_circle_up'
-          : 'person'
-        : void 0
-    "
-    ref="addUserRef"
-  >
+<q-btn-dropdown
+  v-if="filteredPeople.length"
+  :color="props.fixedLabel ? 'primary' : void 0"
+  :icon="
+    Boolean(props.fixedLabel)
+      ? props.fixedLabel === 'Upgrade'
+        ? 'arrow_circle_up'
+        : 'person'
+      : void 0
+  "
+  ref="addUserRef"
+>
     <template #label>
-      <span v-if="isFixedLabel">{{
-        props.isUpgrade ? 'Upgrade' : 'Add User'
+      <span v-if="fixedLabel">{{
+        props.fixedLabel
       }}</span>
       <person-item
         v-else
@@ -55,17 +55,13 @@ const props = defineProps({
     type: Object,
     default: null,
   },
-  isUpgrade: {
-    type: Boolean,
-    default: false,
+  fixedLabel: {
+    type: String,
+    default: null,
   },
   modelValue: {
     type: String,
     default: null,
-  },
-  isFixedLabel: {
-    type: Boolean,
-    default: true,
   },
 });
 

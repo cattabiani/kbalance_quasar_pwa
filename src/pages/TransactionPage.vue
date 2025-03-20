@@ -170,29 +170,25 @@
       <q-card-section>
         <div class="row text-bold">
           <div class="col-auto no-wrap q-mr-md q-ml-sm">
-            <div>Payer</div>
             <people-dropdown
               class="col-auto"
               v-model="payer"
               :people="store.currentSheet.people"
-              :is-fixed-label="false"
+              fixed-label="Payer"
             />
           </div>
           <div class="col">
-            <div>Person</div>
             <q-btn icon="swap_horiz" @click="swapPayerDebtor" />
           </div>
           <div class="col-auto q-mr-md">
-            <div>Debtor</div>
 
             <people-dropdown
               class="col-auto"
               v-model="debtor"
               :people="store.currentSheet.people"
-              :is-fixed-label="false"
+              fixed-label="Debtor"
             />
           </div>
-          <div class="col-auto q-mr-lg">Amount</div>
         </div>
       </q-card-section>
     </q-card>

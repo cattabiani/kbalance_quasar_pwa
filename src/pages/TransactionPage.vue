@@ -169,7 +169,7 @@
 
       <q-card-section>
         <div class="row text-bold">
-          <div class="col-auto q-mr-md q-ml-sm">
+          <div class="col-auto no-wrap q-mr-md q-ml-sm">
             <div>Payer</div>
             <people-dropdown
               class="col-auto"

@@ -271,7 +271,7 @@ export const useStore = defineStore('mainStore', {
       if (people === null) {
         people = this.currentSheet?.people;
       }
-      return !!people[id].name;
+      return !!people[id]?.name;
     },
 
     getEmail(id, people = null) {
@@ -284,7 +284,7 @@ export const useStore = defineStore('mainStore', {
       if (people === null) {
         people = this.currentSheet?.people;
       }
-      return people[id].email;
+      return people[id]?.email;
     },
 
     isPersonFullyRemovable(id) {

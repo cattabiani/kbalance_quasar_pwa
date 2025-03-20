@@ -169,9 +169,29 @@
 
       <q-card-section>
         <div class="row text-bold">
-          <div class="col-auto q-mr-md q-ml-sm">Payer</div>
-          <div class="col">Person</div>
-          <div class="col-auto q-mr-md">Debtor</div>
+          <div class="col-auto q-mr-md q-ml-sm">
+            <div>Payer</div>
+            <people-dropdown
+              class="col-auto"
+              v-model="payer"
+              :people="store.currentSheet.people"
+              :is-fixed-label="false"
+            />
+          </div>
+          <div class="col">
+            <div>Person</div>
+            <q-btn icon="swap_horiz" @click="swapPayerDebtor" />
+          </div>
+          <div class="col-auto q-mr-md">
+            <div>Debtor</div>
+
+            <people-dropdown
+              class="col-auto"
+              v-model="debtor"
+              :people="store.currentSheet.people"
+              :is-fixed-label="false"
+            />
+          </div>
           <div class="col-auto q-mr-lg">Amount</div>
         </div>
       </q-card-section>
@@ -220,6 +240,7 @@
 import { useRouter } from 'vue-router';
 import { useStore } from 'src/stores/store.js';
 import { useQuasar } from 'quasar';
+import PeopleDropdown from 'src/components/PeopleDropdown.vue';
 import PersonItem from 'src/components/PersonItem.vue';
 import CurrencyInput from 'src/components/CurrencyInput.vue';
 import currencyCodes from 'currency-codes';
@@ -236,6 +257,47 @@ const seeInactive = ref(false);
 const currencySelect = ref(null);
 const nameInput = ref(null);
 const isCustomEditing = ref(false);
+
+const payer = computed({
+  get: () => store.personIdx2Id(tr.value.payer) || '',
+  set: (newValue) => {
+    tr.value.payer = store.personId2Idx(newValue);
+  },
+});
+
+const debtor = computed({
+  get: () => {
+    const debtorIndexes = tr.value.debts
+      .map((debt, idx) => (debt.isDebtor ? idx : -1))
+      .filter((idx) => idx !== -1);
+
+    return debtorIndexes.length === 1
+      ? store.personIdx2Id(debtorIndexes[0])
+      : null;
+  },
+  set: (newValue) => {
+    const newIdx = store.personId2Idx(newValue);
+
+    tr.value.debts.forEach((debt, idx) => {
+      debt.isDebtor = idx === newIdx;
+    });
+    split(false);
+  },
+});
+
+const swapPayerDebtor = () => {
+  if (debtor.value !== null) {
+    if (payer.value === debtor.value) return;
+    const payerIdx = store.personId2Idx(payer.value);
+    const debtorIdx = store.personId2Idx(debtor.value);
+
+    tr.value.payer = debtorIdx;
+    tr.value.debts.forEach((debt, idx) => {
+      debt.isDebtor = idx === payerIdx;
+    });
+    split(false);
+  }
+};
 
 const currencies = currencyCodes.data.map((currency) => ({
   label: `${currency.code} - ${currency.currency}`,

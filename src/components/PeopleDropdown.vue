@@ -1,20 +1,18 @@
 <template>
-<q-btn-dropdown
-  v-if="filteredPeople.length"
-  :color="props.fixedLabel ? 'primary' : void 0"
-  :icon="
-    Boolean(props.fixedLabel)
-      ? props.fixedLabel === 'Upgrade'
-        ? 'arrow_circle_up'
-        : 'person'
-      : void 0
-  "
-  ref="addUserRef"
->
+  <q-btn-dropdown
+    v-if="filteredPeople.length"
+    :color="props.fixedLabel ? 'primary' : void 0"
+    :icon="
+      Boolean(props.fixedLabel)
+        ? props.fixedLabel === 'Upgrade'
+          ? 'arrow_circle_up'
+          : 'person'
+        : void 0
+    "
+    ref="addUserRef"
+  >
     <template #label>
-      <span v-if="fixedLabel">{{
-        props.fixedLabel
-      }}</span>
+      <span v-if="fixedLabel">{{ props.fixedLabel }}</span>
       <person-item
         v-else
         :id="props.modelValue"
@@ -51,6 +49,10 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  sortedPeople: {
+    type: Array,
+    default: null,
+  },
   ignoredPeople: {
     type: Object,
     default: null,
@@ -74,10 +76,24 @@ const handleClick = (id) => {
 };
 
 const filteredPeople = computed(() => {
-  // Filter the friends who are not in people.value
-  return Object.values(props.people)
-    .filter((value) => !(value.id in (props?.ignoredPeople ?? {}))) // Exclude friends already in people.value
-    .sort((a, b) => Person.compare(a, b)) // Sort by Person.compare
-    .map((value) => value.id); // Extract only the IDs
+  let peopleList = Object.values(props.people).filter(
+    (value) => !(value.id in (props?.ignoredPeople ?? {})),
+  ); // Exclude ignored people
+
+  if (props.sortedPeople) {
+    // Sort based on sortedPeople order
+    const orderMap = new Map(
+      props.sortedPeople.map((id, index) => [id, index]),
+    );
+    peopleList.sort(
+      (a, b) =>
+        (orderMap.get(a.id) ?? Infinity) - (orderMap.get(b.id) ?? Infinity),
+    );
+  } else {
+    // Default sorting
+    peopleList.sort((a, b) => Person.compare(a, b));
+  }
+
+  return peopleList.map((value) => value.id); // Extract only the IDs
 });
 </script>

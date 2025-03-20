@@ -35,7 +35,7 @@
           v-if="store.currentSheet"
           v-model="selectedPerson"
           :people="store.currentSheet.people"
-          :is-fixed-label="false"
+          :sorted-people="store.currentSheetPeople"
         />
         <q-input
           class="col"

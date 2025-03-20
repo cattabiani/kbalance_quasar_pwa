@@ -27,6 +27,7 @@
           @itemClick="(newid) => upgradeToUser(id, newid)"
           is-upgrade
           @click="stopPropagation($event)"
+          fixed-label="Upgrade"
         />
         <q-btn
           v-if="store.isUserOrFriend(id) && store.isPersonFullyRemovable(id)"
@@ -44,6 +45,7 @@
       :people="store.userLedger.friends"
       :ignored-people="people"
       @itemClick="addUser"
+      fixed-label="User"
     />
     <q-btn color="grey" icon="person" label="Add Person" @click="addPerson" />
   </div>

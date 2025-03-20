@@ -167,28 +167,37 @@
         </q-btn-dropdown>
       </q-card-section>
 
+      <q-card-section
+        class="row justify-center items-center"
+        v-if="tr.debts.length > 2"
+      >
+        <people-dropdown
+          class="col-auto q-mr-sm"
+          v-model="payer"
+          :people="store.currentSheet.people"
+          :sorted-people="store.currentSheetPeople"
+          fixed-label="Payer"
+        />
+        <q-btn
+          class="col-auto q-mr-sm"
+          icon="swap_horiz"
+          @click="swapPayerDebtor"
+        />
+        <people-dropdown
+          class="col-auto"
+          v-model="debtor"
+          :people="store.currentSheet.people"
+          :sorted-people="store.currentSheetPeople"
+          fixed-label="Debtor"
+        />
+      </q-card-section>
+
       <q-card-section>
         <div class="row text-bold">
-          <div class="col-auto no-wrap q-mr-md q-ml-sm">
-            <people-dropdown
-              class="col-auto"
-              v-model="payer"
-              :people="store.currentSheet.people"
-              fixed-label="Payer"
-            />
-          </div>
-          <div class="col">
-            <q-btn icon="swap_horiz" @click="swapPayerDebtor" />
-          </div>
-          <div class="col-auto q-mr-md">
-
-            <people-dropdown
-              class="col-auto"
-              v-model="debtor"
-              :people="store.currentSheet.people"
-              fixed-label="Debtor"
-            />
-          </div>
+          <div class="col-auto q-mr-md q-ml-sm">Payer</div>
+          <div class="col">Person</div>
+          <div class="col-auto q-mr-md">Debtor</div>
+          <div class="col-auto q-mr-lg">Amount</div>
         </div>
       </q-card-section>
     </q-card>

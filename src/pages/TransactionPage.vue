@@ -22,7 +22,7 @@
         icon="done"
         label="Confirm"
         @click="saveAndGoBack"
-        class="q-ml-md bg-white text-primary"
+        class="q-ml-md bg-secondary text-white"
         aria-label="Save"
       />
     </q-toolbar>
@@ -238,6 +238,26 @@
         />
       </q-item>
     </q-list>
+    <q-card>
+      <q-card-section class="row justify-center items-center">
+        <q-btn
+          flat
+          icon="done"
+          label="Cancel"
+          @click="saveAndGoBack"
+          class="q-ml-md bg-red text-white"
+          aria-label="Save"
+        />
+        <q-btn
+          flat
+          icon="done"
+          label="Confirm"
+          @click="saveAndGoBack"
+          class="q-ml-md bg-secondary text-white"
+          aria-label="Save"
+        />
+      </q-card-section>
+    </q-card>
   </q-page>
 </template>
 
@@ -251,7 +271,7 @@ import CurrencyInput from 'src/components/CurrencyInput.vue';
 import currencyCodes from 'currency-codes';
 import Transaction from 'src/models/transaction';
 import Utils from 'src/utils/utils';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 
 const $q = useQuasar();
 const store = useStore();
@@ -262,6 +282,10 @@ const seeInactive = ref(false);
 const currencySelect = ref(null);
 const nameInput = ref(null);
 const isCustomEditing = ref(false);
+
+onMounted(() => {
+  nameInput.value?.focus();
+});
 
 const payer = computed({
   get: () => store.personIdx2Id(tr.value.payer) || '',

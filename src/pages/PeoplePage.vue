@@ -18,7 +18,7 @@
       />
       <q-btn
         flat
-        class="q-ml-md bg-white text-primary"
+        class="q-ml-md bg-secondary text-white"
         icon="done"
         label="Confirm"
         @click="confirm"

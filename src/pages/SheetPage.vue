@@ -17,18 +17,11 @@
         class="q-ml-md bg-white text-primary"
         aria-label="Edit people"
       />
-      <q-btn
-        flat
-        class="q-ml-md bg-white text-primary"
-        icon="note_add"
-        label="Add Entry"
-        @click="addTransaction"
-      />
     </q-toolbar>
   </q-header>
 
   <q-page>
-    <q-card>
+    <q-card class="q-my-md q-mr-md q-ml-md">
       <q-card-section class="row q-gutter-sm">
         <people-dropdown
           class="col-auto"
@@ -46,168 +39,33 @@
         />
       </q-card-section>
     </q-card>
-    <q-card
-      v-if="negativeSummaryDisplay || positiveSummaryDisplay"
-      class="q-my-md q-mr-md q-ml-md"
-    >
-      <div class="q-pa-md">
-        <div v-if="negativeSummaryDisplay" :style="{ color: 'green' }">
-          {{ store.getName(selectedPerson) }} is owed
-          {{ negativeSummaryDisplay }}
-        </div>
 
-        <div v-if="positiveSummaryDisplay" :style="{ color: 'red' }">
-          {{ store.getName(selectedPerson) }} owes
-          {{ positiveSummaryDisplay }}
-        </div>
-      </div>
-    </q-card>
-    <q-card v-if="summaries.detail.length > 0" class="q-my-md q-mr-md q-ml-md">
-      <div class="q-pa-md">
-        <div v-for="item in summaries.detail" :key="item.id">
-          <div>
-            <span>
-              {{
-                item.amount > 0
-                  ? store.getName(selectedPerson)
-                  : store.getName(store.personIdx2Id(item.person))
-              }}
-            </span>
-            <span> owes </span>
-            <span>
-              {{
-                item.amount < 0
-                  ? store.getName(selectedPerson)
-                  : store.getName(store.personIdx2Id(item.person))
-              }}
-              &nbsp;
-            </span>
-            <span :style="{ color: item.amount > 0 ? 'red' : 'green' }">
-              {{ Utils.displayCurrency(item.currency, Math.abs(item.amount)) }}
-            </span>
-          </div>
-        </div>
-      </div>
-    </q-card>
-    <q-list>
-      <q-slide-item
-        v-for="(id, index) in store.currentSheetTransactions"
-        :key="id"
-        clickable
-        :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'"
-        @click="editTransaction(id)"
-        @left="() => removeTransaction(id)"
-        left-color="red"
-      >
-        <template v-slot:left>
-          <q-icon name="delete" />
-        </template>
-        <q-item>
-          <q-card flat bordered class="q-ml-sm q-mr-sm q-pl-sm q-pr-sm">
-            <q-card-section
-              class="column q-pa-none"
-              style="
-                display: flex;
-                justify-content: center;
-                align-items: center;
-              "
-            >
-              <div>
-                {{
-                  Utils.getMonth(store.currentSheet.transactions[id].timestamp)
-                }}
-              </div>
-              <div>
-                {{
-                  Utils.getDay(store.currentSheet.transactions[id].timestamp)
-                }}
-              </div>
-            </q-card-section>
-          </q-card>
+    <summary-card :summaries="summaries" :selectedPerson="selectedPerson" />
 
-          <q-item-section>
-            <q-item-label>
-              {{
-                store.currentSheet.transactions[id].name || 'New Transaction'
-              }}
-            </q-item-label>
-            <q-item-label caption>
-              {{ store.getName(store.payerId(id)) }} payed
-              {{
-                Utils.displayCurrency(
-                  store.currentSheet.transactions[id].currency,
-                  store.currentSheet.transactions[id].amount,
-                )
-              }}
-            </q-item-label>
-          </q-item-section>
-          <q-item-section side>
-            <q-item-label
-              caption
-              v-if="
-                Transaction.position(
-                  store.currentSheet.transactions[id],
-                  selectedPersonIdx,
-                ) > 0
-              "
-              :style="{ color: 'green' }"
-            >
-              {{ store.getName(selectedPerson) }} lent
-            </q-item-label>
-            <q-item-label
-              caption
-              v-if="
-                Transaction.position(
-                  store.currentSheet.transactions[id],
-                  selectedPersonIdx,
-                ) < 0
-              "
-              :style="{ color: 'red' }"
-            >
-              {{ store.getName(selectedPerson) }} borrowed
-            </q-item-label>
-            <q-item-label
-              v-if="
-                Transaction.position(
-                  store.currentSheet.transactions[id],
-                  selectedPersonIdx,
-                ) === 0
-              "
-            >
-              {{
-                selectedPersonIdx !== store.currentSheet.transactions[id].payer
-                  ? 'Not Involved'
-                  : 'Personal'
-              }}
-            </q-item-label>
-            <q-item-label
-              v-else
-              :style="{
-                color:
-                  Transaction.position(
-                    store.currentSheet.transactions[id],
-                    selectedPersonIdx,
-                  ) >= 0
-                    ? 'green'
-                    : 'red',
-              }"
-            >
-              {{
-                Utils.displayCurrency(
-                  store.currentSheet.transactions[id].currency,
-                  Math.abs(
-                    Transaction.position(
-                      store.currentSheet.transactions[id],
-                      selectedPersonIdx,
-                    ),
-                  ),
-                )
-              }}
-            </q-item-label>
-          </q-item-section>
-        </q-item>
-      </q-slide-item>
-    </q-list>
+    <q-card-section class="row justify-center items-center">
+      <q-btn
+        flat
+        class="q-mr-md bg-purple text-white"
+        icon="currency_exchange"
+        label="Convert"
+        @click="goToConvert"
+        v-if="summaries.ans.length"
+      />
+      <q-btn
+        flat
+        class="bg-primary text-white"
+        icon="note_add"
+        label="Add Entry"
+        @click="addTransaction"
+      />
+    </q-card-section>
+
+    <transaction-list
+      :transactions="store.currentSheet.transactions || {}"
+      :selectedPerson="selectedPerson"
+      @remove="removeTransaction"
+      @edit="editTransaction"
+    />
   </q-page>
 </template>
 
@@ -220,6 +78,8 @@ import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import { useStore } from 'src/stores/store';
 import PeopleDropdown from 'src/components/PeopleDropdown.vue';
+import SummaryCard from 'src/components/SummaryCard.vue';
+import TransactionList from 'src/components/TransactionList.vue';
 import Utils from 'src/utils/utils';
 import Transaction from 'src/models/transaction';
 import Results from 'src/models/results';
@@ -231,45 +91,36 @@ const $q = useQuasar();
 const name = ref(store.userLedger?.sheets[store.currentSheet?.id]?.name);
 const selectedPerson = ref(store.user.id);
 const selectedPersonIdx = computed(() =>
-  store.currentSheetPeople.indexOf(selectedPerson.value),
+  store.personId2Idx(selectedPerson.value),
 );
 
 const summaries = computed(() => {
-  const { ans, totals } = Results.getSummary(
-    store.currentSheetResults,
-    selectedPersonIdx.value,
-  );
-
-  const detail = ans.map((item, index) => ({
-    ...item,
-    id: index, // Adding a unique id based on the index
-  }));
-  return { detail, totals }; // Return both formattedAns and totals
+  return Results.getSummary(store.currentSheetResults, selectedPersonIdx.value);
 });
 
-const positiveSummaryDisplay = computed(() => {
-  return Object.entries(summaries.value.totals)
-    .filter(([_, amount]) => amount > 0) // Filter for positive values
-    .map(([currency, amount]) => Utils.displayCurrency(currency, amount)) // Format the string
-    .join(' + ');
-});
-
-const negativeSummaryDisplay = computed(() => {
-  return Object.entries(summaries.value.totals)
-    .filter(([_, amount]) => amount < 0) // Filter for positive values
-    .map(([currency, amount]) => Utils.displayCurrency(currency, -amount)) // Format the string
-    .join(' + ');
-});
-
-const removeTransaction = async (id) => {
+const removeTransaction = async (finalize, id) => {
   try {
-    store.removeTransaction(id);
-  } catch (error) {
+    const message = `Are you sure you want to remove ${Transaction.name(
+      store.currentSheet.transactions[id],
+    )}?`;
+
     $q.notify({
-      message: error.message || error,
-      color: 'negative',
+      message,
+      timeout: 0,
+      actions: [
+        { label: 'Cancel', color: 'white', handler: () => finalize() },
+        {
+          label: 'Confirm',
+          color: 'red',
+          handler: async () => {
+            store.removeTransaction(id);
+            $q.notify({ message: 'Transaction removed successfully!' });
+          },
+        },
+      ],
     });
-    return;
+  } catch (error) {
+    $q.notify({ message: error.message || error, color: 'negative' });
   }
 };
 
@@ -296,6 +147,10 @@ const setSheetName = async () => {
 
 const goToPeople = () => {
   router.push({ name: 'PeoplePage' });
+};
+
+const goToConvert = () => {
+  router.push({ name: 'ConvertPage' });
 };
 
 const goBack = () => {

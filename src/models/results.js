@@ -1,3 +1,5 @@
+import Transaction from './transaction';
+
 const Result = {
   make(nPeople = 0) {
     const mat = [];
@@ -62,6 +64,27 @@ const Result = {
 
     result.mat[i][j] += v;
   },
+
+  getSettlementTransactions(result, currency, id, msg) {
+    if (id === null || id === undefined || id < 0 || id >= result.mat.length) {
+      return [];
+    }
+
+    const n = result.mat.length;
+    const ans = new Array(n).fill(0); // Preallocate array with zeros
+
+    // Fill values before 'id'
+    for (let i = 0; i < id; i++) {
+      ans[i] = result.mat[id][i];
+    }
+
+    // Fill values after 'id'
+    for (let i = id + 1; i < n; i++) {
+      ans[i] = -result.mat[i][id]; // Flip sign
+    }
+
+    return Transaction.makeBatch(n, currency, id, ans, msg);
+  },
 };
 
 const Results = {
@@ -114,6 +137,15 @@ const Results = {
     });
 
     return { ans, totals };
+  },
+
+  getSettlementTransactions(results, currency, id, msg) {
+    return Result.getSettlementTransactions(
+      results.mats[currency],
+      currency,
+      id,
+      msg,
+    );
   },
 };
 

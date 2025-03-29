@@ -1,21 +1,60 @@
 import { v4 as uuidv4 } from 'uuid';
 
 const Transaction = {
-  make(peopleids, currency, payerid, people) {
-    const nPeople = peopleids.length;
+  make(peopleActive, currency, payerIdx) {
+    const nPeople = Array.isArray(peopleActive)
+      ? peopleActive.length
+      : peopleActive;
     let name = '';
     const id = uuidv4();
     let amount = 0;
-    let payer = peopleids.indexOf(payerid);
-    if (payer === -1) {
-      payer = nPeople > 0 ? 0 : -1;
-    }
-    const debts = peopleids.map((personid) => ({
-      isDebtor: people[personid].active,
+    let payer =
+      payerIdx >= 0 && payerIdx < nPeople ? payerIdx : nPeople > 0 ? 0 : -1;
+    const debts = Array.from({ length: nPeople }, (_, i) => ({
+      isDebtor: Array.isArray(peopleActive) ? peopleActive[i] : true,
       owedAmount: 0,
     }));
     let timestamp = Date.now();
     return { name, id, amount, payer, currency, debts, timestamp };
+  },
+
+  makeBatch(peopleActive, currency, payerIdx, movements, msg) {
+    const transactions = {};
+
+    const base = this.make(peopleActive, currency, payerIdx);
+
+    movements.forEach((amount, idx) => {
+      if (amount === 0) return; // Ignore zero movements
+
+      if (amount > 0) {
+        base.debts[idx].isDebtor = true;
+        base.debts[idx].owedAmount = amount;
+        base.amount += amount;
+      } else {
+        const newT = this.make(peopleActive, currency, idx);
+        newT.debts[payerIdx].isDebtor = true;
+        newT.debts[payerIdx].owedAmount = -amount;
+        newT.amount = -amount;
+        transactions[newT.id] = newT;
+      }
+    });
+
+    // Only add base if it has a positive amount
+    if (base.amount > 0) {
+      transactions[base.id] = base;
+    }
+
+    let index = 0;
+    for (const transaction of Object.values(transactions)) {
+      transaction.name = `${msg} (${index})`;
+      index++;
+    }
+
+    return transactions;
+  },
+
+  name(transaction) {
+    return transaction.name || 'New Transaction';
   },
 
   // position for the focus person for this transaction
@@ -140,6 +179,16 @@ const Transaction = {
     }
 
     return -1;
+  },
+
+  getTransactionList(transactions) {
+    // return sorted list of transaction ids based on timestamp
+    if (!transactions) {
+      return [];
+    }
+    return Object.entries(transactions)
+      .sort(([, a], [, b]) => b.timestamp - a.timestamp) // Sort by timestamp (descending)
+      .map(([id]) => id); // Extract the keys (IDs)
   },
 };
 

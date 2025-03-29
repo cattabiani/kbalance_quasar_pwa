@@ -103,7 +103,6 @@ const friends = computed(() => {
 const editPersonName = ref(null);
 const isEditPersonDialog = ref(false);
 const editPersonId = ref(null);
-const timer = ref(null);
 
 defineExpose({
   // Exposing a method for parent access
@@ -154,9 +153,7 @@ const addUser = (id, timestamp = null) => {
 };
 
 const finalize = (reset) => {
-  timer.value = setTimeout(() => {
-    reset?.(); // Optional chaining to call reset if defined
-  }, 0);
+  setTimeout(() => reset?.(), 0);
 };
 
 const removePerson = ({ reset }, id) => {

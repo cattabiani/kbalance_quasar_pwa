@@ -26,6 +26,16 @@ const routes = [
         }, // Protect this route
       },
       {
+        path: '/convert',
+        name: 'ConvertPage',
+        component: () => import('pages/ConvertPage.vue'),
+        meta: {
+          requiresAuth: true,
+          requiresFirebase: true,
+          requiresSheet: true,
+        }, // Protect this route
+      },
+      {
         path: '/sheet/people',
         name: 'PeoplePage',
         component: () => import('pages/PeoplePage.vue'),

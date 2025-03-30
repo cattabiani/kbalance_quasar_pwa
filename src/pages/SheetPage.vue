@@ -61,7 +61,7 @@
     </q-card-section>
 
     <transaction-list
-      :transactions="store.currentSheet.transactions || {}"
+      :transactions="store.currentSheet?.transactions || {}"
       :selectedPerson="selectedPerson"
       @remove="removeTransaction"
       @edit="editTransaction"

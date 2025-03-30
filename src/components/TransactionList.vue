@@ -8,8 +8,9 @@
       @click="editTransaction(id)"
       @left="(event) => removeTransaction(event, id)"
       left-color="red"
+      read-only
     >
-      <template v-slot:left>
+      <template v-slot:left v-if="!disableRemove">
         <q-icon name="delete" />
       </template>
       <q-item>
@@ -27,9 +28,7 @@
             {{ Transaction.name(transactions[id]) }}
           </q-item-label>
           <q-item-label caption>
-            {{
-              store.getName(store.personId2Idx(transactions[id].payer))
-            }}
+            {{ store.getName(store.personId2Idx(transactions[id].payer)) }}
             payed
             {{
               Utils.displayCurrency(
@@ -105,6 +104,10 @@ const props = defineProps({
   selectedPerson: {
     type: String,
     required: true,
+  },
+  disableRemove: {
+    type: Boolean,
+    default: false,
   },
 });
 

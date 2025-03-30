@@ -169,18 +169,39 @@ export const useStore = defineStore('mainStore', {
       );
     },
 
+    async addTransactions(transactions, batch = null) {
+      return await this.autoBatch(
+        async (transactions, batch) => {
+          // Loop over the transaction values directly
+          for (const transaction of Object.values(transactions)) {
+            await this.addTransaction(transaction, batch);
+          }
+        },
+        transactions,
+        batch,
+      );
+    },
+
     // sheet
 
     getEditableCurrentSheetResults() {
       return _.cloneDeep(this.currentSheetResults);
     },
 
-    getSettlementTransactions(currency, payerIdx, msg) {
-      return Results.getSettlementTransactions(
+    makeEquivalentTransactionBatch(
+      fromCurrency,
+      payerIdx,
+      msg,
+      multiplier = 1.0,
+      toCurrency = null,
+    ) {
+      return Results.makeEquivalentTransactionBatch(
         this.currentSheetResults,
-        currency,
+        fromCurrency,
         payerIdx,
         msg,
+        multiplier,
+        toCurrency,
       );
     },
 

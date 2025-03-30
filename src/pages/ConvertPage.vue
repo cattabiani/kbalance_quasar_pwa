@@ -8,6 +8,15 @@
         aria-label="Go Back"
         class="bg-white text-primary"
       />
+      <q-space />
+      <q-btn
+        flat
+        icon="done"
+        label="Confirm"
+        @click="saveAndGoBack"
+        class="q-ml-md bg-secondary text-white"
+        aria-label="Save"
+      />
     </q-toolbar>
   </q-header>
 
@@ -60,12 +69,28 @@
         />
       </q-card-section>
     </q-card>
+    <q-card>
+      <q-card-section class="full-width row justify-center">
+        <q-input
+          ref="conversionInputRef"
+          outlined
+          v-model.number="conversionMulti"
+          type="number"
+          min="0"
+          label="Conversion Rate"
+          input-class="text-center"
+          @focus="conversionInputRef.select()"
+        />
+      </q-card-section>
+    </q-card>
 
     <summary-card :summaries="summaries" :selectedPerson="selectedPerson" />
 
     <transaction-list
       :transactions="transactions"
       :selectedPerson="selectedPerson"
+      :disableEdit="true"
+      :disableRemove="true"
     />
   </q-page>
 </template>
@@ -84,12 +109,14 @@ import currencyCodes from 'currency-codes';
 import Results from 'src/models/results';
 import SummaryCard from 'src/components/SummaryCard.vue';
 import TransactionList from 'src/components/TransactionList.vue';
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onMounted } from 'vue';
 
 const store = useStore();
 const router = useRouter();
 const $q = useQuasar();
 
+const rates = ref(null);
+const conversionInputRef = ref(null);
 const selectedPerson = ref(store.user.id);
 const selectedPersonIdx = computed(() =>
   store.personId2Idx(selectedPerson.value),
@@ -193,14 +220,56 @@ const fromFilterFn = (val, update) => {
   });
 };
 
-const conversionMulti = ref(1.0);
+onMounted(async () => {
+  const apiUrl = `https://cdn.jsdelivr.net/gh/ismartcoding/currency-api/latest/data.json`;
+
+  try {
+    const response = await fetch(apiUrl);
+    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+    // Set the fetched exchange rates in the ref
+    rates.value = await response.json();
+  } catch (error) {
+    $q.notify({ message: error.message || error, color: 'negative' });
+  }
+});
+
+const conversionMulti = computed(() => {
+  if (!rates.value) {
+    return 1.0; // If rates is null, return 1.0
+  }
+  if (!rates.value.quotes[fromCurrency.value]) {
+    $q.notify(`Unknown currency ${fromCurrency.value}!`);
+    return 1.0;
+  }
+  if (!rates.value.quotes[toCurrency.value]) {
+    $q.notify(`Unknown currency ${toCurrency.value}!`);
+    return 1.0;
+  }
+
+  return (
+    rates.value.quotes[toCurrency.value] /
+    rates.value.quotes[fromCurrency.value]
+  );
+});
+
 const transactions = computed(() => {
-  const msg = `🤖 settle ${store.getName(selectedPerson.value)}`;
-  return store.getSettlementTransactions(
+  let msg = `🤖 settle ${store.getName(selectedPerson.value)}`;
+  const settleTransactions = store.makeEquivalentTransactionBatch(
     fromCurrency.value,
     selectedPersonIdx.value,
     msg,
   );
+  msg = `🤖 convert ${store.getName(selectedPerson.value)}`;
+  const conversionTransactions = store.makeEquivalentTransactionBatch(
+    fromCurrency.value,
+    selectedPersonIdx.value,
+    msg,
+    -conversionMulti.value,
+    toCurrency.value,
+  );
+
+  return { ...settleTransactions, ...conversionTransactions };
 });
 const results = computed(() => {
   const res = store.getEditableCurrentSheetResults();
@@ -214,4 +283,17 @@ const results = computed(() => {
 const summaries = computed(() => {
   return Results.getSummary(results.value, selectedPersonIdx.value);
 });
+
+const saveAndGoBack = async () => {
+  try {
+    await store.addTransactions(transactions.value);
+    goBack();
+  } catch (error) {
+    $q.notify({
+      message: error.message || error,
+      color: 'negative',
+    });
+    return;
+  }
+};
 </script>

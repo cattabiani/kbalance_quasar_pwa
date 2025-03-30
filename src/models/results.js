@@ -65,25 +65,42 @@ const Result = {
     result.mat[i][j] += v;
   },
 
-  getSettlementTransactions(result, currency, id, msg) {
-    if (id === null || id === undefined || id < 0 || id >= result.mat.length) {
+  makeEquivalentTransactionBatch(
+    result,
+    fromCurrency,
+    payerIdx,
+    description,
+    multiplier = 1.0,
+    toCurrency = null,
+  ) {
+    // leaving the default values this function gives the settlement transactions. Adjusting multiplier and toCurrency
+    // you can create the conversion transactions
+    if (payerIdx == null || payerIdx < 0 || payerIdx >= result.mat.length) {
       return [];
     }
 
+    toCurrency = toCurrency || fromCurrency; // Default to fromCurrency if not provided
+
     const n = result.mat.length;
-    const ans = new Array(n).fill(0); // Preallocate array with zeros
+    const transactions = new Array(n).fill(0); // Preallocate array with zeros
 
-    // Fill values before 'id'
-    for (let i = 0; i < id; i++) {
-      ans[i] = result.mat[id][i];
+    // Compute transactions before the payer index
+    for (let i = 0; i < payerIdx; i++) {
+      transactions[i] = Math.round(multiplier * result.mat[payerIdx][i]);
     }
 
-    // Fill values after 'id'
-    for (let i = id + 1; i < n; i++) {
-      ans[i] = -result.mat[i][id]; // Flip sign
+    // Compute transactions after the payer index
+    for (let i = payerIdx + 1; i < n; i++) {
+      transactions[i] = -Math.round(multiplier * result.mat[i][payerIdx]); // Flip sign
     }
 
-    return Transaction.makeBatch(n, currency, id, ans, msg);
+    return Transaction.makeBatch(
+      n,
+      toCurrency,
+      payerIdx,
+      transactions,
+      description,
+    );
   },
 };
 
@@ -139,12 +156,21 @@ const Results = {
     return { ans, totals };
   },
 
-  getSettlementTransactions(results, currency, id, msg) {
-    return Result.getSettlementTransactions(
-      results.mats[currency],
-      currency,
-      id,
-      msg,
+  makeEquivalentTransactionBatch(
+    results,
+    fromCurrency,
+    payerIdx,
+    description,
+    multiplier = 1.0,
+    toCurrency = null,
+  ) {
+    return Result.makeEquivalentTransactionBatch(
+      results.mats[fromCurrency],
+      fromCurrency,
+      payerIdx,
+      description,
+      multiplier,
+      toCurrency,
     );
   },
 };

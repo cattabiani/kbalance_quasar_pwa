@@ -43,6 +43,24 @@
     <summary-card :summaries="summaries" :selectedPerson="selectedPerson" />
 
     <q-card-section class="row justify-center items-center">
+      <q-btn-dropdown
+        label="Settle"
+        icon="payments"
+        flat
+        class="q-mr-md bg-green text-white"
+      >
+        <q-list>
+          <q-item
+            v-for="currency in usedCurrencies"
+            :key="currency.value"
+            clickable
+            v-close-popup
+            @click="settleCurrency(currency.value)"
+          >
+            <q-item-section>{{ currency.label }}</q-item-section>
+          </q-item>
+        </q-list>
+      </q-btn-dropdown>
       <q-btn
         flat
         class="q-mr-md bg-purple text-white"
@@ -79,6 +97,7 @@ import { useRouter } from 'vue-router';
 import { useStore } from 'src/stores/store';
 import PeopleDropdown from 'src/components/PeopleDropdown.vue';
 import SummaryCard from 'src/components/SummaryCard.vue';
+import currencyCodes from 'currency-codes';
 import TransactionList from 'src/components/TransactionList.vue';
 import Utils from 'src/utils/utils';
 import Transaction from 'src/models/transaction';
@@ -97,6 +116,36 @@ const selectedPersonIdx = computed(() =>
 const summaries = computed(() => {
   return Results.getSummary(store.currentSheetResults, selectedPersonIdx.value);
 });
+
+const currencies = currencyCodes.data.map((currency) => ({
+  label: `${currency.code} - ${currency.currency}`,
+  value: currency.code,
+}));
+
+const usedCurrencies = computed(() => {
+  return currencies.filter((currency) =>
+    Object.keys(summaries.value.totals).includes(currency.value),
+  );
+});
+
+const settleCurrency = async (currency) => {
+  let msg = `🤖 settle ${store.getName(selectedPerson.value)}`;
+  const transactions = store.makeEquivalentTransactionBatch(
+    currency,
+    selectedPersonIdx.value,
+    msg,
+  );
+
+  try {
+    await store.addTransactions(transactions);
+  } catch (error) {
+    $q.notify({
+      message: error.message || error,
+      color: 'negative',
+    });
+    return;
+  }
+};
 
 const removeTransaction = async (finalize, id) => {
   try {

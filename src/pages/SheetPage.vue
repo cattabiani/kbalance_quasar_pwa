@@ -48,6 +48,7 @@
         icon="payments"
         flat
         class="q-mr-md bg-green text-white"
+        v-if="summaries.ans.length"
       >
         <q-list>
           <q-item

@@ -100,7 +100,7 @@
           <q-slide-item
             v-for="(id, index) in store.userLedgerSheets"
             :key="index"
-            @left="(event) => onLeftSheet(event, id)"
+            @left="(event) => removeSheet(event, id)"
             @click="editSheet(id)"
             left-color="red"
           >
@@ -137,7 +137,7 @@
           <q-slide-item
             v-for="(id, index) in store.userLedgerFriends"
             :key="index"
-            @left="onLeftFriend(id)"
+            @left="(event) => removeFriend(event, id)"
             @click="editFriendName(id)"
             left-color="red"
           >
@@ -177,38 +177,6 @@
     v-model="newFriendName"
     v-model:isVisible="isEditFriendName"
   />
-  <q-dialog v-model="isRemoveSheetDialog" persistent>
-    <q-card class="q-my-md" style="width: 100%; height: auto">
-      <q-card-section class="text-center" style="font-size: 28px">
-        Confirm Delete
-      </q-card-section>
-      <q-card-section class="flex flex-center" v-if="nUsers <= 1">
-        {{ 'This sheet will be completely deleted. Do you want to proceed?' }}
-      </q-card-section>
-      <q-card-section class="flex flex-center" v-else>
-        {{
-          'This sheet will be deleted only for you since there are still some users involved. Do you want to proceed?'
-        }}
-      </q-card-section>
-
-      <q-card-actions
-        style="display: flex; justify-content: center; align-items: center"
-      >
-        <q-btn
-          icon="close"
-          label="Cancel"
-          color="red"
-          @click="closeRemoveSheet"
-        />
-        <q-btn
-          color="primary"
-          icon="content_copy"
-          @click="removeSheet"
-          label="Confirm"
-        />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
 </template>
 
 <script setup>
@@ -238,10 +206,7 @@ const shareString = ref('');
 const editFriendNameId = ref(null);
 const isEditFriendName = ref(false);
 const newFriendName = ref(null);
-const timer = ref(null);
 const nUsers = ref(null);
-const removeSheetId = ref(null);
-const isRemoveSheetDialog = computed(() => removeSheetId.value !== null);
 
 const sendVerificationEmail = async () => {
   try {
@@ -257,40 +222,43 @@ const sendVerificationEmail = async () => {
   }
 };
 
-const onLeftSheet = async ({ reset }, id) => {
+const removeSheet = async ({ reset }, id) => {
   try {
     nUsers.value = await store.nUsers(id);
-    removeSheetId.value = id;
-    finalize(reset);
-  } catch (error) {
-    $q.notify({
-      message: error.message || error,
-      color: 'negative',
-    });
-  }
-};
 
-const closeRemoveSheet = () => {
-  nUsers.value = null;
-  removeSheetId.value = null;
-};
+    const message =
+      nUsers.value <= 1
+        ? 'This sheet will be completely deleted. Do you want to proceed?'
+        : 'This sheet will be deleted only for you since there are still some users involved. Do you want to proceed?';
 
-const removeSheet = async () => {
-  try {
-    await store.removeSheet(removeSheetId.value, nUsers.value);
-    closeRemoveSheet();
-  } catch (error) {
     $q.notify({
-      message: error.message || error,
-      color: 'negative',
+      message,
+      timeout: 0,
+      actions: [
+        {
+          label: 'Cancel',
+          color: 'white',
+          handler: async () => {
+            finalize(reset);
+          },
+        },
+        {
+          label: 'Confirm',
+          color: 'red',
+          handler: async () => {
+            await store.removeSheet(id, nUsers.value);
+            $q.notify({ message: 'Sheet removed successfully!' });
+          },
+        },
+      ],
     });
+  } catch (error) {
+    $q.notify({ message: error.message || error, color: 'negative' });
   }
 };
 
 const finalize = (reset) => {
-  timer.value = setTimeout(() => {
-    reset?.(); // Optional chaining to call reset if defined
-  }, 0);
+  setTimeout(() => reset?.(), 0);
 };
 
 const editSheet = async (id) => {
@@ -304,14 +272,27 @@ const editFriendName = (id) => {
   isEditFriendName.value = true;
 };
 
-const onLeftFriend = async (id) => {
+const removeFriend = async ({ reset }, id) => {
   try {
-    await store.removeFriend(id);
-  } catch (error) {
+    const message = `Are you sure you want to remove ${store.getName(id)}?`;
+
     $q.notify({
-      message: error.message || error,
-      color: 'negative',
+      message,
+      timeout: 0,
+      actions: [
+        { label: 'Cancel', color: 'white', handler: () => finalize(reset) },
+        {
+          label: 'Confirm',
+          color: 'red',
+          handler: async () => {
+            await store.removeFriend(id);
+            $q.notify({ message: 'Friend removed successfully!' });
+          },
+        },
+      ],
     });
+  } catch (error) {
+    $q.notify({ message: error.message || error, color: 'negative' });
   }
 };
 

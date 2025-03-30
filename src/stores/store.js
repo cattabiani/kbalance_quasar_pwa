@@ -133,12 +133,6 @@ export const useStore = defineStore('mainStore', {
   actions: {
     // transaction
 
-    payerId(transactionId) {
-      return this.personIdx2Id(
-        this.currentSheet.transactions[transactionId].payer,
-      );
-    },
-
     personId2Idx(id) {
       return this.currentSheetPeople.indexOf(id);
     },
@@ -175,7 +169,41 @@ export const useStore = defineStore('mainStore', {
       );
     },
 
+    async addTransactions(transactions, batch = null) {
+      return await this.autoBatch(
+        async (transactions, batch) => {
+          // Loop over the transaction values directly
+          for (const transaction of Object.values(transactions)) {
+            await this.addTransaction(transaction, batch);
+          }
+        },
+        transactions,
+        batch,
+      );
+    },
+
     // sheet
+
+    getEditableCurrentSheetResults() {
+      return _.cloneDeep(this.currentSheetResults);
+    },
+
+    makeEquivalentTransactionBatch(
+      fromCurrency,
+      payerIdx,
+      msg,
+      multiplier = 1.0,
+      toCurrency = null,
+    ) {
+      return Results.makeEquivalentTransactionBatch(
+        this.currentSheetResults,
+        fromCurrency,
+        payerIdx,
+        msg,
+        multiplier,
+        toCurrency,
+      );
+    },
 
     async setPeople(people, batch = null) {
       if (!this.currentSheet) {
@@ -226,11 +254,16 @@ export const useStore = defineStore('mainStore', {
         Transaction.updatePeople(ans, this.currentSheetPeople.length);
         return ans;
       }
+
+      // Extract peopleActive as an array of booleans
+      const peopleActive = this.currentSheetPeople.map(
+        (personid) => this.currentSheet.people[personid].active,
+      );
+
       return Transaction.make(
-        this.currentSheetPeople,
+        peopleActive,
         this.lastCurrency,
-        auth.currentUser.uid,
-        this.currentSheet.people,
+        this.personId2Idx(auth.currentUser.uid),
       );
     },
 

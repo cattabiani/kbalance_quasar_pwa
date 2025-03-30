@@ -1,3 +1,5 @@
+import Transaction from './transaction';
+
 const Result = {
   make(nPeople = 0) {
     const mat = [];
@@ -62,6 +64,44 @@ const Result = {
 
     result.mat[i][j] += v;
   },
+
+  makeEquivalentTransactionBatch(
+    result,
+    fromCurrency,
+    payerIdx,
+    description,
+    multiplier = 1.0,
+    toCurrency = null,
+  ) {
+    // leaving the default values this function gives the settlement transactions. Adjusting multiplier and toCurrency
+    // you can create the conversion transactions
+    if (payerIdx == null || payerIdx < 0 || payerIdx >= result.mat.length) {
+      return [];
+    }
+
+    toCurrency = toCurrency || fromCurrency; // Default to fromCurrency if not provided
+
+    const n = result.mat.length;
+    const transactions = new Array(n).fill(0); // Preallocate array with zeros
+
+    // Compute transactions before the payer index
+    for (let i = 0; i < payerIdx; i++) {
+      transactions[i] = Math.round(multiplier * result.mat[payerIdx][i]);
+    }
+
+    // Compute transactions after the payer index
+    for (let i = payerIdx + 1; i < n; i++) {
+      transactions[i] = -Math.round(multiplier * result.mat[i][payerIdx]); // Flip sign
+    }
+
+    return Transaction.makeBatch(
+      n,
+      toCurrency,
+      payerIdx,
+      transactions,
+      description,
+    );
+  },
 };
 
 const Results = {
@@ -114,6 +154,24 @@ const Results = {
     });
 
     return { ans, totals };
+  },
+
+  makeEquivalentTransactionBatch(
+    results,
+    fromCurrency,
+    payerIdx,
+    description,
+    multiplier = 1.0,
+    toCurrency = null,
+  ) {
+    return Result.makeEquivalentTransactionBatch(
+      results.mats[fromCurrency],
+      fromCurrency,
+      payerIdx,
+      description,
+      multiplier,
+      toCurrency,
+    );
   },
 };
 

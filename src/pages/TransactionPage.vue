@@ -28,7 +28,7 @@
     </q-toolbar>
   </q-header>
   <q-page>
-    <q-card>
+    <q-card class="q-my-md q-mr-md q-ml-md">
       <q-card-section>
         <q-input
           ref="nameInput"
@@ -63,8 +63,8 @@
           label="Amount"
           @update:model-value="split(true)"
         />
-      </q-card-section>
-
+      </q-card-section> </q-card
+    ><q-card class="q-my-md q-mr-md q-ml-md">
       <q-card-section class="column items-center" v-if="tr.debts.length === 2">
         <q-btn-dropdown class="full-width">
           <template v-slot:label>
@@ -192,6 +192,25 @@
         />
       </q-card-section>
 
+      <q-card-section class="row justify-center items-center">
+        <q-btn
+          flat
+          icon="done"
+          label="Cancel"
+          @click="saveAndGoBack"
+          class="q-mr-md bg-red text-white"
+          aria-label="Save"
+        />
+        <q-btn
+          flat
+          icon="done"
+          label="Confirm"
+          @click="saveAndGoBack"
+          class="bg-secondary text-white"
+          aria-label="Save"
+        />
+      </q-card-section> </q-card
+    ><q-card class="q-my-md q-mr-md q-ml-md q-mb-md">
       <q-card-section>
         <div class="row text-bold">
           <div class="col-auto q-mr-md q-ml-sm">Payer</div>
@@ -200,63 +219,43 @@
           <div class="col-auto q-mr-lg">Amount</div>
         </div>
       </q-card-section>
-    </q-card>
 
-    <q-list class="q-my-md q-mr-md q-ml-md">
-      <q-item
-        v-for="(id, index) in store.currentSheetPeople"
-        :key="index"
-        :class="index % 2 === 0 ? 'bg-grey-1' : 'bg-white'"
-        v-show="
-          store.currentSheet.people[id].active ||
-          seeInactive ||
-          tr.payer === index ||
-          tr.debts[index].owedAmount !== 0 ||
-          tr.debts[index].isDebtor
-        "
-      >
-        <div class="q-mr-sx" style="display: flex">
-          <q-radio
-            v-model="tr.payer"
-            :val="index"
-            @update:model-value="split(false)"
+      <q-list class="q-my-md q-mr-md q-ml-md">
+        <q-item
+          v-for="(id, index) in store.currentSheetPeople"
+          :key="index"
+          :class="index % 2 === 0 ? 'bg-grey-1' : 'bg-white'"
+          v-show="
+            store.currentSheet.people[id].active ||
+            seeInactive ||
+            tr.payer === index ||
+            tr.debts[index].owedAmount !== 0 ||
+            tr.debts[index].isDebtor
+          "
+        >
+          <div class="q-mr-sx" style="display: flex">
+            <q-radio
+              v-model="tr.payer"
+              :val="index"
+              @update:model-value="split(false)"
+            />
+          </div>
+          <q-item-section>
+            <person-item :id="id" :max-length="13" />
+          </q-item-section>
+          <q-checkbox
+            v-model="tr.debts[index].isDebtor"
+            class="q-mr-sx"
+            @update:model-value="split(true)"
           />
-        </div>
-        <q-item-section>
-          <person-item :id="id" :max-length="13" />
-        </q-item-section>
-        <q-checkbox
-          v-model="tr.debts[index].isDebtor"
-          class="q-mr-sx"
-          @update:model-value="split(true)"
-        />
-        <CurrencyInput
-          v-model="tr.debts[index].owedAmount"
-          :currency="'XXX'"
-          :style="{ maxWidth: '100px' }"
-          @blur="customEditing(index)"
-        />
-      </q-item>
-    </q-list>
-    <q-card>
-      <q-card-section class="row justify-center items-center">
-        <q-btn
-          flat
-          icon="done"
-          label="Cancel"
-          @click="saveAndGoBack"
-          class="q-ml-md bg-red text-white"
-          aria-label="Save"
-        />
-        <q-btn
-          flat
-          icon="done"
-          label="Confirm"
-          @click="saveAndGoBack"
-          class="q-ml-md bg-secondary text-white"
-          aria-label="Save"
-        />
-      </q-card-section>
+          <CurrencyInput
+            v-model="tr.debts[index].owedAmount"
+            :currency="'XXX'"
+            :style="{ maxWidth: '100px' }"
+            @blur="customEditing(index)"
+          />
+        </q-item>
+      </q-list>
     </q-card>
   </q-page>
 </template>

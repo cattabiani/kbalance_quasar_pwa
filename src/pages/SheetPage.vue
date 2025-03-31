@@ -42,42 +42,45 @@
 
     <summary-card :summaries="summaries" :selectedPerson="selectedPerson" />
 
-    <q-card-section class="row justify-center items-center">
-      <q-btn-dropdown
-        label="Settle"
-        icon="payments"
-        flat
-        class="q-mr-md bg-green text-white"
-        v-if="summaries.ans.length"
-      >
-        <q-list>
-          <q-item
-            v-for="currency in usedCurrencies"
-            :key="currency.value"
-            clickable
-            v-close-popup
-            @click="settleCurrency(currency.value)"
-          >
-            <q-item-section>{{ currency.label }}</q-item-section>
-          </q-item>
-        </q-list>
-      </q-btn-dropdown>
-      <q-btn
-        flat
-        class="q-mr-md bg-purple text-white"
-        icon="currency_exchange"
-        label="Convert"
-        @click="goToConvert"
-        v-if="summaries.ans.length"
-      />
-      <q-btn
-        flat
-        class="bg-primary text-white"
-        icon="note_add"
-        label="Add Entry"
-        @click="addTransaction"
-      />
-    </q-card-section>
+    <q-card class="q-my-md q-mr-md q-ml-md">
+      <q-card-section class="row justify-center items-center">
+        <q-btn-dropdown
+          label="Settle"
+          icon="payments"
+          flat
+          class="q-mr-md bg-green text-white"
+          v-if="summaries.ans.length"
+        >
+          <q-list>
+            <q-item
+              v-for="currency in usedCurrencies"
+              :key="currency.value"
+              clickable
+              v-close-popup
+              @click="settleCurrency(currency.value)"
+            >
+              <q-item-section>{{ currency.label }}</q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
+        <q-btn
+          flat
+          class="q-mr-md bg-purple text-white"
+          icon="currency_exchange"
+          label="Convert"
+          @click="goToConvert"
+          v-if="summaries.ans.length"
+        />
+
+        <q-btn
+          flat
+          class="q-mt-sm bg-primary text-white"
+          icon="note_add"
+          label="Add Entry"
+          @click="addTransaction"
+        />
+      </q-card-section>
+    </q-card>
 
     <transaction-list
       :transactions="store.currentSheet?.transactions || {}"

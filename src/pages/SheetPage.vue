@@ -43,7 +43,7 @@
     <summary-card :summaries="summaries" :selectedPerson="selectedPerson" />
 
     <q-card class="q-my-md q-mr-md q-ml-md">
-      <q-card-section class="row justify-center items-center">
+      <q-card-section class="row justify-center items-center q-pb-none">
         <q-btn-dropdown
           label="Settle"
           icon="payments"
@@ -71,10 +71,12 @@
           @click="goToConvert"
           v-if="summaries.ans.length"
         />
+      </q-card-section>
+      <q-card-section class="row justify-center items-center q-bt-sm">
 
         <q-btn
           flat
-          class="q-mt-sm bg-primary text-white"
+          class="bg-primary text-white"
           icon="note_add"
           label="Add Entry"
           @click="addTransaction"

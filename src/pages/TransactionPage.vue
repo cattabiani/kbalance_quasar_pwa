@@ -177,6 +177,7 @@
           :people="store.currentSheet.people"
           :sorted-people="store.currentSheetPeople"
           fixed-label="Payer"
+          dense
         />
         <q-btn
           class="col-auto q-mr-sm"
@@ -189,6 +190,7 @@
           :people="store.currentSheet.people"
           :sorted-people="store.currentSheetPeople"
           fixed-label="Debtor"
+          dense
         />
       </q-card-section>
 

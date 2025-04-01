@@ -171,13 +171,13 @@ module.exports = configure(function (/* ctx */) {
           ],
           screenshots: [
             {
-              src: 'screenshots/screenshot-1.jpeg',
+              src: 'screenshots/transaction.jpeg',
               sizes: '985x2048',
               type: 'image/jpeg',
               form_factor: 'wide',
             },
             {
-              src: 'screenshots/screenshot-1.jpeg',
+              src: 'screenshots/conversion.jpeg',
               sizes: '985x2048',
               type: 'image/jpeg',
             },

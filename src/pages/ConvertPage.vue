@@ -47,7 +47,7 @@
           use-input
           input-debounce="0"
           @filter="fromFilterFn"
-          :style="{ maxWidth: '130px' }"
+          :style="{ maxWidth: '110px' }"
         />
 
         <q-btn class="q-mr-md" icon="swap_horiz" @click="swapCurrencies" />
@@ -65,7 +65,7 @@
           use-input
           input-debounce="0"
           @filter="filterFn"
-          :style="{ maxWidth: '130px' }"
+          :style="{ maxWidth: '110px' }"
         />
       </q-card-section>
     </q-card>

@@ -59,11 +59,19 @@ const routes = [
         path: '/login',
         name: 'LoginPage',
         component: () => import('pages/LoginPage.vue'),
+        meta: {
+          requiresFirebase: true,
+        }, // Protect this route
       },
       {
         path: '/settings',
         name: 'SettingsPage',
         component: () => import('pages/SettingsPage.vue'),
+      },
+      {
+        path: '/landing',
+        name: 'LandingPage',
+        component: () => import('pages/LandingPage.vue'),
       },
     ],
   },

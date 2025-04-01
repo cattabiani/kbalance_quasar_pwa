@@ -1,4 +1,16 @@
 <template>
+    <q-header elevated class="bg-primary text-white">
+    <q-toolbar>
+      <q-btn
+        flat
+        icon="arrow_back"
+        @click="goBack"
+        aria-label="Go Back"
+        class="bg-white text-primary"
+      />
+      <q-space />
+    </q-toolbar>
+  </q-header>
   <q-page class="flex flex-center">
     <q-card class="q-pa-md q-mb-md" style="width: 80%">
       <q-card-section class="text-center" style="font-size: 28px">
@@ -116,36 +128,7 @@ const submit = async () => {
   }
 };
 
-const installPromptHandler = (event) => {
-  event.preventDefault(); // Prevent the default prompt from appearing
-
-  notification = $q.notify({
-    actions: [
-      {
-        label: 'Install',
-        color: 'white',
-        handler: () => {
-          if (event) {
-            event.prompt(); // Show the install prompt
-            notification.close(); // Dismiss the notification
-          }
-        },
-      },
-      {
-        label: 'Dismiss',
-        color: 'white',
-        handler: () => {
-          notification.close(); // Dismiss the notification
-        },
-      },
-    ],
-    timeout: 0, // Prevent it from auto-closing
-  });
+const goBack = () => {
+  router.replace({ name: 'LandingPage' });
 };
-
-window.addEventListener('beforeinstallprompt', installPromptHandler);
-
-onBeforeUnmount(() => {
-  window.removeEventListener('beforeinstallprompt', installPromptHandler);
-});
 </script>

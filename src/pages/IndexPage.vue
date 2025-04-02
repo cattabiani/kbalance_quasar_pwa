@@ -100,7 +100,7 @@
           <q-slide-item
             v-for="(id, index) in store.userLedgerSheets"
             :key="index"
-            @left="(event) => removeSheet(event, id)"
+            @left="(event) => removeSheet(event, id, index)"
             @click="editSheet(id)"
             left-color="red"
           >
@@ -137,7 +137,7 @@
           <q-slide-item
             v-for="(id, index) in store.userLedgerFriends"
             :key="index"
-            @left="(event) => removeFriend(event, id)"
+            @left="(event) => removeFriend(event, id, index)"
             @click="editFriendName(id)"
             left-color="red"
           >
@@ -162,7 +162,7 @@
             label="Add Friend"
             color="primary"
             aria-label="Add a new friend"
-            @click="isReceiving = true"
+            @click="startReceiving"
           />
         </div>
       </q-tab-panel>
@@ -222,14 +222,19 @@ const sendVerificationEmail = async () => {
   }
 };
 
-const removeSheet = async ({ reset }, id) => {
+const startReceiving = () => {
+  isReceiving.value = true;
+  receiveString.value = null;
+};
+
+const removeSheet = async ({ reset }, id, index) => {
   try {
     nUsers.value = await store.nUsers(id);
 
     const message =
       nUsers.value <= 1
-        ? 'This sheet will be completely deleted. Do you want to proceed?'
-        : 'This sheet will be deleted only for you since there are still some users involved. Do you want to proceed?';
+        ? `The sheet ${store.userLedger.sheets[id].name} will be completely deleted. Do you want to proceed?`
+        : `The sheet ${store.userLedger.sheets[id].name} will be deleted only for you since there are still some users involved. Do you want to proceed?`;
 
     $q.notify({
       message,
@@ -238,27 +243,25 @@ const removeSheet = async ({ reset }, id) => {
         {
           label: 'Cancel',
           color: 'white',
-          handler: async () => {
-            finalize(reset);
-          },
+          handler: () => reset(),
         },
         {
           label: 'Confirm',
           color: 'red',
           handler: async () => {
             await store.removeSheet(id, nUsers.value);
+            if (index < store.userLedgerSheets.length) {
+              reset();
+            }
             $q.notify({ message: 'Sheet removed successfully!' });
           },
         },
       ],
     });
   } catch (error) {
+    reset();
     $q.notify({ message: error.message || error, color: 'negative' });
   }
-};
-
-const finalize = (reset) => {
-  setTimeout(() => reset?.(), 0);
 };
 
 const editSheet = async (id) => {
@@ -272,7 +275,7 @@ const editFriendName = (id) => {
   isEditFriendName.value = true;
 };
 
-const removeFriend = async ({ reset }, id) => {
+const removeFriend = async ({ reset }, id, index) => {
   try {
     const message = `Are you sure you want to remove ${store.getName(id)}?`;
 
@@ -280,18 +283,22 @@ const removeFriend = async ({ reset }, id) => {
       message,
       timeout: 0,
       actions: [
-        { label: 'Cancel', color: 'white', handler: () => finalize(reset) },
+        { label: 'Cancel', color: 'white', handler: () => reset() },
         {
           label: 'Confirm',
           color: 'red',
           handler: async () => {
             await store.removeFriend(id);
+            if (index < store.userLedgerFriends.length) {
+              reset();
+            }
             $q.notify({ message: 'Friend removed successfully!' });
           },
         },
       ],
     });
   } catch (error) {
+    reset();
     $q.notify({ message: error.message || error, color: 'negative' });
   }
 };

@@ -217,7 +217,7 @@
         <div class="row text-bold">
           <div class="col-auto q-mr-md q-ml-sm">Payer</div>
           <div class="col">Person</div>
-          <div class="col-auto q-mr-md">Debtor</div>
+          <div class="col-auto q-mr-md">Owes</div>
           <div class="col-auto q-mr-lg">Amount</div>
         </div>
       </q-card-section>

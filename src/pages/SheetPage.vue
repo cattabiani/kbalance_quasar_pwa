@@ -73,7 +73,6 @@
         />
       </q-card-section>
       <q-card-section class="row justify-center items-center q-bt-sm">
-
         <q-btn
           flat
           class="bg-primary text-white"
@@ -153,7 +152,7 @@ const settleCurrency = async (currency) => {
   }
 };
 
-const removeTransaction = async (finalize, id) => {
+const removeTransaction = async (reset, id) => {
   try {
     const message = `Are you sure you want to remove ${Transaction.name(
       store.currentSheet.transactions[id],
@@ -163,7 +162,7 @@ const removeTransaction = async (finalize, id) => {
       message,
       timeout: 0,
       actions: [
-        { label: 'Cancel', color: 'white', handler: () => finalize() },
+        { label: 'Cancel', color: 'white', handler: () => reset() },
         {
           label: 'Confirm',
           color: 'red',
@@ -175,6 +174,7 @@ const removeTransaction = async (finalize, id) => {
       ],
     });
   } catch (error) {
+    reset();
     $q.notify({ message: error.message || error, color: 'negative' });
   }
 };

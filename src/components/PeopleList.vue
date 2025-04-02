@@ -3,7 +3,7 @@
     <q-slide-item
       v-for="(id, index) in peopleList"
       :key="id"
-      @left="(event) => removePerson(event, id)"
+      @left="(event) => removePerson(event, id, index)"
       @click="editPerson(id)"
       @right="(event) => activatePerson(event, id)"
       left-color="red"
@@ -152,11 +152,7 @@ const addUser = (id, timestamp = null) => {
   }
 };
 
-const finalize = (reset) => {
-  setTimeout(() => reset?.(), 0);
-};
-
-const removePerson = ({ reset }, id) => {
+const removePerson = ({ reset }, id, index) => {
   if (id === store.user.id) {
     if (store.currentSheet) {
       $q.notify({
@@ -171,7 +167,7 @@ const removePerson = ({ reset }, id) => {
       });
     }
 
-    finalize(reset);
+    reset();
     return;
   }
   if (store.isPersonFullyRemovable(id)) {
@@ -184,15 +180,16 @@ const removePerson = ({ reset }, id) => {
     $q.notify({
       message: 'Person marked as inactive.',
     });
-    if (props.seeInactive) {
-      finalize(reset);
-    }
+  }
+
+  if (props.seeInactive && index < peopleList.value.length) {
+    reset();
   }
 };
 
 const activatePerson = ({ reset }, id) => {
   people.value[id].active = true;
-  finalize(reset);
+  reset();
 };
 
 watch(

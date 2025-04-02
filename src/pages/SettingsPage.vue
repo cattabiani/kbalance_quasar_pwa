@@ -1,5 +1,5 @@
 <template>
-    <q-header elevated class="bg-primary text-white">
+  <q-header elevated class="bg-primary text-white">
     <q-toolbar>
       <q-btn
         flat

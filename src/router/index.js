@@ -36,11 +36,7 @@ export default route(() => {
       to.matched.some((record) => record.meta.requiresFirebase) &&
       !store.isFirebaseReady()
     ) {
-      if (Utils.isAppInstalled()) {
-        next({ name: 'LandingPage' });
-      } else {
-        next({ name: 'SettingsPage' });
-      }
+      next({ name: 'SettingsPage' });
     } else if (
       to.matched.some((record) => record.meta.requiresAuth) &&
       !store.isReady()

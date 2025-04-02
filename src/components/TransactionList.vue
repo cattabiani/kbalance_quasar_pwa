@@ -29,7 +29,7 @@
           </q-item-label>
           <q-item-label caption>
             {{ store.getName(store.personId2Idx(transactions[id].payer)) }}
-            payed
+            paid
             {{
               Utils.displayCurrency(
                 transactions[id].currency,
@@ -111,10 +111,6 @@ const props = defineProps({
   },
 });
 
-const finalize = (reset) => {
-  setTimeout(() => reset?.(), 0);
-};
-
 const selectedPersonIdx = computed(() =>
   store.personId2Idx(props.selectedPerson),
 );
@@ -130,6 +126,6 @@ const editTransaction = (id) => {
 };
 
 const removeTransaction = ({ reset }, id) => {
-  emit('remove', () => finalize(reset), id); // Emit id and call finalize after removal
+  emit('remove', () => reset(), id); // Emit id and call finalize after removal
 };
 </script>

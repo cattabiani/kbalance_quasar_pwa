@@ -44,11 +44,31 @@
 
     <q-card class="q-my-md q-mr-md q-ml-md">
       <q-card-section class="row justify-center items-center q-pb-none">
+        <q-btn
+          flat
+          dense
+          class="bg-primary text-white"
+          icon="note_add"
+          label="Add Entry"
+          @click="addTransaction"
+        />
+        <q-btn
+          flat
+          dense
+          class="q-ml-md bg-purple text-white"
+          icon="currency_exchange"
+          label="Convert"
+          @click="goToConvert"
+          v-if="summaries.ans.length"
+        />
+      </q-card-section>
+      <q-card-section class="row justify-center items-center q-bt-sm">
         <q-btn-dropdown
           label="Settle"
           icon="payments"
           flat
-          class="q-mr-md bg-green text-white"
+          dense
+          class="bg-green text-white"
           v-if="summaries.ans.length"
         >
           <q-list>
@@ -63,23 +83,6 @@
             </q-item>
           </q-list>
         </q-btn-dropdown>
-        <q-btn
-          flat
-          class="q-mr-md bg-purple text-white"
-          icon="currency_exchange"
-          label="Convert"
-          @click="goToConvert"
-          v-if="summaries.ans.length"
-        />
-      </q-card-section>
-      <q-card-section class="row justify-center items-center q-bt-sm">
-        <q-btn
-          flat
-          class="bg-primary text-white"
-          icon="note_add"
-          label="Add Entry"
-          @click="addTransaction"
-        />
       </q-card-section>
     </q-card>
 

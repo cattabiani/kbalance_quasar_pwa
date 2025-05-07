@@ -62,6 +62,13 @@ export const useStore = defineStore('mainStore', {
       return this.currentSheet !== null;
     },
 
+    currencies() {
+      if (this.currentSheet) {
+        return new Set(Results.getCurrencies(this.currentSheetResults));
+      }
+      return new Set();
+    },
+
     lastCurrency() {
       if (this.currentSheet && this.currentSheetTransactions?.length) {
         return this.currentSheet.transactions[this.currentSheetTransactions[0]]
@@ -203,6 +210,23 @@ export const useStore = defineStore('mainStore', {
         multiplier,
         toCurrency,
       );
+    },
+
+    async settleCurrencyPerson(currency, personIdx, msg) {
+      const transactions = this.makeEquivalentTransactionBatch(
+        currency,
+        personIdx,
+        msg,
+      );
+
+      try {
+        await this.addTransactions(transactions);
+      } catch (error) {
+        $q.notify({
+          message: error.message || error,
+          color: 'negative',
+        });
+      }
     },
 
     async setPeople(people, batch = null) {

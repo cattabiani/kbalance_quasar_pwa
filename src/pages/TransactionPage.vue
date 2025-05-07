@@ -40,22 +40,13 @@
       </q-card-section>
 
       <q-card-section class="row" style="align-items: center">
-        <q-select
-          class="q-mr-md"
-          ref="currencySelect"
-          label="Select a Currency"
-          filled
+        <CurrencyDropdown
           v-model="tr.currency"
-          :options="currencyOptions"
-          option-label="label"
-          option-value="value"
-          option-slot
-          emit-value
-          use-input
-          input-debounce="0"
-          @filter="filterFn"
-          :style="{ maxWidth: '130px' }"
+          :usedCurrencies="store.currencies"
+          class="q-mr-md text-subtitle1"
+          style="height: 56px"
         />
+
         <CurrencyInput
           v-model="tr.amount"
           :currency="'XXX'"
@@ -63,8 +54,9 @@
           label="Amount"
           @update:model-value="split(true)"
         />
-      </q-card-section> </q-card
-    ><q-card class="q-my-md q-mr-md q-ml-md">
+      </q-card-section>
+    </q-card>
+    <q-card class="q-my-md q-mr-md q-ml-md">
       <q-card-section class="column items-center" v-if="tr.debts.length === 2">
         <q-btn-dropdown class="full-width">
           <template v-slot:label>
@@ -269,7 +261,7 @@ import { useQuasar } from 'quasar';
 import PeopleDropdown from 'src/components/PeopleDropdown.vue';
 import PersonItem from 'src/components/PersonItem.vue';
 import CurrencyInput from 'src/components/CurrencyInput.vue';
-import currencyCodes from 'currency-codes';
+import CurrencyDropdown from 'src/components/CurrencyDropdown.vue';
 import Transaction from 'src/models/transaction';
 import Utils from 'src/utils/utils';
 import { ref, computed, onMounted } from 'vue';
@@ -280,7 +272,6 @@ const router = useRouter();
 
 const tr = ref(store.getEditableTransaction());
 const seeInactive = ref(false);
-const currencySelect = ref(null);
 const nameInput = ref(null);
 const isCustomEditing = ref(false);
 
@@ -328,13 +319,6 @@ const swapPayerDebtor = () => {
     split(false);
   }
 };
-
-const currencies = currencyCodes.data.map((currency) => ({
-  label: `${currency.code} - ${currency.currency}`,
-  value: currency.code,
-}));
-
-const currencyOptions = ref(currencies);
 
 const otherId = store.currentSheetPeople.find((item) => item !== store.user.id);
 const otherIdx = store.currentSheetPeople.findIndex(
@@ -409,34 +393,6 @@ const splitFor2 = (idx) => {
       return;
   }
   split(true);
-};
-
-const filterFn = (val, update) => {
-  if (val === '') {
-    update(() => {
-      currencyOptions.value = currencies;
-    });
-    return;
-  }
-
-  tr.value.currency = '';
-  const needle = val.toLowerCase();
-  update(() => {
-    const filtered = currencies.filter((v) =>
-      v.value.toLowerCase().includes(needle),
-    );
-    currencyOptions.value = filtered;
-
-    if (currencyOptions.value.length === 1) {
-      tr.value.currency = currencyOptions.value[0].value;
-      if (currencySelect.value) {
-        currencySelect.value.updateInputValue(''); // Clear input
-        setTimeout(() => {
-          currencySelect.value.hidePopup(); // Close the dropdown
-        }, 0);
-      }
-    }
-  });
 };
 
 const customEditing = (index) => {

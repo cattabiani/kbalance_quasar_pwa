@@ -12,6 +12,18 @@ const Result = {
     return ans;
   },
 
+  isEmpty(result) {
+    if (result.ntransactions === 0) return true;
+
+    for (const row of result.mat) {
+      for (const value of row) {
+        if (value !== 0) return false;
+      }
+    }
+
+    return true;
+  },
+
   addPeople(result, nPeople) {
     for (let i = result.mat.length; i < nPeople; ++i) {
       result.mat.push(Array(result.mat.length).fill(0));
@@ -112,6 +124,12 @@ const Results = {
     const results = { nPeople, nTransactions, nCurrencies, mats };
     Results.applyTransactions(results, transactions, nPeople);
     return results;
+  },
+
+  getCurrencies(results) {
+    return Object.entries(results.mats)
+      .filter(([_, res]) => !Result.isEmpty(res))
+      .map(([currency]) => currency);
   },
 
   applyTransactions(results, transactions, nPeople) {

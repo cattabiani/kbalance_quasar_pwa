@@ -63,26 +63,17 @@
         />
       </q-card-section>
       <q-card-section class="row justify-center items-center q-bt-sm">
-        <q-btn-dropdown
+        <CurrencyDropdown
+          v-model="setCurrency"
+          :usedCurrencies="usedCurrencies"
           label="Settle"
           icon="payments"
           flat
           dense
+          clear
           class="bg-green text-white"
-          v-if="summaries.ans.length"
-        >
-          <q-list>
-            <q-item
-              v-for="currency in usedCurrencies"
-              :key="currency.value"
-              clickable
-              v-close-popup
-              @click="settleCurrency(currency.value)"
-            >
-              <q-item-section>{{ currency.label }}</q-item-section>
-            </q-item>
-          </q-list>
-        </q-btn-dropdown>
+          :expandable="false"
+        />
       </q-card-section>
     </q-card>
 
@@ -105,8 +96,8 @@ import { useRouter } from 'vue-router';
 import { useStore } from 'src/stores/store';
 import PeopleDropdown from 'src/components/PeopleDropdown.vue';
 import SummaryCard from 'src/components/SummaryCard.vue';
-import currencyCodes from 'currency-codes';
 import TransactionList from 'src/components/TransactionList.vue';
+import CurrencyDropdown from 'src/components/CurrencyDropdown.vue';
 import Utils from 'src/utils/utils';
 import Transaction from 'src/models/transaction';
 import Results from 'src/models/results';
@@ -120,40 +111,22 @@ const selectedPerson = ref(store.user.id);
 const selectedPersonIdx = computed(() =>
   store.personId2Idx(selectedPerson.value),
 );
+const setCurrency = ref(null);
 
 const summaries = computed(() => {
   return Results.getSummary(store.currentSheetResults, selectedPersonIdx.value);
 });
 
-const currencies = currencyCodes.data.map((currency) => ({
-  label: `${currency.code} - ${currency.currency}`,
-  value: currency.code,
-}));
-
 const usedCurrencies = computed(() => {
-  return currencies.filter((currency) =>
-    Object.keys(summaries.value.totals).includes(currency.value),
-  );
+  return new Set(Object.keys(summaries.value.totals));
 });
 
-const settleCurrency = async (currency) => {
-  let msg = `🤖 settle ${store.getName(selectedPerson.value)}`;
-  const transactions = store.makeEquivalentTransactionBatch(
-    currency,
-    selectedPersonIdx.value,
-    msg,
-  );
+watch(setCurrency, async (currency) => {
+  if (currency == null) return;
 
-  try {
-    await store.addTransactions(transactions);
-  } catch (error) {
-    $q.notify({
-      message: error.message || error,
-      color: 'negative',
-    });
-    return;
-  }
-};
+  const msg = `🤖 settle ${store.getName(selectedPerson.value)}`;
+  store.settleCurrencyPerson(currency, selectedPersonIdx.value, msg);
+});
 
 const removeTransaction = async (reset, id) => {
   try {

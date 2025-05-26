@@ -34,7 +34,7 @@ export default route(() => {
 
     if (
       to.matched.some((record) => record.meta.requiresFirebase) &&
-      !store.isFirebaseReady()
+      !store.firebaseReady
     ) {
       next({ name: 'SettingsPage' });
     } else if (

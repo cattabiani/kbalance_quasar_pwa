@@ -50,7 +50,10 @@ export const useStore = defineStore('mainStore', {
     currentSheet: null,
 
     // firebase
+    firebaseReady: false,
+    authReady: false,
     config: Config.make(),
+    pendingTransactionIds: new Set(),
 
     // listeners
     unsubscribeUserLedger: null,
@@ -149,6 +152,7 @@ export const useStore = defineStore('mainStore', {
     },
 
     async addTransaction(transaction, batch = null) {
+      this.pendingTransactionIds.add(transaction.id);
       return await this.autoBatch(
         async (transaction, batch) => {
           await this.removeTransaction(this.transactionId, batch);
@@ -503,12 +507,8 @@ export const useStore = defineStore('mainStore', {
 
     // admin
 
-    isFirebaseReady() {
-      return app !== null;
-    },
-
     isReady() {
-      return this.isFirebaseReady() && auth?.currentUser && !!this.userLedger;
+      return this.firebaseReady && this.authReady && !!this.userLedger;
     },
 
     async setUsername(newName, batch = null) {
@@ -551,14 +551,18 @@ export const useStore = defineStore('mainStore', {
     },
 
     async initFirebase() {
-      if (!Config.isCompatible(this.config)) {
+      if (!Config.isCompatible(this.config)) return;
+
+      // Clear any existing instance
+      await this.clearFirebase();
+
+      // Prevent double init
+      if (getApps().length > 0) {
+        this.firebaseReady = true;
         return;
       }
-      await this.clearFirebase();
-      if (getApps().length > 0) {
-        throw new Error('There should not be firebase instances active');
-      }
 
+      // Initialize app, auth, and offline Firestore
       app = initializeApp(this.config);
       auth = getAuth(app);
       db = initializeFirestore(app, {
@@ -566,13 +570,25 @@ export const useStore = defineStore('mainStore', {
           tabManager: persistentMultipleTabManager(),
         }),
       });
+
+      // Track readiness
+      this.firebaseReady = true;
+
+      // Ensure auth state is ready, but do not load any ledger
+      await new Promise((resolve) => {
+        const unsubscribe = auth.onAuthStateChanged(() => {
+          this.authReady = true;
+          unsubscribe();
+          resolve();
+        });
+      });
     },
 
     async clearFirebase() {
       await this.logout();
       db = null;
 
-      if (app !== null) {
+      if (app) {
         await deleteApp(app);
       }
       auth = null;
@@ -591,18 +607,22 @@ export const useStore = defineStore('mainStore', {
       if (app === null) {
         await this.initFirebase();
       }
+      await auth.authStateReady?.(); // optional chaining for safety
 
       await signInWithEmailAndPassword(auth, username, password);
     },
 
     async register(email, password) {
-      this.logout();
-      if (!this.isFirebaseSet) {
+      await this.logout();
+
+      if (!this.isFirebaseReady) {
         await this.initFirebase();
       }
+
+      // Optionally wait for Firebase to finish initializing auth state
+      await auth.authStateReady?.();
       await createUserWithEmailAndPassword(auth, email, password);
 
-      // new
       const userLedgerRef = this.getUserLedgerRef();
       await setDoc(userLedgerRef, UserLedger.make());
     },
@@ -617,7 +637,7 @@ export const useStore = defineStore('mainStore', {
 
     clearAll() {
       this.clearUserLedger();
-      this.cleacCurrentSheet();
+      this.clearCurrentSheet();
     },
 
     clearUserLedger() {
@@ -659,7 +679,12 @@ export const useStore = defineStore('mainStore', {
         const sheetRef = this.getSheetRef(id);
         this.unsubscribeCurrentSheet = onSnapshot(sheetRef, async (doc) => {
           if (doc.exists()) {
-            this.currentSheet = doc.data();
+            const data = doc.data();
+            this.currentSheet = data;
+            // Remove any pending IDs that now exist in the confirmed snapshot
+            if (!doc.metadata.hasPendingWrites) {
+              this.pendingTransactionIds.clear();
+            }
           }
 
           await this.updateFriends();
@@ -715,21 +740,24 @@ export const useStore = defineStore('mainStore', {
     },
 
     // utils
-
     async autoBatch(fn, ...args) {
       const isStandalone = !args[args.length - 1];
       if (isStandalone) {
-        args[args.length - 1] = writeBatch(db); // Create a new batch if not provided
+        args[args.length - 1] = writeBatch(db);
       }
 
-      // Call the original function with the provided arguments and batch
+      // Run the user function (which modifies the batch)
       const result = await fn.apply(this, args);
 
-      // Commit the batch if it was created internally
       if (isStandalone) {
-        await args[args.length - 1].commit();
+        const batch = args[args.length - 1];
+
+        // Fire-and-forget the commit without awaiting it,
+        // but return the commit Promise so caller can catch errors
+        batch.commit();
       }
 
+      // Return result immediately without waiting for commit to finish
       return result;
     },
   },

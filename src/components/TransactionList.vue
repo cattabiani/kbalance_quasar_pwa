@@ -24,7 +24,9 @@
         </q-card>
 
         <q-item-section>
-          <q-item-label>
+          <q-item-label
+            :class="{ 'text-grey': store.pendingTransactionIds.has(id) }"
+          >
             {{ Transaction.name(transactions[id]) }}
           </q-item-label>
           <q-item-label caption>

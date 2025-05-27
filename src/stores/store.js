@@ -58,6 +58,7 @@ export const useStore = defineStore('mainStore', {
     // listeners
     unsubscribeUserLedger: null,
     unsubscribeCurrentSheet: null,
+    onlineHandler: null,
   }),
 
   getters: {
@@ -152,7 +153,10 @@ export const useStore = defineStore('mainStore', {
     },
 
     async addTransaction(transaction, batch = null) {
-      this.pendingTransactionIds.add(transaction.id);
+      console.log('nav online', navigator.onLine);
+      if (!navigator.onLine) {
+        this.pendingTransactionIds.add(transaction.id);
+      }
       return await this.autoBatch(
         async (transaction, batch) => {
           await this.removeTransaction(this.transactionId, batch);
@@ -525,6 +529,7 @@ export const useStore = defineStore('mainStore', {
     },
 
     async init() {
+      this.setupOnlineListener();
       if (app === null) {
         await this.initFirebase();
       }
@@ -635,9 +640,31 @@ export const useStore = defineStore('mainStore', {
       await sendPasswordResetEmail(auth, email); // Send password reset email
     },
 
+    setupOnlineListener() {
+      if (this.onlineHandler) {
+        return;
+      }
+      const clearPending = () => {
+        this.pendingTransactionIds.clear();
+      };
+
+      window.addEventListener('online', clearPending);
+
+      // Store reference to the handler for later removal
+      this.onlineHandler = clearPending;
+    },
+
+    disposeOnlineListener() {
+      if (this.onlineHandler) {
+        window.removeEventListener('online', this.onlineHandler);
+        this.onlineHandler = null;
+      }
+    },
+
     clearAll() {
       this.clearUserLedger();
       this.clearCurrentSheet();
+      this.disposeOnlineListener();
     },
 
     clearUserLedger() {
@@ -681,10 +708,6 @@ export const useStore = defineStore('mainStore', {
           if (doc.exists()) {
             const data = doc.data();
             this.currentSheet = data;
-            // Remove any pending IDs that now exist in the confirmed snapshot
-            if (!doc.metadata.hasPendingWrites) {
-              this.pendingTransactionIds.clear();
-            }
           }
 
           await this.updateFriends();
@@ -768,8 +791,21 @@ export const useStore = defineStore('mainStore', {
       'config',
       'currentSheetId',
       'transactionId',
-      'unsubscribeUserLedger',
-      'unsubscribeCurrentSheet',
+      'pendingTransactionIds',
     ],
+    serializer: {
+      serialize: (state) =>
+        JSON.stringify({
+          ...state,
+          pendingTransactionIds: Array.from(state.pendingTransactionIds),
+        }),
+      deserialize: (raw) => {
+        const parsed = JSON.parse(raw);
+        return {
+          ...parsed,
+          pendingTransactionIds: new Set(parsed.pendingTransactionIds),
+        };
+      },
+    },
   },
 });

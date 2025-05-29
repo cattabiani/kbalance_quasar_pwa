@@ -3,35 +3,40 @@
     <q-toolbar>
       <q-toolbar-title style="font-size: 28px"> Index </q-toolbar-title>
 
-      <q-btn-dropdown
-        icon="settings"
-        flat
-        label="Settings"
-        class="q-ml-md bg-white text-primary"
-      >
-        <q-list>
-          <q-item clickable v-ripple @click="shareFirebaseSettings">
+      <q-btn icon="menu" flat class="q-ml-md bg-white text-primary" push>
+        <q-menu>
+          <q-list>
+            <!-- <q-item clickable v-ripple @click="convertTest">
             <q-item-section avatar class="text-primary">
               <q-icon name="qr_code" />
             </q-item-section>
             <q-item-section class="text-primary">
               <div class="text-center">Share<br />Settings</div>
             </q-item-section>
-          </q-item>
-          <q-item clickable v-ripple @click="showAbout = true">
-            <q-item-section avatar class="text-primary">
-              <q-icon name="info" />
-            </q-item-section>
-            <q-item-section class="text-primary">About</q-item-section>
-          </q-item>
-          <q-item clickable v-ripple @click="logout">
-            <q-item-section avatar class="text-primary">
-              <q-icon name="logout" />
-            </q-item-section>
-            <q-item-section class="text-primary">Logout</q-item-section>
-          </q-item>
-        </q-list>
-      </q-btn-dropdown>
+          </q-item> -->
+            <q-item clickable v-ripple @click="shareFirebaseSettings">
+              <q-item-section avatar class="text-primary">
+                <q-icon name="qr_code" />
+              </q-item-section>
+              <q-item-section class="text-primary">
+                <div class="text-center">Share<br />Settings</div>
+              </q-item-section>
+            </q-item>
+            <q-item clickable v-ripple @click="showAbout = true">
+              <q-item-section avatar class="text-primary">
+                <q-icon name="info" />
+              </q-item-section>
+              <q-item-section class="text-primary">About</q-item-section>
+            </q-item>
+            <q-item clickable v-ripple @click="logout">
+              <q-item-section avatar class="text-primary">
+                <q-icon name="logout" />
+              </q-item-section>
+              <q-item-section class="text-primary">Logout</q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
+      </q-btn>
     </q-toolbar>
   </q-header>
 
@@ -95,8 +100,8 @@
       <q-tab name="Friends" label="Friends" icon="group" class="full-width" />
     </q-tabs>
     <q-tab-panels v-model="activeTab" animated>
-      <q-tab-panel name="Sheets">
-        <q-list bordered class="q-mb-md">
+      <q-tab-panel name="Sheets" class="q-pa-none">
+        <q-list bordered>
           <q-slide-item
             v-for="(id, index) in store.userLedgerSheets"
             :key="index"
@@ -132,7 +137,7 @@
           />
         </div>
       </q-tab-panel>
-      <q-tab-panel name="Friends">
+      <q-tab-panel name="Friends" class="q-pa-none">
         <q-list bordered class="q-mb-md">
           <q-slide-item
             v-for="(id, index) in store.userLedgerFriends"

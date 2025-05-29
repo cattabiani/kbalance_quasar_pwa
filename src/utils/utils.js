@@ -3,9 +3,11 @@ const Utils = {
     const date = new Date(dateint);
     return date.getDate().toString().padStart(2, '0');
   },
-  getMonth(dateint) {
+  getMonth(dateint, isShort = true) {
     const date = new Date(dateint);
-    return new Intl.DateTimeFormat('en-GB', { month: 'short' }).format(date);
+    return new Intl.DateTimeFormat('en-GB', {
+      month: isShort ? 'short' : 'long',
+    }).format(date);
   },
   getYear(dateint) {
     const date = new Date(dateint);

@@ -10,6 +10,14 @@
       left-color="red"
       read-only
     >
+      <q-item
+        v-if="showDivider(index)"
+        dense
+        dark
+        class="bg-secondary text-bold text-white justify-center"
+      >
+        {{ dividerLabel(index) }}
+      </q-item>
       <template v-slot:left v-if="!disableRemove">
         <q-icon name="delete" />
       </template>
@@ -112,6 +120,30 @@ const props = defineProps({
     default: false,
   },
 });
+
+const showDivider = (index) => {
+  if (index === 0) return false;
+  const idPrev = transactionList.value[index - 1];
+  const idCurr = transactionList.value[index];
+  const tPrev = props.transactions[idPrev].timestamp;
+  const tCurr = props.transactions[idCurr].timestamp;
+
+  return (
+    Utils.getYear(tPrev) !== Utils.getYear(tCurr) ||
+    Utils.getMonth(tPrev) !== Utils.getMonth(tCurr)
+  );
+};
+
+const dividerLabel = (index) => {
+  const idCurr = transactionList.value[index];
+  const idPrev = transactionList.value[index - 1];
+  const tCurr = props.transactions[idCurr].timestamp;
+
+  return Utils.getYear(props.transactions[idPrev].timestamp) !==
+    Utils.getYear(tCurr)
+    ? `${Utils.getMonth(tCurr, false)} ${Utils.getYear(tCurr)}`
+    : Utils.getMonth(tCurr, false);
+};
 
 const selectedPersonIdx = computed(() =>
   store.personId2Idx(props.selectedPerson),

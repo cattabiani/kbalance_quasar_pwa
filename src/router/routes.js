@@ -26,13 +26,23 @@ const routes = [
         }, // Protect this route
       },
       {
-        path: '/convert',
+        path: '/sheet/convert',
         name: 'ConvertPage',
         component: () => import('pages/ConvertPage.vue'),
         meta: {
           requiresAuth: true,
           requiresFirebase: true,
           requiresSheet: true,
+        }, // Protect this route
+      },
+      {
+        path: '/convertTest',
+        name: 'ConvertTestPage',
+        component: () => import('pages/ConvertTestPage.vue'),
+        meta: {
+          requiresAuth: true,
+          requiresFirebase: true,
+          requiresSheet: false,
         }, // Protect this route
       },
       {

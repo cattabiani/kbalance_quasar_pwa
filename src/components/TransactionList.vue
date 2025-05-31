@@ -1,15 +1,11 @@
 <template>
-  <q-list>
-    <q-slide-item
-      v-for="(id, index) in transactionList"
-      :key="id"
-      clickable
-      :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'"
-      @click="editTransaction(id)"
-      @left="(event) => removeTransaction(event, id)"
-      left-color="red"
-      read-only
+  <div>
+    <q-infinite-scroll
+      @load="loadMore"
+      :offset="300"
+      :disable="isFinished"
     >
+    <template v-for="(id, index) in visibleTransactions" :key="id">
       <q-item
         v-if="showDivider(index)"
         dense
@@ -18,6 +14,14 @@
       >
         {{ dividerLabel(index) }}
       </q-item>
+    <q-slide-item
+      clickable
+      :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'"
+      @click="editTransaction(id)"
+      @left="(event) => removeTransaction(event, id)"
+      left-color="red"
+      read-only
+    >
       <template v-slot:left v-if="!disableRemove">
         <q-icon name="delete" />
       </template>
@@ -96,7 +100,9 @@
         </q-item-section>
       </q-item>
     </q-slide-item>
-  </q-list>
+    </template>
+    </q-infinite-scroll>
+    </div>
 </template>
 
 <script setup>
@@ -121,8 +127,16 @@ const props = defineProps({
   },
 });
 
-const showDivider = (index) => {
-  if (index === 0) return false;
+const visibleTransactions = ref([]);
+const itemsPerPage = 20;
+const currentIndex = ref(0);
+const startIndex = ref(0);
+
+
+
+const showDivider = (visibleIndex) => {
+  const index = startIndex.value + visibleIndex;
+  if (index <= 0 || index >= transactionList.value.length) return false;
   const idPrev = transactionList.value[index - 1];
   const idCurr = transactionList.value[index];
   const tPrev = props.transactions[idPrev].timestamp;
@@ -134,7 +148,9 @@ const showDivider = (index) => {
   );
 };
 
-const dividerLabel = (index) => {
+const dividerLabel = (visibleIndex) => {
+  const index = startIndex.value + visibleIndex;
+  if (index <= 0 || index >= transactionList.value.length) return null;
   const idCurr = transactionList.value[index];
   const idPrev = transactionList.value[index - 1];
   const tCurr = props.transactions[idCurr].timestamp;
@@ -162,4 +178,31 @@ const editTransaction = (id) => {
 const removeTransaction = ({ reset }, id) => {
   emit('remove', () => reset(), id); // Emit id and call finalize after removal
 };
+
+const loadMore = (index, done) => {
+  const nextSlice = transactionList.value.slice(
+    currentIndex.value,
+    currentIndex.value + itemsPerPage
+  );
+
+  // Update startIndex if this is the first load
+  if (visibleTransactions.value.length === 0) {
+    startIndex.value = currentIndex.value;
+  }
+
+  visibleTransactions.value.push(...nextSlice);
+  currentIndex.value += itemsPerPage;
+  done();
+};
+
+const isFinished = computed(() =>
+  currentIndex.value >= transactionList.value.length
+);
+
+watch(transactionList, () => {
+  visibleTransactions.value = [];
+  currentIndex.value = 0;
+  loadMore(0, () => {});
+});
+
 </script>

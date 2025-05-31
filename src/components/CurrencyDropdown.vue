@@ -18,20 +18,26 @@
             />
           </q-item-section>
         </q-item>
-        <q-item
-          v-for="(currency, index) in filteredCurrencies"
-          :key="currency.value"
-          :class="index % 2 === 0 ? 'bg-white' : 'bg-grey-2'"
-          clickable
-          v-close-popup
-          @click="select(currency.value)"
+        <q-virtual-scroll
+          :items="filteredCurrencies"
+          :item-size="42"
+          virtual-scroll-item-key="value"
         >
-          <q-item-section>{{ currency.label }}</q-item-section>
-        </q-item>
-        <q-separator v-if="filtered && expandable" />
+          <template #default="{ item: currency, index }">
+            <q-item
+              :class="index % 2 === 0 ? 'bg-white' : 'bg-grey-2'"
+              clickable
+              v-close-popup
+              @click="select(currency.value)"
+            >
+              <q-item-section>{{ currency.label }}</q-item-section>
+            </q-item>
+          </template>
+        </q-virtual-scroll>
+        <q-separator v-if="filtered && isExpandable" />
 
         <q-item
-          v-if="filtered && expandable"
+          v-if="filtered && isExpandable"
           clickable
           @click="filtered = false"
         >
@@ -69,39 +75,64 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue']);
 
 const selected = ref(props.modelValue);
-const filtered = ref(props.usedCurrencies.size > 0);
+const filtered = ref(props.usedCurrencies?.size > 0);
 const searchQuery = ref('');
+const isExpandable = computed(() => props.expandable && props.usedCurrencies.size > 0);
 
 const onBeforeShow = () => {
-  filtered.value = props.usedCurrencies.size > 0;
+  filtered.value = props.usedCurrencies?.size > 0;
   if (props.clear) {
     selected.value = null;
     emit('update:modelValue', null);
   }
 };
 
-const allCurrencies = currencyCodes.data.map((currency) => ({
-  label: `${currency.code} - ${currency.currency}`,
-  value: currency.code,
+const allCurrencies = currencyCodes.data.map(({ code, currency }) => ({
+  label: `${code} - ${currency.length > 15 ? currency.slice(0, 15) + '...' : currency}`,
+  value: code,
 }));
 
 const filteredCurrencies = computed(() => {
-  // Step 1: Apply usedCurrencies filter (if any)
-  let result = !props.expandable
-    ? allCurrencies.filter(({ value }) => props.usedCurrencies.has(value))
-    : props.usedCurrencies.size === 0 || !filtered.value
-    ? allCurrencies
-    : allCurrencies.filter(({ value }) => props.usedCurrencies.has(value));
+  // If no usedCurrencies, show all currencies with optional search filter
+  if (props.usedCurrencies.size === 0) {
+    let result = allCurrencies;
+    const query = searchQuery.value?.toLowerCase();
+    if (query) {
+      result = result.filter(({ label }) => label.toLowerCase().includes(query));
+    }
+    return result;
+  }
 
-  // Step 2: Apply search query filter
+  // If not expandable, only show usedCurrencies filtered list
+  if (!isExpandable.value) {
+    let result = allCurrencies.filter(({ value }) => props.usedCurrencies.has(value));
+    const query = searchQuery.value?.toLowerCase();
+    if (query) {
+      result = result.filter(({ label }) => label.toLowerCase().includes(query));
+    }
+    return result;
+  }
+
+  // Expandable and filtered=false means show all currencies
+  if (!filtered.value) {
+    let result = allCurrencies;
+    const query = searchQuery.value?.toLowerCase();
+    if (query) {
+      result = result.filter(({ label }) => label.toLowerCase().includes(query));
+    }
+    return result;
+  }
+
+  // Otherwise, show filtered usedCurrencies list with optional query
+  let result = allCurrencies.filter(({ value }) => props.usedCurrencies.has(value));
   const query = searchQuery.value?.toLowerCase();
   if (query) {
     result = result.filter(({ label }) => label.toLowerCase().includes(query));
   }
-
-  // Step 3: Return result
   return result;
 });
+
+
 
 watch(
   () => props.modelValue,

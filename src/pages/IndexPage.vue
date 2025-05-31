@@ -3,17 +3,9 @@
     <q-toolbar>
       <q-toolbar-title style="font-size: 28px"> Index </q-toolbar-title>
 
-      <q-btn icon="menu" flat class="q-ml-md bg-white text-primary" push>
+      <q-btn icon="settings" flat class="q-ml-md bg-white text-primary" push label="Settings">
         <q-menu>
           <q-list>
-            <!-- <q-item clickable v-ripple @click="convertTest">
-            <q-item-section avatar class="text-primary">
-              <q-icon name="qr_code" />
-            </q-item-section>
-            <q-item-section class="text-primary">
-              <div class="text-center">Share<br />Settings</div>
-            </q-item-section>
-          </q-item> -->
             <q-item clickable v-ripple @click="shareFirebaseSettings">
               <q-item-section avatar class="text-primary">
                 <q-icon name="qr_code" />
@@ -84,6 +76,13 @@
         />
       </q-card-section>
     </q-card>
+
+  <q-toolbar class="column items-center q-pa-sm bg-grey-3">
+    <div class="row q-gutter-sm">
+      <q-btn dense label="Convert" class="bg-green text-white" icon="currency_exchange" @click="goToConvertTest"/>
+    </div>
+  </q-toolbar>
+
     <q-tabs
       v-model="activeTab"
       inline-label
@@ -318,6 +317,10 @@ const shareUsername = () => {
 
 const goToNewSheetWizard = () => {
   router.push({ name: 'NewSheetWizardPage' });
+};
+
+const goToConvertTest = () => {
+  router.push({ name: 'ConvertTestPage' });
 };
 
 const setUsername = async () => {

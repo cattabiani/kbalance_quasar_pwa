@@ -3,7 +3,13 @@
     <q-toolbar>
       <q-toolbar-title style="font-size: 28px"> Index </q-toolbar-title>
 
-      <q-btn icon="settings" flat class="q-ml-md bg-white text-primary" push label="Settings">
+      <q-btn
+        icon="settings"
+        flat
+        class="q-ml-md bg-white text-primary"
+        push
+        label="Settings"
+      >
         <q-menu>
           <q-list>
             <q-item clickable v-ripple @click="shareFirebaseSettings">
@@ -77,11 +83,17 @@
       </q-card-section>
     </q-card>
 
-  <q-toolbar class="column items-center q-pa-sm bg-grey-3">
-    <div class="row q-gutter-sm">
-      <q-btn dense label="Convert" class="bg-green text-white" icon="currency_exchange" @click="goToConvertTest"/>
-    </div>
-  </q-toolbar>
+    <q-toolbar class="column items-center q-pa-sm bg-grey-3">
+      <div class="row q-gutter-sm">
+        <q-btn
+          dense
+          label="Convert"
+          class="bg-purple text-white"
+          icon="currency_exchange"
+          @click="goToConvertTest"
+        />
+      </div>
+    </q-toolbar>
 
     <q-tabs
       v-model="activeTab"
@@ -99,8 +111,8 @@
       <q-tab name="Friends" label="Friends" icon="group" class="full-width" />
     </q-tabs>
     <q-tab-panels v-model="activeTab" animated>
-      <q-tab-panel name="Sheets" class="q-pa-none">
-        <q-list bordered>
+      <q-tab-panel name="Sheets" class="q-pt-sm q-pl-none q-pr-none">
+        <q-list bordered class="q-mb-sm">
           <q-slide-item
             v-for="(id, index) in store.userLedgerSheets"
             :key="index"
@@ -136,8 +148,8 @@
           />
         </div>
       </q-tab-panel>
-      <q-tab-panel name="Friends" class="q-pa-none">
-        <q-list bordered class="q-mb-md">
+      <q-tab-panel name="Friends" class="q-pt-sm q-pl-none q-pr-none">
+        <q-list bordered class="q-mb-sm">
           <q-slide-item
             v-for="(id, index) in store.userLedgerFriends"
             :key="index"

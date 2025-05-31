@@ -12,22 +12,17 @@
   </q-header>
 
   <q-page>
-
-        <q-card>
-<q-card-section class="full-width row justify-center">
-
-<CurrencyInput
+    <q-card>
+      <q-card-section class="full-width row justify-center">
+        <CurrencyInput
           v-model="amount"
           :currency="'XXX'"
           label="Amount"
           class="q-mr-md"
         />
-        <CurrencyDropdown
-          v-model="fromCurrency"
-          dense
-        />
-</q-card-section>
-        
+        <CurrencyDropdown v-model="fromCurrency" dense />
+      </q-card-section>
+
       <q-card-section class="full-width row justify-center">
         <q-input
           ref="conversionInputRef"
@@ -40,28 +35,24 @@
           @focus="conversionInputRef.select()"
           class="q-mr-md"
         />
-        <q-btn  icon="swap_vert" @click="swapCurrencies" />
+        <q-btn icon="swap_vert" @click="swapCurrencies" />
       </q-card-section>
 
       <q-card-section class="full-width row justify-center">
-    <CurrencyInput
+        <CurrencyInput
           :model-value="convertedAmount"
           :currency="'XXX'"
           label="Amount"
           class="q-mr-md"
           readonly
         />
-                <CurrencyDropdown
-          v-model="toCurrency"
-          dense
-        />
+        <CurrencyDropdown v-model="toCurrency" dense />
       </q-card-section>
     </q-card>
   </q-page>
 </template>
 
 <script setup>
-
 defineOptions({
   name: 'ConvertTestPage',
 });
@@ -73,12 +64,11 @@ import CurrencyDropdown from 'src/components/CurrencyDropdown.vue';
 
 import { ref, computed, onMounted } from 'vue';
 
-
 const router = useRouter();
 const $q = useQuasar();
 
-const fromCurrency = ref("USD");
-const toCurrency = ref("USD");
+const fromCurrency = ref('USD');
+const toCurrency = ref('USD');
 const rates = ref(null);
 const amount = ref(100);
 
@@ -88,9 +78,11 @@ const goBack = () => {
 
 const swapCurrencies = () => {
   if (fromCurrency.value === toCurrency.value) return;
-  [fromCurrency.value, toCurrency.value] = [toCurrency.value, fromCurrency.value];
+  [fromCurrency.value, toCurrency.value] = [
+    toCurrency.value,
+    fromCurrency.value,
+  ];
 };
-
 
 onMounted(async () => {
   const apiUrl = `https://cdn.jsdelivr.net/gh/ismartcoding/currency-api/latest/data.json`;
@@ -128,7 +120,4 @@ const conversionMulti = computed(() => {
 const convertedAmount = computed(() => {
   return amount.value * conversionMulti.value;
 });
-
-
-
 </script>

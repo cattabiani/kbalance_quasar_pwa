@@ -20,7 +20,7 @@
       <q-item
         v-for="(currency, index) in filteredCurrencies"
         :key="currency.value"
-        :class="index % 2 === 0 ? 'bg-white' : 'bg-grey-2'"
+        :class="index % 2 === 0 ? 'bg-white' : 'bg-grey-3'"
         clickable
         v-close-popup
         @click="select(currency.value)"

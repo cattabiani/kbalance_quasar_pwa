@@ -9,14 +9,49 @@
         class="bg-white text-primary"
       />
       <q-space />
-      <q-btn
+
+      <q-btn-dropdown
         flat
-        icon="people"
-        @click="goToPeople"
-        label="People"
-        class="q-ml-md bg-white text-primary"
-        aria-label="Edit people"
-      />
+        class="q-ma-none bg-white text-primary"
+        label="More"
+        icon="more_vert"
+        menu-anchor="bottom right"
+        menu-self="top right"
+      >
+        <q-list>
+          <q-item clickable v-close-popup @click="goToPeople" class="bg-grey-3">
+            <q-item-section avatar>
+              <q-icon name="people" />
+            </q-item-section>
+            <q-item-section>People</q-item-section>
+          </q-item>
+          <q-item
+            clickable
+            v-close-popup
+            @click="goToConvert"
+            v-if="summaries.ans.length"
+          >
+            <q-item-section avatar>
+              <q-icon name="currency_exchange" />
+            </q-item-section>
+            <q-item-section>Convert</q-item-section>
+          </q-item>
+
+          <q-item :class="summaries.ans.length ? 'bg-grey-3' : ''">
+            <q-item-section>
+              <CurrencyDropdown
+                v-model="setCurrency"
+                :usedCurrencies="usedCurrencies"
+                label="Settle"
+                icon="payments"
+                clear
+                flat
+                :expandable="false"
+              />
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-btn-dropdown>
     </q-toolbar>
   </q-header>
 
@@ -42,37 +77,13 @@
 
     <summary-card :summaries="summaries" :selectedPerson="selectedPerson" />
 
-    <q-card class="q-my-md q-mr-md q-ml-md">
-      <q-card-section class="row justify-center items-center q-pb-none">
+    <q-card class="q-ma-md">
+      <q-card-section class="row justify-center items-center q-pa-sm">
         <q-btn
-          flat
-          dense
           class="bg-primary text-white"
           icon="note_add"
           label="Add Entry"
           @click="addTransaction"
-        />
-        <q-btn
-          flat
-          dense
-          class="q-ml-md bg-purple text-white"
-          icon="currency_exchange"
-          label="Convert"
-          @click="goToConvert"
-          v-if="summaries.ans.length"
-        />
-      </q-card-section>
-      <q-card-section class="row justify-center items-center q-bt-sm">
-        <CurrencyDropdown
-          v-model="setCurrency"
-          :usedCurrencies="usedCurrencies"
-          label="Settle"
-          icon="payments"
-          flat
-          dense
-          clear
-          class="bg-green text-white"
-          :expandable="false"
         />
       </q-card-section>
     </q-card>

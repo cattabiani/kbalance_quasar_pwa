@@ -88,13 +88,13 @@ import CurrencyDropdown from 'src/components/CurrencyDropdown.vue';
 import Results from 'src/models/results';
 import SummaryCard from 'src/components/SummaryCard.vue';
 import TransactionList from 'src/components/TransactionList.vue';
-import { ref, watch, computed, onMounted } from 'vue';
+import { useExchangeRates } from 'src/composables/useExchangeRates';
+import { ref, computed, onMounted } from 'vue';
 
 const store = useStore();
 const router = useRouter();
 const $q = useQuasar();
 
-const rates = ref(null);
 const conversionInputRef = ref(null);
 const selectedPerson = ref(store.user.id);
 const selectedPersonIdx = computed(() =>
@@ -114,6 +114,7 @@ const fromCurrency = ref(keys.length > 0 ? keys[0] : 'USD');
 const toCurrency = ref(
   keys.length > 1 ? keys[1] : keys.length > 0 ? keys[0] : 'USD',
 );
+const { conversionMulti } = useExchangeRates(fromCurrency, toCurrency);
 
 const goBack = () => {
   router.go(-1);
@@ -132,39 +133,6 @@ const swapCurrencies = () => {
     });
   }
 };
-
-onMounted(async () => {
-  const apiUrl = `https://cdn.jsdelivr.net/gh/ismartcoding/currency-api/latest/data.json`;
-
-  try {
-    const response = await fetch(apiUrl);
-    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-
-    // Set the fetched exchange rates in the ref
-    rates.value = await response.json();
-  } catch (error) {
-    $q.notify({ message: error.message || error, color: 'negative' });
-  }
-});
-
-const conversionMulti = computed(() => {
-  if (!rates.value) {
-    return 1.0; // If rates is null, return 1.0
-  }
-  if (!rates.value.quotes[fromCurrency.value]) {
-    $q.notify(`Unknown currency ${fromCurrency.value}!`);
-    return 1.0;
-  }
-  if (!rates.value.quotes[toCurrency.value]) {
-    $q.notify(`Unknown currency ${toCurrency.value}!`);
-    return 1.0;
-  }
-
-  return (
-    rates.value.quotes[toCurrency.value] /
-    rates.value.quotes[fromCurrency.value]
-  );
-});
 
 const transactions = computed(() => {
   let msg = `🤖 settle ${store.getName(selectedPerson.value)}`;

@@ -8,6 +8,7 @@
         aria-label="Go Back"
         class="bg-white text-primary"
       />
+      <q-toolbar-title style="font-size: 28px"> Converter </q-toolbar-title>
     </q-toolbar>
   </q-header>
 
@@ -61,6 +62,7 @@ import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import CurrencyInput from 'src/components/CurrencyInput.vue';
 import CurrencyDropdown from 'src/components/CurrencyDropdown.vue';
+import { useExchangeRates } from 'src/composables/useExchangeRates';
 
 import { ref, computed, onMounted } from 'vue';
 
@@ -69,7 +71,7 @@ const $q = useQuasar();
 
 const fromCurrency = ref('USD');
 const toCurrency = ref('USD');
-const rates = ref(null);
+const { conversionMulti } = useExchangeRates(fromCurrency, toCurrency);
 const amount = ref(100);
 
 const goBack = () => {
@@ -83,39 +85,6 @@ const swapCurrencies = () => {
     fromCurrency.value,
   ];
 };
-
-onMounted(async () => {
-  const apiUrl = `https://cdn.jsdelivr.net/gh/ismartcoding/currency-api/latest/data.json`;
-
-  try {
-    const response = await fetch(apiUrl);
-    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-
-    // Set the fetched exchange rates in the ref
-    rates.value = await response.json();
-  } catch (error) {
-    $q.notify({ message: error.message || error, color: 'negative' });
-  }
-});
-
-const conversionMulti = computed(() => {
-  if (!rates.value) {
-    return 1.0; // If rates is null, return 1.0
-  }
-  if (!rates.value.quotes[fromCurrency.value]) {
-    $q.notify(`Unknown currency ${fromCurrency.value}!`);
-    return 1.0;
-  }
-  if (!rates.value.quotes[toCurrency.value]) {
-    $q.notify(`Unknown currency ${toCurrency.value}!`);
-    return 1.0;
-  }
-
-  return (
-    rates.value.quotes[toCurrency.value] /
-    rates.value.quotes[fromCurrency.value]
-  );
-});
 
 const convertedAmount = computed(() => {
   return amount.value * conversionMulti.value;

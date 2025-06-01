@@ -77,16 +77,14 @@
 
     <summary-card :summaries="summaries" :selectedPerson="selectedPerson" />
 
-    <q-card class="q-ma-md">
-      <q-card-section class="row justify-center items-center q-pa-sm">
-        <q-btn
-          class="bg-primary text-white"
-          icon="note_add"
-          label="Add Entry"
-          @click="addTransaction"
-        />
-      </q-card-section>
-    </q-card>
+    <div class="row justify-center items-center q-pb-md">
+      <q-btn
+        class="bg-primary text-white"
+        icon="note_add"
+        label="Add Entry"
+        @click="addTransaction"
+      />
+    </div>
 
     <transaction-list
       :transactions="store.currentSheet?.transactions || {}"

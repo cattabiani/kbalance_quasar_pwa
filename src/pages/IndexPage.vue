@@ -86,7 +86,6 @@
     <q-toolbar class="column items-center q-pa-sm bg-grey-3">
       <div class="row q-gutter-sm">
         <q-btn
-          dense
           label="Convert"
           class="bg-purple text-white"
           icon="currency_exchange"

@@ -30,12 +30,75 @@ const Result = {
     }
   },
 
+  _minCashFlow(mat) {
+    const n = mat.length;
+    const balances = Array(n).fill(0);
+
+    // Compute net balances
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < i; j++) {
+        const v = mat[i][j];
+        balances[i] -= v;
+        balances[j] += v;
+      }
+    }
+
+    const transactions = [];
+    let balList = balances
+      .map((balance, index) => ({ index, balance }))
+      .filter(({ balance }) => balance !== 0);
+
+    while (balList.length > 0) {
+      // Find debtor (min) and creditor (max) efficiently
+      let debtorIdx = 0;
+      let creditorIdx = 0;
+      for (let i = 1; i < balList.length; i++) {
+        if (balList[i].balance < balList[debtorIdx].balance) {
+          debtorIdx = i;
+        }
+        if (balList[i].balance > balList[creditorIdx].balance) {
+          creditorIdx = i;
+        }
+      }
+
+      const debtor = balList[debtorIdx];
+      const creditor = balList[creditorIdx];
+
+      const settle = Math.min(-debtor.balance, creditor.balance);
+      transactions.push([debtor.index, creditor.index, settle]);
+
+      debtor.balance += settle;
+      creditor.balance -= settle;
+
+      // Remove settled parties
+      balList = balList.filter((p) => p.balance !== 0);
+    }
+
+    return transactions;
+  },
+
+  _simplify(result) {
+    const ans = [];
+    for (let i = 0; i < result.mat.length; i++) {
+      ans.push(Array(i).fill(0));
+    }
+
+    const transactions = this._minCashFlow(result.mat);
+    for (const [i, j, w] of transactions) {
+      this._apply(ans, i, j, w);
+    }
+
+    result.mat = ans;
+  },
+
   getSummary(result, id) {
     if (id === null || id === undefined || id < 0 || id >= result.mat.length) {
       return [];
     }
 
     const ans = [];
+
+    this._simplify(result);
 
     // Add the values from the row at 'id' with 0 appended
     for (let i = 0; i < result.mat[id].length; i++) {
@@ -58,13 +121,13 @@ const Result = {
   applyTransaction(result, transaction, multi) {
     const j = transaction.payer;
     for (let i = 0; i < transaction.debts.length; ++i) {
-      this._apply(result, i, j, multi * transaction.debts[i].owedAmount);
+      this._apply(result.mat, i, j, multi * transaction.debts[i].owedAmount);
     }
 
     result.ntransactions += multi;
   },
 
-  _apply(result, i, j, v) {
+  _apply(mat, i, j, v) {
     if (i === j) {
       return;
     }
@@ -74,7 +137,7 @@ const Result = {
       v = -v;
     }
 
-    result.mat[i][j] += v;
+    mat[i][j] += v;
   },
 
   makeEquivalentTransactionBatch(
@@ -122,7 +185,7 @@ const Results = {
     let nCurrencies = 0;
     const mats = {};
     const results = { nPeople, nTransactions, nCurrencies, mats };
-    Results.applyTransactions(results, transactions, nPeople);
+    this.applyTransactions(results, transactions, nPeople);
     return results;
   },
 

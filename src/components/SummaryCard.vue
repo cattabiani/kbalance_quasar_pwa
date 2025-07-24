@@ -17,7 +17,10 @@
       </div>
     </q-card>
 
-    <q-card v-else class="q-my-md q-mr-md q-ml-md">
+    <q-card
+      v-if="!localSummaries || localSummaries.detail.length === 0"
+      class="q-my-md q-mr-md q-ml-md"
+    >
       <div class="q-pa-md">
         <div>All Settled!</div>
       </div>

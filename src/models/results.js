@@ -78,6 +78,10 @@ const Result = {
   },
 
   _simplify(result) {
+    if (result.mat.length < 3) {
+      return;
+    }
+
     const ans = [];
     for (let i = 0; i < result.mat.length; i++) {
       ans.push(Array(i).fill(0));

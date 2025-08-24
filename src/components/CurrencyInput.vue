@@ -5,6 +5,7 @@
     outlined
     :label="props.label"
     @focus="inputRef.select()"
+    :input-class="props.alignRight ? 'text-right' : 'text-left'"
   />
 </template>
 
@@ -19,6 +20,10 @@ const props = defineProps({
   modelValue: Number,
   currency: String,
   label: String,
+  alignRight: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const { inputRef, formattedValue, setValue, setOptions } = useCurrencyInput({

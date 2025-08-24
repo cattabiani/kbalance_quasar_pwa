@@ -203,54 +203,101 @@
           class="bg-secondary text-white"
           aria-label="Save"
         />
-      </q-card-section> </q-card
-    ><q-card class="q-my-md q-mr-md q-ml-md q-mb-md">
-      <q-card-section>
-        <div class="row text-bold">
-          <div class="col-auto q-mr-md q-ml-sm">Payer</div>
-          <div class="col">Person</div>
-          <div class="col-auto q-mr-md">Owes</div>
-          <div class="col-auto q-mr-lg">Amount</div>
-        </div>
       </q-card-section>
+    </q-card>
+    <!-- <q-card class="q-my-md q-mr-md q-ml-md q-mb-md"> -->
+    <q-card-section>
+      <div class="row text-bold no-wrap items-center">
+        <!-- radio header -->
+        <div style="flex: 0 0 5%; text-align: left" class="q-ml-sm q-mr-md">
+          Payer
+        </div>
 
-      <q-list class="q-my-md q-mr-md q-ml-md">
-        <q-item
-          v-for="(id, index) in store.currentSheetPeople"
-          :key="index"
-          :class="index % 2 === 0 ? 'bg-grey-1' : 'bg-white'"
-          v-show="
-            store.currentSheet.people[id].active ||
-            seeInactive ||
-            tr.payer === index ||
-            tr.debts[index].owedAmount !== 0 ||
-            tr.debts[index].isDebtor
+        <!-- name header -->
+        <div
+          style="
+            flex: 1 1 auto;
+            text-align: left;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
           "
         >
-          <div class="q-mr-sx" style="display: flex">
-            <q-radio
-              v-model="tr.payer"
-              :val="index"
-              @update:model-value="split(false)"
-            />
-          </div>
-          <q-item-section>
-            <person-item :id="id" :max-length="13" />
-          </q-item-section>
+          Person
+        </div>
+
+        <!-- checkbox header -->
+        <div style="flex: 0 0 5%; text-align: center; margin-right: 6px">
+          Owes
+        </div>
+
+        <!-- value header -->
+        <div style="flex: 0 1 25%; text-align: right">Amount</div>
+      </div>
+    </q-card-section>
+
+    <q-list class="q-my-md q-mr-md q-ml-md">
+      <q-item
+        v-for="(id, index) in store.currentSheetPeople"
+        :key="index"
+        :class="index % 2 === 0 ? 'bg-grey-1' : 'bg-white'"
+        v-show="
+          store.currentSheet.people[id].active ||
+          seeInactive ||
+          tr.payer === index ||
+          tr.debts[index].owedAmount !== 0 ||
+          tr.debts[index].isDebtor
+        "
+        class="row no-wrap items-center"
+      >
+        <!-- radio left -->
+        <q-item-section side style="flex: 0 0 5%; text-align: left">
+          <q-radio
+            v-model="tr.payer"
+            :val="index"
+            @update:model-value="split(false)"
+            dense
+          />
+        </q-item-section>
+
+        <!-- name flexible -->
+        <q-item-section
+          style="
+            flex: 1 1 auto;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-align: right;
+          "
+        >
+          <person-item :id="id" />
+        </q-item-section>
+
+        <!-- checkbox right -->
+        <q-item-section
+          side
+          style="flex: 0 0 5%; text-align: center; margin-right: 6px"
+        >
           <q-checkbox
             v-model="tr.debts[index].isDebtor"
-            class="q-mr-sx"
             @update:model-value="split(true)"
+            dense
           />
+        </q-item-section>
+
+        <!-- value right -->
+        <q-item-section side style="flex: 0 1 25%">
           <CurrencyInput
             v-model="tr.debts[index].owedAmount"
             :currency="'XXX'"
-            :style="{ maxWidth: '100px' }"
+            dense
+            style="width: auto; min-width: 4ch"
             @blur="customEditing(index)"
           />
-        </q-item>
-      </q-list>
-    </q-card>
+        </q-item-section>
+      </q-item>
+    </q-list>
+    <!-- </q-card> -->
   </q-page>
 </template>
 

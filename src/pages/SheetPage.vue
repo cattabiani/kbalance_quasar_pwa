@@ -57,21 +57,37 @@
 
   <q-page>
     <q-card class="q-my-md q-mr-md q-ml-md">
-      <q-card-section class="row q-gutter-sm">
-        <people-dropdown
-          class="col-auto"
-          v-if="store.currentSheet"
-          v-model="selectedPerson"
-          :people="store.currentSheet.people"
-          :sorted-people="store.currentSheetPeople"
-        />
-        <q-input
-          class="col"
-          v-model="name"
-          @blur="setSheetName"
-          outlined
-          label="Sheet Name"
-        />
+      <q-card-section class="row no-wrap items-center">
+        <!-- dropdown 50% -->
+        <div class="col-6" style="text-overflow: ellipsis; white-space: nowrap">
+          <people-dropdown
+            v-if="store.currentSheet"
+            v-model="selectedPerson"
+            :people="store.currentSheet.people"
+            :sorted-people="store.currentSheetPeople"
+            style="width: 100%"
+          />
+        </div>
+
+        <!-- input 50% with small margin -->
+        <div
+          class="col-6"
+          style="
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding-left: 8px;
+          "
+        >
+          <q-input
+            v-model="name"
+            @blur="setSheetName"
+            outlined
+            label="Sheet Name"
+            dense
+            style="width: 100%"
+          />
+        </div>
       </q-card-section>
     </q-card>
 

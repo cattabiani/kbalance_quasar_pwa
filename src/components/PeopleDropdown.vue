@@ -12,12 +12,22 @@
     ref="addUserRef"
   >
     <template #label>
-      <span v-if="fixedLabel">{{ props.fixedLabel }}</span>
+      <span
+        v-if="fixedLabel"
+        style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap"
+        >{{ props.fixedLabel }}</span
+      >
       <person-item
         v-else
         :id="props.modelValue"
         :people="props.people"
         :max-length="13"
+        style="
+          flex: 1 1 auto;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        "
       />
     </template>
 

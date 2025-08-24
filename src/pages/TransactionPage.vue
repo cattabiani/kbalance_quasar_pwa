@@ -160,7 +160,7 @@
       </q-card-section>
 
       <q-card-section
-        class="row justify-center items-center"
+        class="row justify-center items-center no-wrap"
         v-if="tr.debts.length > 2"
       >
         <people-dropdown
@@ -207,32 +207,20 @@
     </q-card>
     <!-- <q-card class="q-my-md q-mr-md q-ml-md q-mb-md"> -->
     <q-card-section>
-      <div class="row text-bold no-wrap items-center">
+      <div class="row text-bold items-center no-wrap">
         <!-- radio header -->
         <div style="flex: 0 0 5%; text-align: left" class="q-ml-sm q-mr-md">
           Payer
         </div>
 
         <!-- name header -->
-        <div
-          style="
-            flex: 1 1 auto;
-            text-align: left;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          "
-        >
-          Person
-        </div>
+        <div style="flex: 1 0 30%; text-align: left">Person</div>
 
         <!-- checkbox header -->
-        <div style="flex: 0 0 5%; text-align: center; margin-right: 6px">
-          Owes
-        </div>
+        <div style="flex: 0 0 10%; text-align: center">Owes</div>
 
         <!-- value header -->
-        <div style="flex: 0 1 25%; text-align: right">Amount</div>
+        <div style="flex: 0 0 32%; text-align: right">Amount</div>
       </div>
     </q-card-section>
 
@@ -263,7 +251,7 @@
         <!-- name flexible -->
         <q-item-section
           style="
-            flex: 1 1 auto;
+            flex: 1 0 50%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -286,7 +274,7 @@
         </q-item-section>
 
         <!-- value right -->
-        <q-item-section side style="flex: 0 1 25%">
+        <q-item-section side style="flex: 0 0 35%">
           <CurrencyInput
             v-model="tr.debts[index].owedAmount"
             :currency="'XXX'"

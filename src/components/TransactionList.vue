@@ -3,12 +3,12 @@
     <q-infinite-scroll @load="loadMore" :offset="300" :disable="isFinished">
       <template v-for="(id, index) in visibleTransactions" :key="id">
         <q-item
-          v-if="showDivider(index)"
+          v-if="getDividerLabel(index)"
           dense
           dark
           class="bg-secondary text-bold text-white justify-center"
         >
-          {{ dividerLabel(index) }}
+          {{ getDividerLabel(index) }}
         </q-item>
         <q-slide-item
           clickable
@@ -134,31 +134,36 @@ const itemsPerPage = 20;
 const currentIndex = ref(0);
 const startIndex = ref(0);
 
-const showDivider = (visibleIndex) => {
+const getDividerLabel = (visibleIndex) => {
   const index = startIndex.value + visibleIndex;
-  if (index <= 0 || index >= transactionList.value.length) return false;
-  const idPrev = transactionList.value[index - 1];
+  if (index < 0 || index >= transactionList.value.length) return '';
+
   const idCurr = transactionList.value[index];
-  const tPrev = props.transactions[idPrev].timestamp;
   const tCurr = props.transactions[idCurr].timestamp;
 
-  return (
-    Utils.getYear(tPrev) !== Utils.getYear(tCurr) ||
-    Utils.getMonth(tPrev) !== Utils.getMonth(tCurr)
-  );
-};
+  let tPrev;
+  if (index === 0) {
+    tPrev = new Date('2026-08-06').getTime(); // your custom date
+  } else {
+    const idPrev = transactionList.value[index - 1];
+    tPrev = props.transactions[idPrev].timestamp;
+  }
 
-const dividerLabel = (visibleIndex) => {
-  const index = startIndex.value + visibleIndex;
-  if (index <= 0 || index >= transactionList.value.length) return null;
-  const idCurr = transactionList.value[index];
-  const idPrev = transactionList.value[index - 1];
-  const tCurr = props.transactions[idCurr].timestamp;
+  const yearPrev = Utils.getYear(tPrev);
+  const monthPrev = Utils.getMonth(tPrev);
+  const yearCurr = Utils.getYear(tCurr);
+  const monthCurr = Utils.getMonth(tCurr);
 
-  return Utils.getYear(props.transactions[idPrev].timestamp) !==
-    Utils.getYear(tCurr)
-    ? `${Utils.getMonth(tCurr, false)} ${Utils.getYear(tCurr)}`
-    : Utils.getMonth(tCurr, false);
+  if (yearPrev === yearCurr && monthPrev === monthCurr) return '';
+
+  let label = '';
+  if (monthPrev !== monthCurr) label += Utils.getMonth(tCurr, false);
+  if (yearPrev !== yearCurr) {
+    if (label) label += ' ';
+    label += yearCurr;
+  }
+
+  return label;
 };
 
 const selectedPersonIdx = computed(() =>

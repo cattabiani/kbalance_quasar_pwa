@@ -143,7 +143,7 @@ const getDividerLabel = (visibleIndex) => {
 
   let tPrev;
   if (index === 0) {
-    tPrev = new Date('2026-08-06').getTime(); // your custom date
+    tPrev = Date.now();
   } else {
     const idPrev = transactionList.value[index - 1];
     tPrev = props.transactions[idPrev].timestamp;

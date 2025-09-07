@@ -127,6 +127,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  searchString: {
+    type: String,
+    default: null,
+  },
 });
 
 const visibleTransactions = ref([]);
@@ -171,7 +175,13 @@ const selectedPersonIdx = computed(() =>
 );
 
 const transactionList = computed(() => {
-  return Transaction.getTransactionList(props.transactions);
+  const search = (props.searchString || '').toLowerCase();
+
+  return Transaction.getTransactionList(props.transactions).filter((id) => {
+    return Transaction.name(props.transactions[id])
+      .toLowerCase()
+      .includes(search);
+  });
 });
 
 const emit = defineEmits(['edit', 'remove']);
@@ -199,6 +209,28 @@ const loadMore = (index, done) => {
   currentIndex.value += itemsPerPage;
   done();
 };
+
+// const loadMore = (index, done) => {
+//   const search = props.searchString.toLowerCase();
+
+//   // Filter transactions first
+//   const filtered = transactionList.value.filter(t =>
+//     Transaction.name(t).toLowerCase().includes(search)
+//   );
+
+//   const nextSlice = filtered.slice(
+//     currentIndex.value,
+//     currentIndex.value + itemsPerPage
+//   );
+
+//   if (visibleTransactions.value.length === 0) {
+//     startIndex.value = currentIndex.value;
+//   }
+
+//   visibleTransactions.value.push(...nextSlice);
+//   currentIndex.value += itemsPerPage;
+//   done();
+// };
 
 const isFinished = computed(
   () => currentIndex.value >= transactionList.value.length,

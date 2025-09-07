@@ -10,6 +10,14 @@
       />
       <q-space />
 
+      <q-btn
+        flat
+        icon="search"
+        label="Search"
+        @click="toggleSearch"
+        class="bg-white text-primary q-mr-sm"
+      />
+
       <q-btn-dropdown
         flat
         class="q-ma-none bg-white text-primary"
@@ -52,6 +60,18 @@
           </q-item>
         </q-list>
       </q-btn-dropdown>
+    </q-toolbar>
+    <q-toolbar v-show="searchActive" class="bg-primary q-pa-sm">
+      <q-input
+        ref="searchInput"
+        dense
+        outlined
+        debounce="300"
+        v-model="searchString"
+        placeholder="Type to search..."
+        clearable
+        class="col bg-white"
+      />
     </q-toolbar>
   </q-header>
 
@@ -105,6 +125,7 @@
     <transaction-list
       :transactions="store.currentSheet?.transactions || {}"
       :selectedPerson="selectedPerson"
+      :search-string="searchString"
       @remove="removeTransaction"
       @edit="editTransaction"
     />
@@ -126,7 +147,7 @@ import CurrencyDropdown from 'src/components/CurrencyDropdown.vue';
 import Utils from 'src/utils/utils';
 import Transaction from 'src/models/transaction';
 import Results from 'src/models/results';
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, nextTick } from 'vue';
 
 const store = useStore();
 const router = useRouter();
@@ -137,6 +158,9 @@ const selectedPersonIdx = computed(() =>
   store.personId2Idx(selectedPerson.value),
 );
 const setCurrency = ref(null);
+const searchString = ref(null);
+const searchActive = ref(false);
+const searchInput = ref(null);
 
 const summaries = computed(() => {
   return Results.getSummary(store.currentSheetResults, selectedPersonIdx.value);
@@ -254,4 +278,15 @@ watch(
   },
   { immediate: true },
 );
+
+const toggleSearch = () => {
+  searchActive.value = !searchActive.value;
+  if (!searchActive.value) {
+    searchString.value = '';
+  } else {
+    nextTick(() => {
+      searchInput.value?.focus();
+    });
+  }
+};
 </script>

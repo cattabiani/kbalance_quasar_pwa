@@ -58,6 +58,12 @@
               />
             </q-item-section>
           </q-item>
+          <q-item clickable v-close-popup @click="downloadSheet">
+            <q-item-section avatar>
+              <q-icon name="download" />
+            </q-item-section>
+            <q-item-section>Download (csv)</q-item-section>
+          </q-item>
         </q-list>
       </q-btn-dropdown>
     </q-toolbar>
@@ -288,5 +294,20 @@ const toggleSearch = () => {
       searchInput.value?.focus();
     });
   }
+};
+
+const downloadSheet = () => {
+  const csvContent = store.currentSheetToCsv();
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', 'sheet.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
 };
 </script>

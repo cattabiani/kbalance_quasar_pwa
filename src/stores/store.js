@@ -392,6 +392,28 @@ export const useStore = defineStore('mainStore', {
       return newSheet;
     },
 
+    currentSheetToCsv() {
+      if (!this.currentSheet) return '';
+
+      const peopleNames = this.currentSheetPeople.map((id) =>
+        this.getName(id, this.currentSheet.people),
+      );
+
+      const header = Transaction.csvHeader(peopleNames);
+
+      const rows = [
+        header,
+        ...this.currentSheetTransactions.map((id) =>
+          Transaction.toCsvLine(
+            this.currentSheet.transactions[id],
+            peopleNames,
+          ),
+        ),
+      ];
+
+      return rows.map((r) => r.join(',')).join('\n');
+    },
+
     async removeSheet(id, nUsers, batch = null) {
       return await this.autoBatch(
         async (id, nUsers, batch) => {

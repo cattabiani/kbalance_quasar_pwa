@@ -190,6 +190,40 @@ const Transaction = {
       .sort(([, a], [, b]) => b.timestamp - a.timestamp) // Sort by timestamp (descending)
       .map(([id]) => id); // Extract the keys (IDs)
   },
+
+  csvHeader(peopleNames = []) {
+    return [
+      'id',
+      'name',
+      'payer',
+      'amount',
+      'currency',
+      ...peopleNames,
+      'timestamp',
+      'date',
+    ];
+  },
+
+  toCsvLine(transaction, peopleNames = []) {
+    const payerName =
+      peopleNames[transaction.payer] ?? `Person${transaction.payer}`;
+    const debts = transaction.debts.map((d, idx) => d.owedAmount);
+    const date = new Date(transaction.timestamp);
+    const dateStr = new Intl.DateTimeFormat('en-GB').format(
+      new Date(transaction.timestamp),
+    );
+
+    return [
+      transaction.id,
+      transaction.name,
+      payerName,
+      transaction.amount,
+      transaction.currency,
+      ...debts,
+      transaction.timestamp,
+      dateStr,
+    ];
+  },
 };
 
 export default Transaction;

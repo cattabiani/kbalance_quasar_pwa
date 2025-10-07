@@ -15,7 +15,10 @@ const Utils = {
   },
 
   displayCurrency(currency, amount) {
-    return `${currency} ${parseFloat(amount / 100)}`;
+    const formatted = new Intl.NumberFormat('it-CH', {
+      maximumFractionDigits: 2,
+    }).format(amount / 100);
+    return `${currency} ${formatted}`;
   },
 
   truncate(name, maxLength = null) {

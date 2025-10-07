@@ -35,6 +35,7 @@ const { inputRef, formattedValue, setValue, setOptions } = useCurrencyInput({
     max: undefined,
   },
   autoSign: true,
+  locale: 'it-CH',
 });
 
 watch(

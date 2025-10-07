@@ -1,7 +1,10 @@
 <template>
   <div>
     <q-card
-      v-if="negativeSummaryDisplay || positiveSummaryDisplay"
+      v-if="
+        (negativeSummaryDisplay || positiveSummaryDisplay) &&
+        store.currentSheetPeople.length > 2
+      "
       class="q-my-md q-mr-md q-ml-md"
     >
       <div class="q-pa-md">

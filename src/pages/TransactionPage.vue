@@ -43,8 +43,7 @@
         <CurrencyDropdown
           v-model="tr.currency"
           :usedCurrencies="store.currencies"
-          class="q-mr-md text-subtitle1"
-          style="height: 56px"
+          class="q-mr-md text-subtitle1 full-height"
         />
 
         <CurrencyInput

@@ -21,8 +21,9 @@
   </q-header>
 
   <q-page>
-    <q-card class="q-my-md q-mr-md q-ml-md">
-      <q-card-section class="full-width">
+    <q-card class="q-my-md q-mx-md row items-stretch q-gutter-x-md">
+      <!-- Left: flexible -->
+      <q-card-section class="col">
         <people-dropdown
           class="full-width"
           v-if="store.currentSheet"
@@ -32,31 +33,13 @@
         />
       </q-card-section>
 
-      <q-card-section class="full-width row justify-center">
+      <!-- Right: auto width, stretches to same height -->
+      <q-card-section class="row items-stretch">
         <CurrencyDropdown
-          v-model="fromCurrency"
-          :usedCurrencies="fromCurrencies"
-          dense
+          v-model="currency"
+          :usedCurrencies="usedCurrencies"
           :expandable="false"
-          class="q-mr-md"
-        />
-        <q-btn class="q-mr-md" icon="swap_horiz" @click="swapCurrencies" />
-        <CurrencyDropdown
-          v-model="toCurrency"
-          :usedCurrencies="fromCurrencies"
-          dense
-        />
-      </q-card-section>
-      <q-card-section class="full-width row justify-center">
-        <q-input
-          ref="conversionInputRef"
-          outlined
-          v-model.number="conversionMulti"
-          type="number"
-          min="0"
-          label="Conversion Rate"
-          input-class="text-center"
-          @focus="conversionInputRef.select()"
+          class="text-subtitle1 full-height"
         />
       </q-card-section>
     </q-card>
@@ -74,7 +57,7 @@
 
 <script setup>
 defineOptions({
-  name: 'ConvertPage',
+  name: 'SettlePage',
 });
 
 import { useQuasar } from 'quasar';
@@ -93,7 +76,6 @@ const store = useStore();
 const router = useRouter();
 const $q = useQuasar();
 
-const conversionInputRef = ref(null);
 const selectedPerson = ref(store.user.id);
 const selectedPersonIdx = computed(() =>
   store.personId2Idx(selectedPerson.value),
@@ -102,54 +84,27 @@ const selectedPersonIdx = computed(() =>
 const baseSummaries = computed(() => {
   return Results.getSummary(store.currentSheetResults, selectedPersonIdx.value);
 });
-
-const fromCurrencies = computed(() => {
+const usedCurrencies = computed(() => {
   return new Set(Object.keys(baseSummaries.value.totals));
 });
-
 const keys = Object.keys(baseSummaries.value.totals);
-const fromCurrency = ref(keys.length > 0 ? keys[0] : 'USD');
-const toCurrency = ref(
-  keys.length > 1 ? keys[1] : keys.length > 0 ? keys[0] : 'USD',
-);
-const { conversionMulti } = useExchangeRates(fromCurrency, toCurrency);
+const currency = ref(keys.length > 0 ? keys[0] : 'USD');
 
 const goBack = () => {
   router.go(-1);
 };
 
-const swapCurrencies = () => {
-  if (Object.keys(baseSummaries.value.totals).includes(toCurrency.value)) {
-    [fromCurrency.value, toCurrency.value] = [
-      toCurrency.value,
-      fromCurrency.value,
-    ];
-  } else {
-    $q.notify({
-      message: `Cannot swap: You don't have a balance in ${toCurrency.value}`,
-      color: 'negative',
-    });
-  }
-};
-
 const transactions = computed(() => {
   let msg = `🤖 settle ${store.getName(selectedPerson.value)}`;
   const settleTransactions = store.makeEquivalentTransactionBatch(
-    fromCurrency.value,
+    currency.value,
     selectedPersonIdx.value,
     msg,
-  );
-  msg = `🤖 convert ${store.getName(selectedPerson.value)}`;
-  const conversionTransactions = store.makeEquivalentTransactionBatch(
-    fromCurrency.value,
-    selectedPersonIdx.value,
-    msg,
-    -conversionMulti.value,
-    toCurrency.value,
   );
 
-  return { ...settleTransactions, ...conversionTransactions };
+  return { ...settleTransactions };
 });
+
 const results = computed(() => {
   const res = store.getEditableCurrentSheetResults();
   Results.applyTransactions(

@@ -45,19 +45,18 @@
             <q-item-section>Convert</q-item-section>
           </q-item>
 
-          <q-item :class="summaries.ans.length ? 'bg-grey-3' : ''">
-            <q-item-section>
-              <CurrencyDropdown
-                v-model="setCurrency"
-                :usedCurrencies="usedCurrencies"
-                label="Settle"
-                icon="payments"
-                clear
-                flat
-                :expandable="false"
-              />
+          <q-item
+            clickable
+            v-close-popup
+            @click="goToSettle"
+            v-if="summaries.ans.length"
+          >
+            <q-item-section avatar>
+              <q-icon name="payments" />
             </q-item-section>
+            <q-item-section>Settle</q-item-section>
           </q-item>
+
           <q-item clickable v-close-popup @click="downloadSheet">
             <q-item-section avatar>
               <q-icon name="download" />
@@ -163,24 +162,12 @@ const selectedPerson = ref(store.user.id);
 const selectedPersonIdx = computed(() =>
   store.personId2Idx(selectedPerson.value),
 );
-const setCurrency = ref(null);
 const searchString = ref(null);
 const searchActive = ref(false);
 const searchInput = ref(null);
 
 const summaries = computed(() => {
   return Results.getSummary(store.currentSheetResults, selectedPersonIdx.value);
-});
-
-const usedCurrencies = computed(() => {
-  return new Set(Object.keys(summaries.value.totals));
-});
-
-watch(setCurrency, async (currency) => {
-  if (currency == null) return;
-
-  const msg = `🤖 settle ${store.getName(selectedPerson.value)}`;
-  store.settleCurrencyPerson(currency, selectedPersonIdx.value, msg);
 });
 
 const removeTransaction = async (reset, id) => {
@@ -237,6 +224,10 @@ const goToPeople = () => {
 
 const goToConvert = () => {
   router.push({ name: 'ConvertPage' });
+};
+
+const goToSettle = () => {
+  router.push({ name: 'SettlePage' });
 };
 
 const goBack = () => {

@@ -4,7 +4,12 @@
     v-bind="buttonProps"
     icon-right="arrow_drop_down"
   >
-    <q-menu anchor="bottom left" self="top left" @before-show="onBeforeShow">
+    <q-menu
+      anchor="bottom left"
+      self="top left"
+      @before-show="onBeforeShow"
+      :fit="true"
+    >
       <q-item>
         <q-item-section>
           <q-input

@@ -153,7 +153,6 @@ export const useStore = defineStore('mainStore', {
     },
 
     async addTransaction(transaction, batch = null) {
-      console.log('nav online', navigator.onLine);
       if (!navigator.onLine) {
         this.pendingTransactionIds.add(transaction.id);
       }

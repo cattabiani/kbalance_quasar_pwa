@@ -36,6 +36,16 @@ const routes = [
         }, // Protect this route
       },
       {
+        path: '/sheet/settle',
+        name: 'SettlePage',
+        component: () => import('pages/SettlePage.vue'),
+        meta: {
+          requiresAuth: true,
+          requiresFirebase: true,
+          requiresSheet: true,
+        }, // Protect this route
+      },
+      {
         path: '/convertTest',
         name: 'ConvertTestPage',
         component: () => import('pages/ConvertTestPage.vue'),

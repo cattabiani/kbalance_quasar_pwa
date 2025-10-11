@@ -2,20 +2,40 @@
   <div>
     <q-card
       v-if="
-        (negativeSummaryDisplay || positiveSummaryDisplay) &&
+        (positiveTotals.length || negativeTotals.length) &&
         store.currentSheetPeople.length > 2
       "
       class="q-my-md q-mr-md q-ml-md"
     >
       <div class="q-pa-md">
-        <div v-if="negativeSummaryDisplay" :style="{ color: 'green' }">
+        <div v-if="negativeTotals.length">
           {{ store.getName(selectedPerson) }} is owed
-          {{ negativeSummaryDisplay }}
+          <template
+            v-for="([currency, amount], index) in negativeTotals"
+            :key="currency"
+          >
+            <CurrencyDisplay
+              :currency="currency"
+              :amount="-amount"
+              color="green"
+            />
+            <span v-if="index < negativeTotals.length - 1"> + </span>
+          </template>
         </div>
 
-        <div v-if="positiveSummaryDisplay" :style="{ color: 'red' }">
+        <div v-if="positiveTotals.length">
           {{ store.getName(selectedPerson) }} owes
-          {{ positiveSummaryDisplay }}
+          <template
+            v-for="([currency, amount], index) in positiveTotals"
+            :key="currency"
+          >
+            <CurrencyDisplay
+              :currency="currency"
+              :amount="amount"
+              color="red"
+            />
+            <span v-if="index < positiveTotals.length - 1"> + </span>
+          </template>
         </div>
       </div>
     </q-card>
@@ -52,9 +72,11 @@
               }}
               &nbsp;
             </span>
-            <span :style="{ color: item.amount > 0 ? 'red' : 'green' }">
-              {{ Utils.displayCurrency(item.currency, Math.abs(item.amount)) }}
-            </span>
+            <CurrencyDisplay
+              :currency="item.currency"
+              :amount="Math.abs(item.amount)"
+              :color="item.amount > 0 ? 'red' : 'green'"
+            />
           </div>
         </div>
       </div>
@@ -63,13 +85,10 @@
 </template>
 
 <script setup>
-import { useQuasar } from 'quasar';
-import { useRouter } from 'vue-router';
 import { useStore } from 'src/stores/store';
-import Utils from 'src/utils/utils';
-import Results from 'src/models/results';
+import CurrencyDisplay from 'src/components/CurrencyDisplay.vue';
 
-import { ref, watch, computed } from 'vue';
+import { computed } from 'vue';
 
 const store = useStore();
 
@@ -94,17 +113,15 @@ const localSummaries = computed(() => {
   return { detail, totals }; // Return both formattedAns and totals
 });
 
-const positiveSummaryDisplay = computed(() => {
-  return Object.entries(localSummaries.value.totals)
-    .filter(([_, amount]) => amount > 0) // Filter for positive values
-    .map(([currency, amount]) => Utils.displayCurrency(currency, amount)) // Format the string
-    .join(' + ');
+const positiveTotals = computed(() => {
+  return Object.entries(localSummaries.value.totals).filter(
+    ([_, amount]) => amount > 0,
+  ); // [[currency, amount], ...]
 });
 
-const negativeSummaryDisplay = computed(() => {
-  return Object.entries(localSummaries.value.totals)
-    .filter(([_, amount]) => amount < 0) // Filter for positive values
-    .map(([currency, amount]) => Utils.displayCurrency(currency, -amount)) // Format the string
-    .join(' + ');
+const negativeTotals = computed(() => {
+  return Object.entries(localSummaries.value.totals).filter(
+    ([_, amount]) => amount < 0,
+  ); // [[currency, amount], ...]
 });
 </script>

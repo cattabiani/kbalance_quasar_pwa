@@ -38,14 +38,14 @@
                 {{ Transaction.name(transactions[id]) }}
               </q-item-label>
               <q-item-label caption>
-                {{ store.getName(store.personId2Idx(transactions[id].payer)) }}
-                paid
                 {{
-                  Utils.displayCurrency(
-                    transactions[id].currency,
-                    transactions[id].amount,
-                  )
+                  store.getName(store.personId2Idx(transactions[id].payer))
                 }}
+                paid
+                <CurrencyDisplay
+                  :currency="transactions[id].currency"
+                  :amount="transactions[id].amount"
+                />
               </q-item-label>
             </q-item-section>
 
@@ -80,24 +80,21 @@
                     : 'Personal'
                 }}
               </q-item-label>
-              <q-item-label
-                v-else
-                :style="{
-                  color:
+              <q-item-label v-else>
+                <CurrencyDisplay
+                  :currency="transactions[id].currency"
+                  :amount="
+                    Math.abs(
+                      Transaction.position(transactions[id], selectedPersonIdx),
+                    )
+                  "
+                  :color="
                     Transaction.position(transactions[id], selectedPersonIdx) >=
                     0
                       ? 'green'
-                      : 'red',
-                }"
-              >
-                {{
-                  Utils.displayCurrency(
-                    transactions[id].currency,
-                    Math.abs(
-                      Transaction.position(transactions[id], selectedPersonIdx),
-                    ),
-                  )
-                }}
+                      : 'red'
+                  "
+                />
               </q-item-label>
             </q-item-section>
           </q-item>
@@ -111,6 +108,7 @@
 import Utils from 'src/utils/utils';
 import Transaction from 'src/models/transaction';
 import { useStore } from 'src/stores/store';
+import CurrencyDisplay from 'src/components/CurrencyDisplay.vue';
 import { ref, watch, computed } from 'vue';
 
 const store = useStore();

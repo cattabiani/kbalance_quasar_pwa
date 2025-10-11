@@ -59,18 +59,14 @@
       <q-card-section class="column items-center" v-if="tr.debts.length === 2">
         <q-btn-dropdown class="full-width">
           <template v-slot:label>
-            <div class="q-gutter-none">
-              <div class="text-center">
-                {{ split2topLine(state2, tr.payer) }}
-              </div>
-              <div
-                class="text-center text-caption"
-                :class="tr.payer === youIdx ? 'text-green' : 'text-red'"
-                v-if="state2 !== -1 && tr.amount !== 0"
-              >
-                {{ split2bottomLine(state2, tr.payer) }}
-              </div>
-            </div>
+            <TwoPeopleSplitRow
+              :split="state2 === 1"
+              :payer="tr.payer"
+              :you-idx="youIdx"
+              :other-name="store.getName(otherId)"
+              :currency="tr.currency"
+              :amount="tr.amount"
+            />
           </template>
 
           <q-list>
@@ -81,17 +77,14 @@
               @click="splitFor2(0)"
             >
               <q-item-section>
-                <div class="q-gutter-none">
-                  <div class="text-center">
-                    {{ split2topLine(1, youIdx) }}
-                  </div>
-                  <div
-                    class="text-center text-caption text-green"
-                    v-if="tr.amount"
-                  >
-                    {{ split2bottomLine(1, youIdx) }}
-                  </div>
-                </div>
+                <TwoPeopleSplitRow
+                  split
+                  :payer="youIdx"
+                  :you-idx="youIdx"
+                  :other-name="store.getName(otherId)"
+                  :currency="tr.currency"
+                  :amount="tr.amount"
+                />
               </q-item-section>
             </q-item>
             <q-item
@@ -101,17 +94,13 @@
               @click="splitFor2(1)"
             >
               <q-item-section>
-                <div class="q-gutter-none">
-                  <div class="text-center">
-                    {{ split2topLine(0, youIdx) }}
-                  </div>
-                  <div
-                    class="text-center text-caption text-green"
-                    v-if="tr.amount"
-                  >
-                    {{ split2bottomLine(0, youIdx) }}
-                  </div>
-                </div>
+                <TwoPeopleSplitRow
+                  :payer="youIdx"
+                  :you-idx="youIdx"
+                  :other-name="store.getName(otherId)"
+                  :currency="tr.currency"
+                  :amount="tr.amount"
+                />
               </q-item-section>
             </q-item>
             <q-item
@@ -121,17 +110,14 @@
               @click="splitFor2(2)"
             >
               <q-item-section>
-                <div class="q-gutter-none">
-                  <div class="text-center">
-                    {{ split2topLine(1, otherIdx) }}
-                  </div>
-                  <div
-                    class="text-center text-caption text-red"
-                    v-if="tr.amount"
-                  >
-                    {{ split2bottomLine(1, otherIdx) }}
-                  </div>
-                </div>
+                <TwoPeopleSplitRow
+                  split
+                  :payer="otherIdx"
+                  :you-idx="youIdx"
+                  :other-name="store.getName(otherId)"
+                  :currency="tr.currency"
+                  :amount="tr.amount"
+                />
               </q-item-section>
             </q-item>
             <q-item
@@ -141,17 +127,13 @@
               @click="splitFor2(3)"
             >
               <q-item-section>
-                <div class="q-gutter-none">
-                  <div class="text-center">
-                    {{ split2topLine(0, otherIdx) }}
-                  </div>
-                  <div
-                    class="text-center text-caption text-red"
-                    v-if="tr.amount"
-                  >
-                    {{ split2bottomLine(0, otherIdx) }}
-                  </div>
-                </div>
+                <TwoPeopleSplitRow
+                  :payer="otherIdx"
+                  :you-idx="youIdx"
+                  :other-name="store.getName(otherId)"
+                  :currency="tr.currency"
+                  :amount="tr.amount"
+                />
               </q-item-section>
             </q-item>
           </q-list>
@@ -296,6 +278,7 @@ import PeopleDropdown from 'src/components/PeopleDropdown.vue';
 import PersonItem from 'src/components/PersonItem.vue';
 import CurrencyInput from 'src/components/CurrencyInput.vue';
 import CurrencyDropdown from 'src/components/CurrencyDropdown.vue';
+import TwoPeopleSplitRow from 'src/components/TwoPeopleSplitRow.vue';
 import Transaction from 'src/models/transaction';
 import Utils from 'src/utils/utils';
 import { ref, computed, onMounted } from 'vue';
@@ -365,41 +348,6 @@ const youIdx = store.currentSheetPeople.findIndex(
 const state2 = computed(() => {
   return Transaction.state(tr.value);
 });
-
-const split2topLine = (state, payer) => {
-  switch (state) {
-    case 0:
-      return (
-        (payer === youIdx ? 'You are' : `${store.getName(otherId)} is`) +
-        ' owed the full amount'
-      );
-    case 1:
-      return (
-        (payer === youIdx ? 'You' : store.getName(otherId)) +
-        ' paid, split equally'
-      );
-    default:
-      return 'Custom';
-  }
-};
-
-const split2bottomLine = (state, payer) => {
-  const amount =
-    state === 0
-      ? tr.value.amount
-      : (tr.value.amount + (tr.value.amount % 2)) / 2;
-  if (payer === youIdx) {
-    return `${store.getName(otherId)} owes you ${Utils.displayCurrency(
-      tr.value.currency,
-      amount,
-    )}`;
-  }
-
-  return `You owe ${store.getName(otherId)} ${Utils.displayCurrency(
-    tr.value.currency,
-    amount,
-  )}`;
-};
 
 const splitFor2 = (idx) => {
   switch (idx) {

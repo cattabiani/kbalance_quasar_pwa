@@ -14,13 +14,6 @@ const Utils = {
     return date.getFullYear();
   },
 
-  displayCurrency(currency, amount) {
-    const formatted = new Intl.NumberFormat('it-CH', {
-      maximumFractionDigits: 2,
-    }).format(amount / 100);
-    return `${currency} ${formatted}`;
-  },
-
   truncate(name, maxLength = null) {
     if (!name || !maxLength) {
       return name;

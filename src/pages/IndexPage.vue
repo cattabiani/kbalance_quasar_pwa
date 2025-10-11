@@ -198,7 +198,6 @@
 defineOptions({
   name: 'IndexPage',
 });
-
 import ShareString from 'src/components/ShareString.vue';
 import ReceiveString from 'src/components/ReceiveString.vue';
 import AboutContent from 'src/components/AboutContent.vue';

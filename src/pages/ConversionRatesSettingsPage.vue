@@ -134,8 +134,8 @@ const updateOptions = [
   { label: 'Monthly', value: 30 * 24 * 60 * 60 * 1000 },
 ];
 
-// Table columns for conversion rates
-const conversionColumns = [
+// Table columns for conversion rates (reactive label)
+const conversionColumns = computed(() => [
   { name: 'currency', label: 'Currency', field: 'currency', align: 'left' },
   {
     name: 'value',
@@ -143,7 +143,7 @@ const conversionColumns = [
     field: 'value',
     align: 'right',
   },
-];
+]);
 
 // Table rows for conversion rates
 const conversionRows = computed(() => {

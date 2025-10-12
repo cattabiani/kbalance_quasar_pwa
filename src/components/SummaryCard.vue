@@ -88,7 +88,6 @@
               :currency="item.currency"
               :amount="Math.abs(item.amount)"
               :color="item.amount > 0 ? 'red' : 'green'"
-              inline-conversion
               :converted-amount="
                 store.convertCurrency(
                   Math.abs(item.amount),

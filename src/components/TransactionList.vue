@@ -38,13 +38,20 @@
                 {{ Transaction.name(transactions[id]) }}
               </q-item-label>
               <q-item-label caption>
-                {{
-                  store.getName(store.personId2Idx(transactions[id].payer))
-                }}
+                {{ store.getName(store.personId2Idx(transactions[id].payer)) }}
                 paid
                 <CurrencyDisplay
                   :currency="transactions[id].currency"
                   :amount="transactions[id].amount"
+                  :reference-currency="store.referenceCurrency"
+                  :converted-amount="
+                    store.convertCurrency(
+                      transactions[id].amount,
+                      transactions[id].currency,
+                      store.referenceCurrency,
+                    )
+                  "
+                  inline-conversion
                 />
               </q-item-label>
             </q-item-section>
@@ -93,6 +100,19 @@
                     0
                       ? 'green'
                       : 'red'
+                  "
+                  :reference-currency="store.referenceCurrency"
+                  :converted-amount="
+                    store.convertCurrency(
+                      Math.abs(
+                        Transaction.position(
+                          transactions[id],
+                          selectedPersonIdx,
+                        ),
+                      ),
+                      transactions[id].currency,
+                      store.referenceCurrency,
+                    )
                   "
                 />
               </q-item-label>

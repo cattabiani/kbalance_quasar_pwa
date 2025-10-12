@@ -10,8 +10,14 @@
         <CurrencyDisplay
           :currency="currency"
           :amount="splitAmount"
-          :reference-currency="referenceCurrency"
-          :conversion-ratio="conversionRatio"
+          :reference-currency="store.referenceCurrency"
+          :converted-amount="
+            store.convertCurrency(
+              splitAmount,
+              currency,
+              store.referenceCurrency,
+            )
+          "
           color="green"
           inline-conversion
         />
@@ -21,8 +27,14 @@
         <CurrencyDisplay
           :currency="currency"
           :amount="splitAmount"
-          :reference-currency="referenceCurrency"
-          :conversion-ratio="conversionRatio"
+          :reference-currency="store.referenceCurrency"
+          :converted-amount="
+            store.convertCurrency(
+              splitAmount,
+              currency,
+              store.referenceCurrency,
+            )
+          "
           color="red"
           inline-conversion
         />
@@ -34,6 +46,8 @@
 <script setup>
 import { computed } from 'vue';
 import CurrencyDisplay from './CurrencyDisplay.vue';
+import { useStore } from 'src/stores/store.js';
+const store = useStore();
 
 const props = defineProps({
   split: { type: Boolean, default: false }, // false = full, true = split
@@ -42,8 +56,6 @@ const props = defineProps({
   otherName: { type: String, required: true },
   currency: { type: String, required: true },
   amount: { type: Number, required: true },
-  referenceCurrency: { type: String, default: null },
-  conversionRatio: { type: Number, default: 1.0 },
 });
 
 // Determine if payer is you

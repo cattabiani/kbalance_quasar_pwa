@@ -18,6 +18,14 @@
               :currency="currency"
               :amount="-amount"
               color="green"
+              :converted-amount="
+                store.convertCurrency(
+                  -amount,
+                  currency,
+                  store.referenceCurrency,
+                )
+              "
+              :reference-currency="store.referenceCurrency"
             />
             <span v-if="index < negativeTotals.length - 1"> + </span>
           </template>
@@ -33,6 +41,10 @@
               :currency="currency"
               :amount="amount"
               color="red"
+              :converted-amount="
+                store.convertCurrency(amount, currency, store.referenceCurrency)
+              "
+              :reference-currency="store.referenceCurrency"
             />
             <span v-if="index < positiveTotals.length - 1"> + </span>
           </template>
@@ -76,6 +88,15 @@
               :currency="item.currency"
               :amount="Math.abs(item.amount)"
               :color="item.amount > 0 ? 'red' : 'green'"
+              inline-conversion
+              :converted-amount="
+                store.convertCurrency(
+                  Math.abs(item.amount),
+                  item.currency,
+                  store.referenceCurrency,
+                )
+              "
+              :reference-currency="store.referenceCurrency"
             />
           </div>
         </div>

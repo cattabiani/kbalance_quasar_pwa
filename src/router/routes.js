@@ -46,9 +46,9 @@ const routes = [
         }, // Protect this route
       },
       {
-        path: '/convertTest',
-        name: 'ConvertTestPage',
-        component: () => import('pages/ConvertTestPage.vue'),
+        path: '/conversionRatesSettings',
+        name: 'ConversionRatesSettingsPage',
+        component: () => import('pages/ConversionRatesSettingsPage.vue'),
         meta: {
           requiresAuth: true,
           requiresFirebase: true,

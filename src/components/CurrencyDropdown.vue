@@ -1,6 +1,10 @@
 <template>
   <q-btn
-    :label="buttonProps.label || selected || 'Select currency'"
+    :label="
+      buttonProps.label ||
+      (selected === null ? 'No currency' : selected) ||
+      'Select currency'
+    "
     v-bind="buttonProps"
     icon-right="arrow_drop_down"
   >
@@ -67,6 +71,11 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  allowNoCurrency: {
+    // <-- new prop
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -103,6 +112,11 @@ const filteredCurrencies = computed(() => {
       result = result.filter(({ label }) =>
         label.toLowerCase().includes(query),
       );
+    }
+
+    // Prepend "No currency" if allowed
+    if (props.allowNoCurrency && !query) {
+      result = [{ label: 'No currency', value: null }, ...result];
     }
     return result;
   }

@@ -280,7 +280,6 @@ import CurrencyInput from 'src/components/CurrencyInput.vue';
 import CurrencyDropdown from 'src/components/CurrencyDropdown.vue';
 import TwoPeopleSplitRow from 'src/components/TwoPeopleSplitRow.vue';
 import Transaction from 'src/models/transaction';
-import Utils from 'src/utils/utils';
 import { ref, computed, onMounted } from 'vue';
 
 const $q = useQuasar();

@@ -49,6 +49,11 @@ export const useStore = defineStore('mainStore', {
     userLedger: null,
     currentSheet: null,
 
+    referenceCurrency: null,
+    conversionRates: null,
+    conversionRatesUpdatedAt: null,
+    conversionRatesAutoUpdateRate: 24 * 60 * 60 * 1000, // daily
+
     // firebase
     firebaseReady: false,
     authReady: false,
@@ -567,6 +572,17 @@ export const useStore = defineStore('mainStore', {
       if (this.currentSheetId) {
         await this.subscribeCurrentSheet(this.currentSheetId);
       }
+
+      // update conversion rates if necessary
+      if (
+        navigator.onLine &&
+        this.conversionRatesAutoUpdateRate > 0 &&
+        (!this.conversionRatesUpdatedAt ||
+          Date.now() - this.conversionRatesUpdatedAt >
+            this.conversionRatesAutoUpdateRate)
+      ) {
+        await this.fetchConversionRates();
+      }
     },
 
     setConfig(newConfig) {
@@ -804,6 +820,51 @@ export const useStore = defineStore('mainStore', {
       // Return result immediately without waiting for commit to finish
       return result;
     },
+
+    // conversion rates
+
+    async fetchConversionRates() {
+      if (!navigator.onLine) {
+        return;
+      }
+
+      // const apiUrl = 'https://api.frankfurter.dev/v1/latest'
+      const apiUrl =
+        'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/eur.json';
+
+      const response = await fetch(apiUrl);
+      if (!response.ok)
+        throw new Error(`HTTP error! Status: ${response.status}`);
+
+      const data = await response.json();
+      // Convert currency keys to upper case
+      if (data.eur && typeof data.eur === 'object') {
+        const eurRates = {};
+        for (const key in data.eur) {
+          eurRates[key.toUpperCase()] = data.eur[key];
+        }
+        data.eur = eurRates;
+      }
+      this.conversionRates = data;
+      this.conversionRatesUpdatedAt = Date.now();
+    },
+
+    convertCurrency(amount, fromCurrency, toCurrency) {
+      if (fromCurrency === toCurrency) {
+        return amount;
+      }
+      if (!this.conversionRates || !this.conversionRates.eur) {
+        return null;
+      }
+      const fromRate = this.conversionRates.eur[fromCurrency] || null;
+      const toRate = this.conversionRates.eur[toCurrency] || null;
+
+      if (!fromRate || !toRate) {
+        return null;
+      }
+
+      return Math.round((amount * toRate) / fromRate);
+    },
   },
 
   persist: {
@@ -813,6 +874,10 @@ export const useStore = defineStore('mainStore', {
       'currentSheetId',
       'transactionId',
       'pendingTransactionIds',
+      'referenceCurrency',
+      'conversionRates',
+      'conversionRatesUpdatedAt',
+      'conversionRatesAutoUpdateRate',
     ],
     serializer: {
       serialize: (state) =>

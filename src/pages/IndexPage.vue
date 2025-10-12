@@ -20,6 +20,14 @@
                 <div class="text-center">Share<br />Settings</div>
               </q-item-section>
             </q-item>
+            <q-item clickable v-ripple @click="goToConversionRatesSettings">
+              <q-item-section avatar class="text-primary">
+                <q-icon name="qcurrency_exchange" />
+              </q-item-section>
+              <q-item-section class="text-primary">
+                <div class="text-center">Conversions<br />Rates</div>
+              </q-item-section>
+            </q-item>
             <q-item clickable v-ripple @click="showAbout = true">
               <q-item-section avatar class="text-primary">
                 <q-icon name="info" />
@@ -82,17 +90,6 @@
         />
       </q-card-section>
     </q-card>
-
-    <q-toolbar class="column items-center q-pa-sm bg-grey-3">
-      <div class="row q-gutter-sm">
-        <q-btn
-          label="Convert"
-          class="bg-purple text-white"
-          icon="currency_exchange"
-          @click="goToConvertTest"
-        />
-      </div>
-    </q-toolbar>
 
     <q-tabs
       v-model="activeTab"
@@ -329,8 +326,8 @@ const goToNewSheetWizard = () => {
   router.push({ name: 'NewSheetWizardPage' });
 };
 
-const goToConvertTest = () => {
-  router.push({ name: 'ConvertTestPage' });
+const goToConversionRatesSettings = () => {
+  router.push({ name: 'ConversionRatesSettingsPage' });
 };
 
 const setUsername = async () => {

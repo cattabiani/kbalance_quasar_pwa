@@ -1,17 +1,37 @@
 <template>
-  <q-input
-    ref="inputRef"
-    v-model="formattedValue"
-    outlined
-    :label="props.label"
-    @focus="inputRef.select()"
-    :input-class="props.alignRight ? 'text-right' : 'text-left'"
-  />
+  <div>
+    <q-input
+      ref="inputRef"
+      v-model="formattedValue"
+      outlined
+      :label="props.label"
+      @focus="inputRef.select()"
+      :input-class="props.alignRight ? 'text-right' : 'text-left'"
+    />
+    <CurrencyDisplay
+      v-if="
+        props.currency !== store.referenceCurrency && props.modelValue !== 0
+      "
+      :currency="store.referenceCurrency"
+      :amount="
+        store.convertCurrency(
+          props.modelValue,
+          props.currency,
+          store.referenceCurrency,
+        )
+      "
+      class="text-caption text-left q-mt-xs"
+    />
+  </div>
 </template>
 
 <script setup>
 import { useCurrencyInput } from 'vue-currency-input';
 import { watch } from 'vue';
+import CurrencyDisplay from './CurrencyDisplay.vue';
+import { useStore } from 'src/stores/store.js';
+
+const store = useStore();
 
 const emit = defineEmits(['change', 'update:modelValue']);
 
@@ -27,7 +47,7 @@ const props = defineProps({
 });
 
 const { inputRef, formattedValue, setValue, setOptions } = useCurrencyInput({
-  currency: props.currency,
+  currency: 'XXX',
   currencyDisplay: 'hidden',
   valueScaling: 'precision',
   valueRange: {
@@ -42,13 +62,6 @@ watch(
   () => props.modelValue,
   (value) => {
     setValue(value);
-  },
-);
-
-watch(
-  () => props.currency,
-  (currency) => {
-    setOptions({ currency });
   },
 );
 </script>

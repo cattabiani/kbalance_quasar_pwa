@@ -48,7 +48,7 @@
 
         <CurrencyInput
           v-model="tr.amount"
-          :currency="'XXX'"
+          :currency="tr.currency"
           style="flex: 1"
           label="Amount"
           @update:model-value="split(true)"
@@ -66,6 +66,7 @@
               :other-name="store.getName(otherId)"
               :currency="tr.currency"
               :amount="tr.amount"
+              :reference-currency="store.referenceCurrency"
             />
           </template>
 
@@ -258,7 +259,7 @@
         <q-item-section side style="flex: 0 0 35%">
           <CurrencyInput
             v-model="tr.debts[index].owedAmount"
-            :currency="'XXX'"
+            :currency="tr.currency"
             dense
             style="width: auto; min-width: 4ch"
             @blur="customEditing(index)"

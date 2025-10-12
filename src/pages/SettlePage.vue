@@ -69,7 +69,6 @@ import CurrencyDropdown from 'src/components/CurrencyDropdown.vue';
 import Results from 'src/models/results';
 import SummaryCard from 'src/components/SummaryCard.vue';
 import TransactionList from 'src/components/TransactionList.vue';
-import { useExchangeRates } from 'src/composables/useExchangeRates';
 import { ref, computed, onMounted } from 'vue';
 
 const store = useStore();

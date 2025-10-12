@@ -86,7 +86,6 @@ import CurrencyDropdown from 'src/components/CurrencyDropdown.vue';
 import Results from 'src/models/results';
 import SummaryCard from 'src/components/SummaryCard.vue';
 import TransactionList from 'src/components/TransactionList.vue';
-import { useExchangeRates } from 'src/composables/useExchangeRates';
 import { ref, computed, onMounted } from 'vue';
 
 const store = useStore();
@@ -112,7 +111,10 @@ const fromCurrency = ref(keys.length > 0 ? keys[0] : 'USD');
 const toCurrency = ref(
   keys.length > 1 ? keys[1] : keys.length > 0 ? keys[0] : 'USD',
 );
-const { conversionMulti } = useExchangeRates(fromCurrency, toCurrency);
+
+const conversionMulti = ref(
+  store.convertCurrency(1, fromCurrency.value, toCurrency.value),
+); // 1.00
 
 const goBack = () => {
   router.go(-1);

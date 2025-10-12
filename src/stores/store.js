@@ -863,7 +863,7 @@ export const useStore = defineStore('mainStore', {
         return null;
       }
 
-      return Math.round((amount * toRate) / fromRate);
+      return (amount * toRate) / fromRate;
     },
   },
 

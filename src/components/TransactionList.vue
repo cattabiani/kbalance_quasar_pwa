@@ -228,28 +228,6 @@ const loadMore = (index, done) => {
   done();
 };
 
-// const loadMore = (index, done) => {
-//   const search = props.searchString.toLowerCase();
-
-//   // Filter transactions first
-//   const filtered = transactionList.value.filter(t =>
-//     Transaction.name(t).toLowerCase().includes(search)
-//   );
-
-//   const nextSlice = filtered.slice(
-//     currentIndex.value,
-//     currentIndex.value + itemsPerPage
-//   );
-
-//   if (visibleTransactions.value.length === 0) {
-//     startIndex.value = currentIndex.value;
-//   }
-
-//   visibleTransactions.value.push(...nextSlice);
-//   currentIndex.value += itemsPerPage;
-//   done();
-// };
-
 const isFinished = computed(
   () => currentIndex.value >= transactionList.value.length,
 );

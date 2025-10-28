@@ -263,6 +263,7 @@
             dense
             style="width: auto; min-width: 4ch"
             @blur="customEditing(index)"
+            :readonly="!tr.debts[index].isDebtor"
           />
         </q-item-section>
       </q-item>

@@ -292,6 +292,7 @@ const tr = ref(store.getEditableTransaction());
 const seeInactive = ref(false);
 const nameInput = ref(null);
 const isCustomEditing = ref(false);
+// const edited = ref(new Set());
 
 onMounted(() => {
   nameInput.value?.focus();

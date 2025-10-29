@@ -119,30 +119,55 @@ const Transaction = {
     }
   },
 
-  split(transaction) {
-    const nDebtors = transaction.debts.filter((debt) => debt.isDebtor).length;
-    if (nDebtors == 0) {
-      Object.values(transaction.debts).forEach((person) => {
-        person.owedAmount = 0;
-      });
-      return;
-    }
+split(transaction, exclude = new Set()) {
+  const debts = transaction.debts;
 
-    const q = Math.floor(transaction.amount / nDebtors);
-    let r = transaction.amount % nDebtors;
+  // Compute total excluded amount
+  const excludedTotal = [...exclude].reduce((sum, i) => sum + debts[i].owedAmount, 0);
 
-    transaction.debts.forEach((debt, index) => {
-      if (debt.isDebtor) {
-        debt.owedAmount = q;
-        if (r > 0 && index !== transaction.payer) {
-          debt.owedAmount += 1;
-          --r;
-        }
-      } else {
-        debt.owedAmount = 0;
-      }
+  // Case 1: negative amount → normalize before anything else
+  if (transaction.amount < 0) {
+    transaction.amount += excludedTotal;
+    debts.forEach((d, i) => {
+      d.owedAmount = exclude.has(i) ? 0 : d.owedAmount;
     });
-  },
+    return 1;
+  }
+
+  // Count active debtors
+  const nDebtors = debts.filter(
+    (d, i) => d.isDebtor && !exclude.has(i)
+  ).length;
+
+  // Case 2: no debtors
+  if (nDebtors === 0) {
+    debts.forEach((d, i) => {
+      if (!exclude.has(i)) d.owedAmount = 0;
+    });
+    return 0;
+  }
+
+  // Case 3: normal split among non-excluded debtors
+  const effectiveAmount = transaction.amount - excludedTotal;
+  const q = Math.floor(effectiveAmount / nDebtors);
+  let r = effectiveAmount % nDebtors;
+
+  debts.forEach((d, i) => {
+    if (exclude.has(i)) {
+      d.owedAmount = 0;
+    } else if (d.isDebtor) {
+      d.owedAmount = q;
+      if (r > 0 && i !== transaction.payer) {
+        d.owedAmount += 1;
+        --r;
+      }
+    } else {
+      d.owedAmount = 0;
+    }
+  });
+
+  return 0;
+},
 
   state(transaction) {
     if (transaction.debts.length !== 2) {

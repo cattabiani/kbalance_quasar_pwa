@@ -137,7 +137,7 @@
       </q-card-section>
     </q-card>
 
-    <summary-card :summaries="summaries" :selectedPerson="selectedPerson" />
+    <summary-card :summaries="displaySummaries" :selectedPerson="selectedPerson" />
 
     <div class="row justify-center items-center q-pb-md">
       <q-btn
@@ -188,6 +188,13 @@ const searchActive = ref(false);
 const searchInput = ref(null);
 
 const summaries = computed(() => {
+  return Results.getSummary(
+    store.currentSheetResults,
+    selectedPersonIdx.value,
+  );
+});
+
+const displaySummaries = computed(() => {
   return Results.getSummary(
     store.currentSheetResults,
     selectedPersonIdx.value,

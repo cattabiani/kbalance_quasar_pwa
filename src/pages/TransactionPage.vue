@@ -261,9 +261,10 @@
             v-model="tr.debts[index].owedAmount"
             :currency="tr.currency"
             dense
-            style="width: auto; min-width: 4ch; border-color: green;"
+            style="width: auto; min-width: 4ch; border-color: green"
             @update:model-value="customSplit(index)"
             :readonly="!tr.debts[index].isDebtor"
+            :bg-color="edited.has(index) ? 'green-1' : ''"
           />
         </q-item-section>
       </q-item>

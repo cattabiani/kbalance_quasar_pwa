@@ -119,19 +119,19 @@ const Transaction = {
     }
   },
 
-clearNonDebtorAmounts(transaction) {
-  transaction.debts.forEach((debt) => {
-    if (!debt.isDebtor) {
-      debt.owedAmount = 0;
-    }
-  });
-},
+  clearNonDebtorAmounts(transaction) {
+    transaction.debts.forEach((debt) => {
+      if (!debt.isDebtor) {
+        debt.owedAmount = 0;
+      }
+    });
+  },
 
-effectiveDebtors(transaction, exclude) {
-  return transaction.debts
-    .map((d, i) => (d.isDebtor && !exclude.has(i) ? i : -1))
-    .filter(i => i !== -1);
-},
+  effectiveDebtors(transaction, exclude) {
+    return transaction.debts
+      .map((d, i) => (d.isDebtor && !exclude.has(i) ? i : -1))
+      .filter((i) => i !== -1);
+  },
 
   split(transaction, exclude = new Set()) {
     this.clearNonDebtorAmounts(transaction);
@@ -139,11 +139,18 @@ effectiveDebtors(transaction, exclude) {
     const debts = transaction.debts;
 
     // Compute total excluded amount
-    const excludedTotal = [...exclude].reduce((sum, i) => sum + debts[i].owedAmount, 0);
+    const excludedTotal = [...exclude].reduce(
+      (sum, i) => sum + debts[i].owedAmount,
+      0,
+    );
 
     const effectiveAmount = transaction.amount - excludedTotal;
     if (effectiveAmount < 0) {
       transaction.amount = excludedTotal;
+      debts.forEach((d, i) => {
+        if (exclude.has(i)) return;
+        d.owedAmount = 0;
+      });
       return 1;
     }
 
@@ -174,9 +181,7 @@ effectiveDebtors(transaction, exclude) {
     });
 
     return 0;
-
   },
-
 
   state(transaction) {
     if (transaction.debts.length !== 2) {

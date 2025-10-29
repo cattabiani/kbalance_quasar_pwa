@@ -63,6 +63,27 @@
             </q-item-section>
             <q-item-section>Download (csv)</q-item-section>
           </q-item>
+
+          <q-item
+            clickable
+            v-close-popup
+            @click="
+              store.simplifiedTransactions = !store.simplifiedTransactions
+            "
+          >
+            <q-item-section avatar>
+              <q-icon
+                :name="
+                  store.simplifiedTransactions ? 'toggle_on' : 'toggle_off'
+                "
+              />
+            </q-item-section>
+            <q-item-section>
+              {{
+                store.simplifiedTransactions ? 'Simplify: ON' : 'Simplify: OFF'
+              }}
+            </q-item-section>
+          </q-item>
         </q-list>
       </q-btn-dropdown>
     </q-toolbar>
@@ -167,7 +188,11 @@ const searchActive = ref(false);
 const searchInput = ref(null);
 
 const summaries = computed(() => {
-  return Results.getSummary(store.currentSheetResults, selectedPersonIdx.value);
+  return Results.getSummary(
+    store.currentSheetResults,
+    selectedPersonIdx.value,
+    store.simplifiedTransactions,
+  );
 });
 
 const removeTransaction = async (reset, id) => {

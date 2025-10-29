@@ -51,7 +51,7 @@
           :currency="tr.currency"
           style="flex: 1"
           label="Amount"
-          @update:model-value="split(true)"
+          @update:model-value="autoSplit()"
         />
       </q-card-section>
     </q-card>
@@ -225,7 +225,7 @@
           <q-radio
             v-model="tr.payer"
             :val="index"
-            @update:model-value="split(false)"
+            @update:model-value="autoSplit()"
             dense
           />
         </q-item-section>
@@ -250,7 +250,7 @@
         >
           <q-checkbox
             v-model="tr.debts[index].isDebtor"
-            @update:model-value="split(true)"
+            @update:model-value="autoSplit()"
             dense
           />
         </q-item-section>
@@ -261,8 +261,8 @@
             v-model="tr.debts[index].owedAmount"
             :currency="tr.currency"
             dense
-            style="width: auto; min-width: 4ch"
-            @blur="customEditing(index)"
+            style="width: auto; min-width: 4ch; border-color: green;"
+            @update:model-value="customSplit(index)"
             :readonly="!tr.debts[index].isDebtor"
           />
         </q-item-section>
@@ -291,8 +291,7 @@ const router = useRouter();
 const tr = ref(store.getEditableTransaction());
 const seeInactive = ref(false);
 const nameInput = ref(null);
-const isCustomEditing = ref(false);
-// const edited = ref(new Set());
+const edited = ref(new Set());
 
 onMounted(() => {
   nameInput.value?.focus();
@@ -321,7 +320,7 @@ const debtor = computed({
     tr.value.debts.forEach((debt, idx) => {
       debt.isDebtor = idx === newIdx;
     });
-    split(false);
+    autoSplit();
   },
 });
 
@@ -335,7 +334,7 @@ const swapPayerDebtor = () => {
     tr.value.debts.forEach((debt, idx) => {
       debt.isDebtor = idx === payerIdx;
     });
-    split(false);
+    autoSplit();
   }
 };
 
@@ -376,23 +375,27 @@ const splitFor2 = (idx) => {
     default:
       return;
   }
-  split(true);
+  autoSplit();
 };
 
-const customEditing = (index) => {
-  if (!isCustomEditing.value) {
-    isCustomEditing.value = true;
-    Transaction.clearOwedAmounts(tr.value, index);
-  }
-  if (Transaction.fillLastOwedAmount(tr.value)) {
+const customSplit = (index) => {
+  edited.value.add(index);
+  split();
+};
+
+const autoSplit = () => {
+  edited.value.clear();
+  split();
+};
+
+const split = () => {
+  const ans = Transaction.split(tr.value, edited.value);
+  if (ans === 1) {
     $q.notify('The amount has been increased to match the sum of the shares.');
   }
-};
 
-const split = (override) => {
-  if (override || !isCustomEditing.value) {
-    isCustomEditing.value = false;
-    Transaction.split(tr.value);
+  if (ans === 2) {
+    $q.notify('The amount has been decreased to match the sum of the shares.');
   }
 };
 

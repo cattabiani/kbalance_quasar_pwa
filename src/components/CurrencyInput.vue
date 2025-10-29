@@ -1,14 +1,14 @@
 <template>
   <div>
     <q-input
-      ref="inputRef"
-      v-model="formattedValue"
-      outlined
-      :label="props.label"
-      @focus="inputRef.select()"
-      :input-class="props.alignRight ? 'text-right' : 'text-left'"
-      :readonly="props.readonly"
-    />
+  ref="inputRef"
+  v-model="formattedValue"
+  outlined
+  :label="props.label"
+  @focus="inputRef.select()"
+  :input-class="props.alignRight ? 'text-right' : 'text-left'"
+  :readonly="props.readonly"
+/>
     <CurrencyDisplay
       v-if="
         props.currency !== store.referenceCurrency && props.modelValue !== 0

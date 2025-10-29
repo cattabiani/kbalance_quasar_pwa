@@ -71,33 +71,33 @@ const Transaction = {
     }
   },
 
-  clearOwedAmounts(transaction, id) {
-    transaction.debts.forEach((debt, index) => {
-      if (index !== id) {
-        debt.owedAmount = 0;
-      }
-    });
-  },
+  // clearOwedAmounts(transaction, id) {
+  //   transaction.debts.forEach((debt, index) => {
+  //     if (index !== id) {
+  //       debt.owedAmount = 0;
+  //     }
+  //   });
+  // },
 
-  fillLastOwedAmount(transaction) {
-    const zeroDebtors = transaction.debts
-      .map((debt, index) => ({ debt, index }))
-      .filter(({ debt }) => debt.isDebtor && debt.owedAmount === 0);
-    const v = transaction.debts.reduce((acc, debt) => acc + debt.owedAmount, 0);
-    const d = transaction.amount - v;
-    let isAmountChanged = false;
-    if (d < 0) {
-      transaction.amount -= d;
-      isAmountChanged = true;
-    }
-    if (zeroDebtors.length !== 1 || d <= 0) {
-      return isAmountChanged;
-    }
+  // fillLastOwedAmount(transaction) {
+  //   const zeroDebtors = transaction.debts
+  //     .map((debt, index) => ({ debt, index }))
+  //     .filter(({ debt }) => debt.isDebtor && debt.owedAmount === 0);
+  //   const v = transaction.debts.reduce((acc, debt) => acc + debt.owedAmount, 0);
+  //   const d = transaction.amount - v;
+  //   let isAmountChanged = false;
+  //   if (d < 0) {
+  //     transaction.amount -= d;
+  //     isAmountChanged = true;
+  //   }
+  //   if (zeroDebtors.length !== 1 || d <= 0) {
+  //     return isAmountChanged;
+  //   }
 
-    const { index } = zeroDebtors[0];
-    transaction.debts[index].owedAmount = d;
-    return isAmountChanged;
-  },
+  //   const { index } = zeroDebtors[0];
+  //   transaction.debts[index].owedAmount = d;
+  //   return isAmountChanged;
+  // },
 
   check(transaction) {
     let v = 0;
@@ -119,55 +119,64 @@ const Transaction = {
     }
   },
 
-split(transaction, exclude = new Set()) {
-  const debts = transaction.debts;
-
-  // Compute total excluded amount
-  const excludedTotal = [...exclude].reduce((sum, i) => sum + debts[i].owedAmount, 0);
-
-  // Case 1: negative amount → normalize before anything else
-  if (transaction.amount < 0) {
-    transaction.amount += excludedTotal;
-    debts.forEach((d, i) => {
-      d.owedAmount = exclude.has(i) ? 0 : d.owedAmount;
-    });
-    return 1;
-  }
-
-  // Count active debtors
-  const nDebtors = debts.filter(
-    (d, i) => d.isDebtor && !exclude.has(i)
-  ).length;
-
-  // Case 2: no debtors
-  if (nDebtors === 0) {
-    debts.forEach((d, i) => {
-      if (!exclude.has(i)) d.owedAmount = 0;
-    });
-    return 0;
-  }
-
-  // Case 3: normal split among non-excluded debtors
-  const effectiveAmount = transaction.amount - excludedTotal;
-  const q = Math.floor(effectiveAmount / nDebtors);
-  let r = effectiveAmount % nDebtors;
-
-  debts.forEach((d, i) => {
-    if (exclude.has(i)) {
-      d.owedAmount = 0;
-    } else if (d.isDebtor) {
-      d.owedAmount = q;
-      if (r > 0 && i !== transaction.payer) {
-        d.owedAmount += 1;
-        --r;
-      }
-    } else {
-      d.owedAmount = 0;
+clearNonDebtorAmounts(transaction) {
+  transaction.debts.forEach((debt) => {
+    if (!debt.isDebtor) {
+      debt.owedAmount = 0;
     }
   });
-
-  return 0;
 },
+
+effectiveDebtors(transaction, exclude) {
+  return transaction.debts
+    .map((d, i) => (d.isDebtor && !exclude.has(i) ? i : -1))
+    .filter(i => i !== -1);
+},
+
+  split(transaction, exclude = new Set()) {
+    this.clearNonDebtorAmounts(transaction);
+
+    const debts = transaction.debts;
+
+    // Compute total excluded amount
+    const excludedTotal = [...exclude].reduce((sum, i) => sum + debts[i].owedAmount, 0);
+
+    const effectiveAmount = transaction.amount - excludedTotal;
+    if (effectiveAmount < 0) {
+      transaction.amount = excludedTotal;
+      return 1;
+    }
+
+    // Count active debtors
+    const effDebtors = this.effectiveDebtors(transaction, exclude);
+    if (effDebtors.length === 0) {
+      if (effectiveAmount > 0) {
+        transaction.amount = excludedTotal;
+        return 2;
+      }
+      return 0;
+    }
+
+    const q = Math.floor(effectiveAmount / effDebtors.length);
+    let r = effectiveAmount % effDebtors.length;
+
+    debts.forEach((d, i) => {
+      if (exclude.has(i)) return;
+      if (d.isDebtor) {
+        d.owedAmount = q;
+        if (r > 0 && i !== transaction.payer) {
+          d.owedAmount += 1;
+          --r;
+        }
+      } else {
+        d.owedAmount = 0;
+      }
+    });
+
+    return 0;
+
+  },
+
 
   state(transaction) {
     if (transaction.debts.length !== 2) {

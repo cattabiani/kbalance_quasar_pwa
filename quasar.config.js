@@ -42,7 +42,7 @@ export default configure((/* ctx */) => ({
   },
 
   pwa: {
-    workboxMode: 'generateSW',
+    workboxMode: 'GenerateSW',
     injectPwaMetaTags: true,
     swFilename: 'sw.js',
     manifestFilename: 'manifest.json',

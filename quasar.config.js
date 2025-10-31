@@ -17,8 +17,10 @@ export default configure((/* ctx */) => ({
 
     vueRouterMode: 'hash',
 
-    publicPath:
-      process.env.NODE_ENV === 'production' ? '/kbalance_quasar_pwa/' : '/',
+    publicPath: './',
+
+      // publicPath:
+      // process.env.NODE_ENV === 'production' ? '/kbalance_quasar_pwa/' : '/',
 
     // remove vite-plugin-checker
     vitePlugins: [],
@@ -43,45 +45,48 @@ export default configure((/* ctx */) => ({
 
   pwa: {
     workboxMode: 'GenerateSW',
-    injectPwaMetaTags: true,
     swFilename: 'sw.js',
-    manifestFilename: 'manifest.json',
+    injectPwaMetaTags: true,
     useCredentialsForManifestTag: false,
-    extendManifestJson(json) {
-      Object.assign(json, {
-        name: 'kBalance',
-        short_name: 'kBalance',
-        description: 'A simple balance-tracking app to manage finances.',
-        display: 'standalone',
-        start_url: './',
-        theme_color: '#1976D2',
-        background_color: '#ffffff',
-        icons: [
-          {
-            src: 'icons/icon-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: 'icons/icon-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-          },
-        ],
-        screenshots: [
-          {
-            src: 'screenshots/transaction.jpeg',
-            sizes: '985x2048',
-            type: 'image/jpeg',
-            form_factor: 'wide',
-          },
-          {
-            src: 'screenshots/conversion.jpeg',
-            sizes: '985x2048',
-            type: 'image/jpeg',
-          },
-        ],
-      });
+    workboxOptions: {
+      skipWaiting: true,
+      clientsClaim: true,
+    },
+    manifest: {
+      name: 'kBalance',
+      short_name: 'kBalance',
+      description: 'A simple balance-tracking app to manage finances.',
+      display: 'standalone',
+      start_url: './', // relative path for GH Pages
+      theme_color: '#1976D2',
+      background_color: '#ffffff',
+      icons: [
+        { src: 'icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+        { src: 'icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+      ],
+      screenshots: [
+        {
+          src: 'screenshots/sheet.jpeg',
+          sizes: '985x2048',
+          type: 'image/jpeg',
+        },
+
+        {
+          src: 'screenshots/transaction.jpeg',
+          sizes: '985x2048',
+          type: 'image/jpeg',
+        },
+        {
+          src: 'screenshots/newPageWizard.jpeg',
+          sizes: '985x2048',
+          type: 'image/jpeg',
+        },
+        {
+          src: 'screenshots/convert.jpeg',
+          sizes: '985x2048',
+          type: 'image/jpeg',
+        },
+      ],
     },
   },
 

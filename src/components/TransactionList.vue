@@ -196,8 +196,7 @@ const transactionList = computed(() => {
   const search = (props.searchString || '').toLowerCase();
 
   return Transaction.getTransactionList(props.transactions).filter((id) => {
-    return Transaction.name(props.transactions[id])
-      .toLowerCase()
+    return Transaction.searchString(props.transactions[id])
       .includes(search);
   });
 });

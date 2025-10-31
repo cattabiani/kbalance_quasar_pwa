@@ -263,6 +263,15 @@ const Transaction = {
       dateStr,
     ];
   },
+
+  searchString(transaction) {
+    const name = (transaction.name || '').toLowerCase();
+    const amount = String(transaction.amount || '').toLowerCase();
+    const debts = (transaction.debts || [])
+      .map((d) => String(d.owedAmount || '').toLowerCase())
+      .join(' ');
+    return `${name}\u0001${amount}\u0001${debts}`;
+  },
 };
 
 export default Transaction;

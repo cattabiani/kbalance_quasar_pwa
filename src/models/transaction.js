@@ -270,7 +270,7 @@ const Transaction = {
     const debts = (transaction.debts || [])
       .map((d) => String(d.owedAmount || '').toLowerCase())
       .join(' ');
-    return `${name}\u0001${amount}\u0001${debts}`;
+    return `${name}|${amount}|${debts}`;
   },
 };
 

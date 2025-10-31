@@ -38,7 +38,7 @@
                 {{ Transaction.name(transactions[id]) }}
               </q-item-label>
               <q-item-label caption>
-                {{ store.getName(store.personId2Idx(transactions[id].payer)) }}
+                {{ store.getName(store.personIdx2Id(transactions[id].payer)) }}
                 paid
                 <CurrencyDisplay
                   :currency="transactions[id].currency"
@@ -194,10 +194,13 @@ const selectedPersonIdx = computed(() =>
 
 const transactionList = computed(() => {
   const search = (props.searchString || '').toLowerCase();
+  const isNum = !isNaN(parseFloat(search));
+  const list = Transaction.getTransactionList(props.transactions);
 
-  return Transaction.getTransactionList(props.transactions).filter((id) => {
-    return Transaction.searchString(props.transactions[id])
-      .includes(search);
+  return list.filter((id) => {
+    const tr = props.transactions[id];
+    if (isNum) return Transaction.searchString(tr).includes(search);
+    return Transaction.name(tr).toLowerCase().includes(search);
   });
 });
 

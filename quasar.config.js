@@ -9,6 +9,10 @@ export default configure(() => ({
 
   extras: ['roboto-font', 'material-icons'],
 
+  env: {
+  VUE_ROUTER_BASE: '/kbalance_quasar_pwa/',
+},
+
   build: {
     target: {
       browser: ['es2019', 'edge88', 'firefox78', 'chrome87', 'safari13.1'],
@@ -16,8 +20,9 @@ export default configure(() => ({
     },
 
     vueRouterMode: 'hash', // hash mode works best for GH Pages
-      publicPath:
-        process.env.NODE_ENV === 'production' ? '/kbalance_quasar_pwa/' : '/',
+    // publicPath: '/kbalance_quasar_pwa/',
+    publicPath:
+      process.env.NODE_ENV === 'production' ? '/kbalance_quasar_pwa/' : '/',
     vitePlugins: [],
   },
 
@@ -40,32 +45,60 @@ export default configure(() => ({
 
   pwa: {
     workboxMode: 'GenerateSW',
-    swFilename: 'sw.js',
     injectPwaMetaTags: true,
+    swFilename: 'sw.js',
+    manifestFilename: 'manifest.json',
     useCredentialsForManifestTag: false,
+
     workboxOptions: {
       skipWaiting: true,
       clientsClaim: true,
-      navigateFallback: './index.html',
     },
-    manifest: {
-      name: 'kBalance',
-      short_name: 'kBalance',
-      description: 'A simple balance-tracking app to manage finances.',
-      display: 'standalone',
-      start_url: './', // <-- fix for GH Pages
-      theme_color: '#1976D2',
-      background_color: '#ffffff',
-      icons: [
-        { src: 'icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
-        { src: 'icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
-      ],
-      screenshots: [
-        { src: 'screenshots/sheet.jpeg', sizes: '985x2048', type: 'image/jpeg' },
-        { src: 'screenshots/transaction.jpeg', sizes: '985x2048', type: 'image/jpeg' },
-        { src: 'screenshots/newPageWizard.jpeg', sizes: '985x2048', type: 'image/jpeg' },
-        { src: 'screenshots/convert.jpeg', sizes: '985x2048', type: 'image/jpeg' },
-      ],
+
+    extendManifestJson(json) {
+      Object.assign(json, {
+        name: 'kBalance',
+        short_name: 'kBalance',
+        description: 'A simple balance-tracking app to manage finances.',
+        display: 'standalone',
+        start_url: './',
+        theme_color: '#1976D2',
+        background_color: '#ffffff',
+        icons: [
+          {
+            src: 'icons/icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'icons/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+        ],
+        screenshots: [
+          {
+            src: 'screenshots/sheet.jpeg',
+            sizes: '985x2048',
+            type: 'image/jpeg',
+          },
+          {
+            src: 'screenshots/transaction.jpeg',
+            sizes: '985x2048',
+            type: 'image/jpeg',
+          },
+          {
+            src: 'screenshots/newPageWizard.jpeg',
+            sizes: '985x2048',
+            type: 'image/jpeg',
+          },
+          {
+            src: 'screenshots/convert.jpeg',
+            sizes: '985x2048',
+            type: 'image/jpeg',
+          },
+        ],
+      });
     },
   },
 

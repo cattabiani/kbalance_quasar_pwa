@@ -17,10 +17,10 @@ export default configure((/* ctx */) => ({
 
     vueRouterMode: 'hash',
 
-    publicPath: './',
+    // publicPath: './',
 
-    // publicPath:
-    // process.env.NODE_ENV === 'production' ? '/kbalance_quasar_pwa/' : '/',
+    publicPath:
+    process.env.NODE_ENV === 'production' ? '/kbalance_quasar_pwa/' : '/',
 
     // remove vite-plugin-checker
     vitePlugins: [],

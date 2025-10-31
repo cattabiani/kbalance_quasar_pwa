@@ -16,12 +16,9 @@ export default configure(() => ({
     },
 
     vueRouterMode: 'hash', // hash mode works best for GH Pages
-
-    publicPath: '/kbalance_quasar_pwa/',
+      publicPath:
+        process.env.NODE_ENV === 'production' ? '/kbalance_quasar_pwa/' : '/',
     vitePlugins: [],
-    vite: {
-      base: '/kbalance_quasar_pwa/',
-    },
   },
 
   devServer: {
@@ -49,14 +46,14 @@ export default configure(() => ({
     workboxOptions: {
       skipWaiting: true,
       clientsClaim: true,
-      navigateFallback: '/kbalance_quasar_pwa/index.html', // <-- fix for GH Pages
+      navigateFallback: './index.html',
     },
     manifest: {
       name: 'kBalance',
       short_name: 'kBalance',
       description: 'A simple balance-tracking app to manage finances.',
       display: 'standalone',
-      start_url: '/kbalance_quasar_pwa/', // <-- fix for GH Pages
+      start_url: './', // <-- fix for GH Pages
       theme_color: '#1976D2',
       background_color: '#ffffff',
       icons: [

@@ -10,10 +10,16 @@ import { useStore } from 'src/stores/store';
 import { useQuasar } from 'quasar';
 
 export default route(() => {
+  const createHistory = process.env.SERVER
+    ? createMemoryHistory
+    : process.env.VUE_ROUTER_MODE === 'history'
+    ? createWebHistory
+    : createWebHashHistory;
+
   const Router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
     routes,
-    history: createWebHashHistory(), // always hash mode for GH Pages
+    history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
   const store = useStore();

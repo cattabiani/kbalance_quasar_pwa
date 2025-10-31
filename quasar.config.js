@@ -1,8 +1,8 @@
 // quasar.config.js
 import { configure } from 'quasar/wrappers';
-import checker from 'vite-plugin-checker'; // <--- add this line
+import checker from 'vite-plugin-checker';
 
-export default configure((/* ctx */) => ({
+export default configure(() => ({
   boot: [],
 
   css: ['app.scss'],
@@ -15,15 +15,13 @@ export default configure((/* ctx */) => ({
       node: 'node20',
     },
 
-    vueRouterMode: 'hash',
+    vueRouterMode: 'hash', // hash mode works best for GH Pages
 
-    // publicPath: './',
-
-    publicPath:
-    process.env.NODE_ENV === 'production' ? '/kbalance_quasar_pwa/' : '/',
-
-    // remove vite-plugin-checker
+    publicPath: '/kbalance_quasar_pwa/',
     vitePlugins: [],
+    vite: {
+      base: '/kbalance_quasar_pwa/',
+    },
   },
 
   devServer: {
@@ -51,13 +49,14 @@ export default configure((/* ctx */) => ({
     workboxOptions: {
       skipWaiting: true,
       clientsClaim: true,
+      navigateFallback: '/kbalance_quasar_pwa/index.html', // <-- fix for GH Pages
     },
     manifest: {
       name: 'kBalance',
       short_name: 'kBalance',
       description: 'A simple balance-tracking app to manage finances.',
       display: 'standalone',
-      start_url: './', // relative path for GH Pages
+      start_url: '/kbalance_quasar_pwa/', // <-- fix for GH Pages
       theme_color: '#1976D2',
       background_color: '#ffffff',
       icons: [
@@ -65,27 +64,10 @@ export default configure((/* ctx */) => ({
         { src: 'icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
       ],
       screenshots: [
-        {
-          src: 'screenshots/sheet.jpeg',
-          sizes: '985x2048',
-          type: 'image/jpeg',
-        },
-
-        {
-          src: 'screenshots/transaction.jpeg',
-          sizes: '985x2048',
-          type: 'image/jpeg',
-        },
-        {
-          src: 'screenshots/newPageWizard.jpeg',
-          sizes: '985x2048',
-          type: 'image/jpeg',
-        },
-        {
-          src: 'screenshots/convert.jpeg',
-          sizes: '985x2048',
-          type: 'image/jpeg',
-        },
+        { src: 'screenshots/sheet.jpeg', sizes: '985x2048', type: 'image/jpeg' },
+        { src: 'screenshots/transaction.jpeg', sizes: '985x2048', type: 'image/jpeg' },
+        { src: 'screenshots/newPageWizard.jpeg', sizes: '985x2048', type: 'image/jpeg' },
+        { src: 'screenshots/convert.jpeg', sizes: '985x2048', type: 'image/jpeg' },
       ],
     },
   },

@@ -16,9 +16,7 @@ export default configure(() => ({
     },
 
     vueRouterMode: 'hash', // hash mode works best for GH Pages
-    // publicPath: '/kbalance_quasar_pwa/',
-    publicPath:
-      process.env.NODE_ENV === 'production' ? '/kbalance_quasar_pwa/' : '/',
+    publicPath: '/kbalance_quasar_pwa/',
     vitePlugins: [],
   },
 

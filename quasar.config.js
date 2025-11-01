@@ -9,10 +9,6 @@ export default configure(() => ({
 
   extras: ['roboto-font', 'material-icons'],
 
-  env: {
-  VUE_ROUTER_BASE: '/kbalance_quasar_pwa/',
-},
-
   build: {
     target: {
       browser: ['es2019', 'edge88', 'firefox78', 'chrome87', 'safari13.1'],

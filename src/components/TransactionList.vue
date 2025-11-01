@@ -38,7 +38,7 @@
                 {{ Transaction.name(transactions[id]) }}
               </q-item-label>
               <q-item-label caption>
-                {{ store.getName(store.personId2Idx(transactions[id].payer)) }}
+                {{ store.getName(store.personIdx2Id(transactions[id].payer)) }}
                 paid
                 <CurrencyDisplay
                   :currency="transactions[id].currency"
@@ -194,11 +194,13 @@ const selectedPersonIdx = computed(() =>
 
 const transactionList = computed(() => {
   const search = (props.searchString || '').toLowerCase();
+  const isNum = !isNaN(parseFloat(search));
+  const list = Transaction.getTransactionList(props.transactions);
 
-  return Transaction.getTransactionList(props.transactions).filter((id) => {
-    return Transaction.name(props.transactions[id])
-      .toLowerCase()
-      .includes(search);
+  return list.filter((id) => {
+    const tr = props.transactions[id];
+    if (isNum) return Transaction.searchString(tr).includes(search);
+    return Transaction.name(tr).toLowerCase().includes(search);
   });
 });
 
@@ -227,28 +229,6 @@ const loadMore = (index, done) => {
   currentIndex.value += itemsPerPage;
   done();
 };
-
-// const loadMore = (index, done) => {
-//   const search = props.searchString.toLowerCase();
-
-//   // Filter transactions first
-//   const filtered = transactionList.value.filter(t =>
-//     Transaction.name(t).toLowerCase().includes(search)
-//   );
-
-//   const nextSlice = filtered.slice(
-//     currentIndex.value,
-//     currentIndex.value + itemsPerPage
-//   );
-
-//   if (visibleTransactions.value.length === 0) {
-//     startIndex.value = currentIndex.value;
-//   }
-
-//   visibleTransactions.value.push(...nextSlice);
-//   currentIndex.value += itemsPerPage;
-//   done();
-// };
 
 const isFinished = computed(
   () => currentIndex.value >= transactionList.value.length,

@@ -7,6 +7,8 @@
       :label="props.label"
       @focus="inputRef.select()"
       :input-class="props.alignRight ? 'text-right' : 'text-left'"
+      :readonly="props.readonly"
+      :bg-color="props.bgColor"
     />
     <CurrencyDisplay
       v-if="
@@ -41,6 +43,14 @@ const props = defineProps({
   currency: String,
   label: String,
   alignRight: {
+    type: Boolean,
+    default: false,
+  },
+  bgColor: {
+    type: String,
+    default: ``,
+  },
+  readonly: {
     type: Boolean,
     default: false,
   },

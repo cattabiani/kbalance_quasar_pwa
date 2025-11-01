@@ -1,6 +1,6 @@
 {
   "name": "kbalance-quasar-pwa",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "A Quasar/Vue app for tracking and managing shared expenses, allowing users to split costs, track balances, and settle payments within groups.",
   "productName": "kBalance",
   "author": "Katta <alessandro.cattabiani@gmail.com>",
@@ -8,7 +8,7 @@
   "scripts": {
     "lint": "eslint --ext .js,.vue ./",
     "format": "prettier --write \"**/*.{js,vue,scss,html,md,json}\" --ignore-path .gitignore",
-    "test": "echo \"No test specified\" && exit 0",
+    "test": "vitest",
     "dev": "quasar dev",
     "build": "quasar build -m pwa",
     "deploy": "quasar build -m pwa && gh-pages -d dist/pwa"
@@ -44,6 +44,7 @@
     "postcss": "^8.4.14",
     "prettier": "^2.8.8",
     "vite-plugin-checker": "^0.8.0",
+    "vitest": "^4.0.6",
     "vue-eslint-parser": "^9.4.2",
     "workbox-build": "^7.3.0",
     "workbox-cacheable-response": "^7.3.0",

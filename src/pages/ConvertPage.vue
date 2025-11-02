@@ -11,6 +11,14 @@
       <q-space />
       <q-btn
         flat
+        :icon="store.simplifiedTransactions ? 'toggle_on' : 'toggle_off'"
+        :label="store.simplifiedTransactions ? 'Simplify: ON' : 'Simplify: OFF'"
+        @click="store.simplifiedTransactions = !store.simplifiedTransactions"
+        class="q-ml-md bg-white text-primary"
+        aria-label="Simplify"
+      />
+      <q-btn
+        flat
         icon="done"
         label="Confirm"
         @click="saveAndGoBack"

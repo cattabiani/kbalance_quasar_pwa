@@ -37,7 +37,7 @@
             clickable
             v-close-popup
             @click="goToConvert"
-            v-if="summaries.ans.length"
+            v-if="Object.keys(summaries.totals).length > 1"
           >
             <q-item-section avatar>
               <q-icon name="currency_exchange" />
@@ -137,10 +137,7 @@
       </q-card-section>
     </q-card>
 
-    <summary-card
-      :summaries="displaySummaries"
-      :selectedPerson="selectedPerson"
-    />
+    <summary-card :summaries="summaries" :selectedPerson="selectedPerson" />
 
     <div class="row justify-center items-center q-pb-md">
       <q-btn
@@ -192,14 +189,6 @@ const searchInput = ref(null);
 
 const summaries = computed(() => {
   return Results.getSummary(store.currentSheetResults, selectedPersonIdx.value);
-});
-
-const displaySummaries = computed(() => {
-  return Results.getSummary(
-    store.currentSheetResults,
-    selectedPersonIdx.value,
-    store.simplifiedTransactions,
-  );
 });
 
 const removeTransaction = async (reset, id) => {

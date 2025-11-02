@@ -10,6 +10,11 @@
       />
       <q-space />
       <q-btn
+        v-if="
+          store.currentSheetPeople
+            .map((id) => !store.currentSheet.people[id].active)
+            .filter((v) => v).length
+        "
         flat
         :icon="seeInactive ? 'visibility_off' : 'visibility'"
         :label="seeInactive ? 'Hide' : 'Show'"

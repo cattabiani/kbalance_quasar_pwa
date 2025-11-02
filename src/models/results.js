@@ -95,23 +95,12 @@ const Result = {
     result.mat = ans;
   },
 
-  getSummary(baseResult, id, simplified = true) {
-    if (
-      id === null ||
-      id === undefined ||
-      id < 0 ||
-      id >= baseResult.mat.length
-    ) {
+  getSummary(result, id) {
+    if (id === null || id === undefined || id < 0 || id >= result.mat.length) {
       return [];
     }
 
     const ans = [];
-
-    let result = baseResult;
-    if (simplified) {
-      result = structuredClone(baseResult);
-      this._simplify(result);
-    }
 
     // Add the values from the row at 'id' with 0 appended
     for (let i = 0; i < result.mat[id].length; i++) {
@@ -193,13 +182,24 @@ const Result = {
 };
 
 const Results = {
-  make(transactions = {}, nPeople = 0) {
+  make(transactions = {}, nPeople = 0, simplified = true) {
     let nTransactions = 0;
     let nCurrencies = 0;
     const mats = {};
     const results = { nPeople, nTransactions, nCurrencies, mats };
     this.applyTransactions(results, transactions, nPeople);
+
+    if (simplified) {
+      this._simplify(results);
+    }
+
     return results;
+  },
+
+  _simplify(results) {
+    Object.values(results.mats).forEach((mat) => {
+      Result._simplify(mat);
+    });
   },
 
   getCurrencies(results) {
@@ -223,7 +223,7 @@ const Results = {
     });
   },
 
-  getSummary(results, id, simplified = true) {
+  getSummary(results, id) {
     const ans = [];
     const totals = {};
 
@@ -234,7 +234,7 @@ const Results = {
     // Loop over the currencies in results
     Object.entries(results.mats).forEach(([currency, result]) => {
       // Call getSummary on each result
-      const l = Result.getSummary(result, id, simplified);
+      const l = Result.getSummary(result, id);
       let tot = 0;
       if (l.length > 0) {
         l.forEach((v) => {

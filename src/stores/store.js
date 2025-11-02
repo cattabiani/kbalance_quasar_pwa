@@ -145,6 +145,7 @@ export const useStore = defineStore('mainStore', {
       return Results.make(
         this.currentSheet.transactions,
         this.currentSheetPeople.length || 0,
+        this.simplifiedTransactions,
       );
     },
   },

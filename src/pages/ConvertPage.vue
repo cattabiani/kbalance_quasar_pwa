@@ -121,7 +121,7 @@ const toCurrency = ref(
 );
 
 const conversionMulti = ref(
-  store.convertCurrency(1, fromCurrency.value, toCurrency.value),
+  store.convertCurrency(1, toCurrency.value, fromCurrency.value),
 ); // 1.00
 
 const goBack = () => {

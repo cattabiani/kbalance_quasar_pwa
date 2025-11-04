@@ -65,6 +65,7 @@
           </q-item>
 
           <q-item
+            v-if="store.currentSheetPeople.length > 2"
             clickable
             v-close-popup
             @click="

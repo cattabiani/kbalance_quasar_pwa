@@ -10,6 +10,7 @@
       />
       <q-space />
       <q-btn
+        v-if="store.currentSheetPeople.length > 2"
         flat
         :icon="store.simplifiedTransactions ? 'toggle_on' : 'toggle_off'"
         :label="store.simplifiedTransactions ? 'Simplify: ON' : 'Simplify: OFF'"

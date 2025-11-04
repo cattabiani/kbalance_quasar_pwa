@@ -43,15 +43,19 @@
 
       <q-card-section class="full-width row justify-center">
         <CurrencyDropdown
-          v-model="fromCurrency"
+          v-model="currency1"
           :usedCurrencies="fromCurrencies"
           dense
           :expandable="false"
           class="q-mr-md"
         />
-        <q-btn class="q-mr-md" icon="swap_horiz" @click="swapCurrencies" />
+        <q-btn
+          class="q-mr-md"
+          :icon="direction ? 'arrow_forward' : 'arrow_back'"
+          @click="direction = !direction"
+        />
         <CurrencyDropdown
-          v-model="toCurrency"
+          v-model="currency2"
           :usedCurrencies="fromCurrencies"
           dense
         />
@@ -116,47 +120,45 @@ const fromCurrencies = computed(() => {
 });
 
 const keys = Object.keys(baseSummaries.value.totals);
-const fromCurrency = ref(keys.length > 0 ? keys[0] : 'USD');
-const toCurrency = ref(
+const currency1 = ref(keys.length > 0 ? keys[0] : 'USD');
+const currency2 = ref(
   keys.length > 1 ? keys[1] : keys.length > 0 ? keys[0] : 'USD',
 );
+const direction = ref(true);
 
-const conversionMulti = ref(
-  store.convertCurrency(1, toCurrency.value, fromCurrency.value),
-); // 1.00
+const conversionMulti = computed(() => {
+  if (direction.value) {
+    return store.convertCurrency(1, currency1.value, currency2.value);
+  } else {
+    return store.convertCurrency(1, currency2.value, currency1.value);
+  }
+}); // 1.00
 
 const goBack = () => {
   router.go(-1);
 };
 
-const swapCurrencies = () => {
-  if (Object.keys(baseSummaries.value.totals).includes(toCurrency.value)) {
-    [fromCurrency.value, toCurrency.value] = [
-      toCurrency.value,
-      fromCurrency.value,
-    ];
-  } else {
-    $q.notify({
-      message: `Cannot swap: You don't have a balance in ${toCurrency.value}`,
-      color: 'negative',
-    });
-  }
-};
-
 const transactions = computed(() => {
+  let curr1 = currency1.value;
+  let curr2 = currency2.value;
+
+  if (!direction.value) {
+    [curr1, curr2] = [curr2, curr1];
+  }
+
   let msg = `🤖 settle ${store.getName(selectedPerson.value)}`;
   const settleTransactions = store.makeEquivalentTransactionBatch(
-    fromCurrency.value,
+    curr1,
     selectedPersonIdx.value,
     msg,
   );
   msg = `🤖 convert ${store.getName(selectedPerson.value)}`;
   const conversionTransactions = store.makeEquivalentTransactionBatch(
-    fromCurrency.value,
+    curr1,
     selectedPersonIdx.value,
     msg,
     -conversionMulti.value,
-    toCurrency.value,
+    curr2,
   );
 
   return { ...settleTransactions, ...conversionTransactions };

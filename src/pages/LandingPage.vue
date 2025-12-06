@@ -41,35 +41,48 @@
         class="bg-white text-primary shadow-1 rounded-borders"
       >
         <!-- Carousel Slides with Images and Descriptions -->
-        <q-carousel-slide name="transaction" class="column no-wrap flex-center">
+        <q-carousel-slide
+          name="transaction"
+          class="column"
+          style="height: 100%; justify-content: space-between"
+        >
           <q-img
             src="screenshots/transaction.jpeg"
             alt="Transaction"
             fit="contain"
+            style="flex: 1; width: 100%"
           />
           <div class="carousel-caption text-h6 text-center">
             Easily split expenses with friends
           </div>
         </q-carousel-slide>
 
-        <q-carousel-slide name="sheet" class="column no-wrap flex-center">
+        <q-carousel-slide
+          name="sheet"
+          class="column"
+          style="height: 100%; justify-content: space-between"
+        >
           <q-img
             src="screenshots/sheet.jpeg"
             alt="Sheet"
             fit="contain"
-            class="carousel-image"
+            style="flex: 1; width: 100%"
           />
           <div class="carousel-caption text-h6 text-center">
             Manage and organize your sheets effortlessly
           </div>
         </q-carousel-slide>
 
-        <q-carousel-slide name="conversion" class="column no-wrap flex-center">
+        <q-carousel-slide
+          name="conversion"
+          class="column"
+          style="height: 100%; justify-content: space-between"
+        >
           <q-img
             src="screenshots/convert.jpeg"
             alt="Conversion"
             fit="contain"
-            class="carousel-image"
+            style="flex: 1; width: 100%"
           />
           <div class="carousel-caption text-h6 text-center">
             Easily convert currencies with updated rates
@@ -78,13 +91,14 @@
 
         <q-carousel-slide
           name="newPageWizard"
-          class="column no-wrap flex-center"
+          class="column"
+          style="height: 100%; justify-content: space-between"
         >
           <q-img
             src="screenshots/newPageWizard.jpeg"
             alt="New Page Wizard"
             fit="contain"
-            class="carousel-image"
+            style="flex: 1; width: 100%"
           />
           <div class="carousel-caption text-h6 text-center">
             Create new sheets with ease using the wizard
@@ -122,7 +136,6 @@ defineOptions({
 });
 
 import Utils from 'src/utils/utils';
-import QRCode from 'qrcode';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { ref, onMounted, onBeforeUnmount } from 'vue';

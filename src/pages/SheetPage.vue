@@ -37,7 +37,7 @@
             clickable
             v-close-popup
             @click="goToConvert"
-            v-if="Object.keys(summaries.totals).length > 1"
+            v-if="Object.keys(summaries).length > 1"
           >
             <q-item-section avatar>
               <q-icon name="currency_exchange" />
@@ -49,7 +49,7 @@
             clickable
             v-close-popup
             @click="goToSettle"
-            v-if="summaries.ans.length"
+            v-if="summaries.length"
           >
             <q-item-section avatar>
               <q-icon name="payments" />
@@ -103,9 +103,8 @@
   </q-header>
 
   <q-page>
-    <q-card class="q-my-md q-mr-md q-ml-md">
+    <!-- <q-card class="q-my-md q-mr-md q-ml-md">
       <q-card-section class="row no-wrap items-center">
-        <!-- dropdown 50% -->
         <div class="col-6" style="text-overflow: ellipsis; white-space: nowrap">
           <people-dropdown
             v-if="store.currentSheet"
@@ -116,7 +115,6 @@
           />
         </div>
 
-        <!-- input 50% with small margin -->
         <div
           class="col-6"
           style="
@@ -136,11 +134,13 @@
           />
         </div>
       </q-card-section>
-    </q-card>
+    </q-card> -->
 
-    <summary-card :summaries="summaries" :selectedPerson="selectedPerson" />
+    <summary-card :summary="summary" :selectedPerson="selectedPerson" />
 
-    <div class="row justify-center items-center q-pb-md">
+
+
+    <!-- <div class="row justify-center items-center q-pb-md">
       <q-btn
         class="bg-primary text-white"
         icon="note_add"
@@ -155,7 +155,7 @@
       :search-string="searchString"
       @remove="removeTransaction"
       @edit="editTransaction"
-    />
+    /> -->
   </q-page>
 </template>
 
@@ -188,15 +188,14 @@ const searchString = ref(null);
 const searchActive = ref(false);
 const searchInput = ref(null);
 
-const summaries = computed(() => {
-  return Results.getSummary(store.currentSheetResults, selectedPersonIdx.value);
+const summary = computed(() => {
+  return Results.summary(store.currentSheetResults, selectedPersonIdx.value);
 });
 
 const removeTransaction = async (reset, id) => {
   try {
-    const message = `Are you sure you want to remove ${Transaction.name(
-      store.currentSheet.transactions[id],
-    )}?`;
+    const message = `Are you sure you want to remove ${
+      store.currentSheet.transactions[id] || '(New Transaction)'}?`;
 
     $q.notify({
       message,

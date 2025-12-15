@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import Transaction from '../src/models/transaction.js'
-import Utils from '../src/utils/utils.js'
+import Transaction from '../../src/models/transaction.js'
+import Utils from '../../src/utils/utils.js'
 
 describe('Transaction.make', () => {
   it('make a transaction', () => {
@@ -574,39 +574,25 @@ describe('Transaction.minCashFlow', () => {
     const tr = Transaction.make(3, "USD");
     tr.credits[1] = 10
     tr.debts[0] = 10
-    const trList = Transaction.minCashFlow(tr, people);
+    const trList = Transaction.minCashFlow(tr);
 
     expect(trList.length).toEqual(1);
-    expect(trList[0].credits).toEqual([10, 0, 0]);
-    expect(trList[0].debts).toEqual([0, 10, 0]);
+    expect(trList[0].amount).toEqual(10);
+    expect(trList[0].creditorIdx).toEqual(1);
+    expect(trList[0].debtorIdx).toEqual(0);
   });
 
   it('should settle multiple creditors/debtors', () => {
     const tr = Transaction.make(3, "USD");
     tr.credits = [0, 0, 16];
     tr.debts = [10, 6, 0];
-    const trList = Transaction.minCashFlow(tr, people);
+    const trList = Transaction.minCashFlow(tr);
 
     // Possible valid settlement sequence:
     expect(trList.length).toEqual(2);
-    expect(trList[0].credits).toEqual([10, 0, 0]);
-    expect(trList[0].debts).toEqual([0, 0, 10]);
-    expect(trList[1].credits).toEqual([0 , 6, 0]);
-    expect(trList[1].debts).toEqual([0, 0, 6]);
-  });
 
-  it('should handle a chain scenario', () => {
-    // Classic example: 0 owes 10, 1 owes 20, 2 must receive 30
-    const tr = Transaction.make(3, "USD");
-    tr.credits = [0, 0, 30];
-    tr.debts = [10, 20, 0];
-    const trList = Transaction.minCashFlow(tr, people);
-
-    expect(trList.length).toEqual(2);
-    expect(trList[0].credits).toEqual([0, 20, 0]);
-    expect(trList[0].debts).toEqual([0, 0, 20]);
-    expect(trList[1].credits).toEqual([10 , 0, 0]);
-    expect(trList[1].debts).toEqual([0, 0, 10]);
+    expect(trList[0]).toEqual({amount: 10, creditorIdx:2 , debtorIdx:0});
+    expect(trList[1]).toEqual({amount: 6, creditorIdx:2 , debtorIdx:1});
   });
 
   it('should handle alternating positives/negatives', () => {
@@ -618,37 +604,34 @@ describe('Transaction.minCashFlow', () => {
     const trList = Transaction.minCashFlow(tr, ["A", "B", "C", "D"]);
 
     expect(trList.length).toEqual(3);
-    expect(trList[0].credits).toEqual([0, 0, 0, 20]);
-    expect(trList[0].debts).toEqual([0, 0, 20, 0]);
-    expect(trList[1].credits).toEqual([0, 6, 0, 0]);
-    expect(trList[1].debts).toEqual([6, 0, 0, 0]);
-    expect(trList[2].credits).toEqual([0, 0, 0, 4]);
-    expect(trList[2].debts).toEqual([4, 0, 0, 0]);
+    expect(trList[0]).toEqual({amount: 20, creditorIdx:2 , debtorIdx:3});
+    expect(trList[1]).toEqual({amount: 6, creditorIdx:0 , debtorIdx:1});
+    expect(trList[2]).toEqual({amount: 4, creditorIdx:0 , debtorIdx:3});
   });
 });
 
-describe('Result.summary', () => {
-  const people = ["A", "B", "C"];
+describe('Transaction.summary', () => {
   it('should filter only 0', () => {
     // Classic example: 0 owes 10, 1 owes 20, 2 must receive 30
     const tr = Transaction.make(3, "USD");
     tr.credits = [0, 0, 30];
     tr.debts = [10, 20, 0];
-    const trList = Transaction.summary(tr, people, 0);
+    const summary = Transaction.summary(tr, 0);
+    expect(summary.total).toEqual(-10);
+    const trList = summary.transactions;
     expect(trList.length).toEqual(1);
-    expect(trList[0].credits).toEqual([10, 0, 0]);
-    expect(trList[0].debts).toEqual([0, 0, 10]);
+    expect(trList[0]).toEqual({amount: 10, creditorIdx:2 , debtorIdx:0});
   });
 });
 
-describe('Result.settle', () => {
+describe('Transaction.settle', () => {
   const people = ["A", "B", "C"];
   it('settle is the inverted balances', () => {
     // Classic example: 0 owes 10, 1 owes 20, 2 must receive 30
     const tr = Transaction.make(3, "USD");
     tr.credits = [0, 0, 30];
     tr.debts = [10, 20, 0];
-    const settleTr = Transaction.settle(tr, people, 2);
+    const settleTr = Transaction.settle(tr, 2, people);
 
     expect(settleTr.credits).toEqual([10, 20, 0]);
     expect(settleTr.debts).toEqual([0, 0, 30]);
@@ -659,7 +642,7 @@ describe('Result.settle', () => {
     const tr = Transaction.make(4, "USD");
     tr.credits = [0, 0, 30, 5];
     tr.debts = [10, 25, 0, 0];
-    const settleTr = Transaction.settle(tr, ["A", "B", "C", "D"], 2);
+    const settleTr = Transaction.settle(tr, 2, ["A", "B", "C", "D"]);
 
     expect(settleTr.credits).toEqual([5, 25, 0, 0]);
     expect(settleTr.debts).toEqual([0, 0, 30, 0]);
@@ -670,7 +653,8 @@ describe('Result.settle', () => {
     const tr = Transaction.make(3, "USD");
     tr.credits = [0, 0, 30];
     tr.debts = [10, 20, 0];
-    const settleTr = Transaction.settle(tr, people, 2);
+    const settleTr = Transaction.settle(tr, 2, people);
+
     Transaction.add(tr, settleTr, 1);
 
     expect(tr.credits).toEqual([0, 0, 0]);

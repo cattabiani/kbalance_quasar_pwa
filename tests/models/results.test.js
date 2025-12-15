@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import Results from '../src/models/results.js'
-import Transaction from '../src/models/transaction.js'
+import Results from '../../src/models/results.js'
+import Transaction from '../../src/models/transaction.js'
 
 // Helper to build a valid transaction quickly.
 // Invariants enforced by tests:
@@ -205,9 +205,6 @@ describe('summary()', () => {
       perCurrencyBalance: { USD: usd, EUR: eur }
     };
 
-    // mock Transaction.summary => return the list of contributing transactions
-    Transaction.summary = () => [usd, eur];
-
     const ans = Results.summary(results, 0);
     expect(ans).toEqual({});
   });
@@ -228,8 +225,6 @@ describe('summary()', () => {
       perCurrencyBalance: { USD: usd, EUR: eur }
     };
 
-    Transaction.summary = (result, _) => [result];
-
     const ans = Results.summary(results, 1);
 
     // USD contributes 0, EUR contributes +4
@@ -245,30 +240,26 @@ describe('summary()', () => {
       [3, 0, 2]
     );
 
-    const t2 = validTr(
+    Transaction.add(t1, validTr(
       3, 'USD',
       [0, 7, 0],     // person 1: +7
       [4, 0, 3]
-    );
+    ), 1);
 
-    const aggUSD = validTr(
+    const ttot = validTr(
       3, 'USD',
       [0, 12, 0],    // total credits
       [7, 0, 5]      // total debts
     );
 
     const results = {
-      perCurrencyBalance: { USD: aggUSD }
+      perCurrencyBalance: { USD: t1 }
     };
-
-    // mock Transaction.summary to return all individual contributing transactions
-    Transaction.summary = () => [t1, t2];
 
     const ans = Results.summary(results, 1);
 
     // net = (5 - 0) + (7 - 0) = 12
     expect(ans['USD'].total).toBe(12);
-    expect(ans['USD'].transactions).toEqual([t1, t2]);
   });
 
   it('ignores currencies where idx has net zero even if transactions exist', () => {
@@ -278,13 +269,9 @@ describe('summary()', () => {
       [10, 0]    // person 1 has 0 - 0 = 0
     );
 
-    const t1 = usd;
-
     const results = {
       perCurrencyBalance: { USD: usd }
     };
-
-    Transaction.summary = () => [t1];
 
     const ans = Results.summary(results, 1);
     expect(ans).toEqual({});

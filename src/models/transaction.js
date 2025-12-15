@@ -1,6 +1,13 @@
 import { v4 as uuidv4 } from 'uuid';
 import Utils from '../utils/utils.js';
 
+const Transaction1to1 = {
+  make(amount, creditorIdx, debtorIdx) {
+    return {amount, creditorIdx, debtorIdx};
+  }
+};
+
+
 const Transaction = {
   make(people, currency) {
     const nPeople = Array.isArray(people)
@@ -14,7 +21,7 @@ const Transaction = {
     return { name, id, credits, currency, debts, timestamp };
   },
 
-  make1to1(people, currency, creditorIdx, debtorIdx, value) {
+  fromTransaction1to1(tr, people, currency) {
     const nPeople = Array.isArray(people)
       ? people.length
       : people;
@@ -22,13 +29,29 @@ const Transaction = {
     const credits = Array.from({ length: nPeople }, () => 0);
     const debts = Array.from({ length: nPeople }, () => 0);
     let timestamp = Date.now();
-    credits[creditorIdx] = value;
-    debts[debtorIdx] = value;
+    credits[tr.creditorIdx] = tr.amount;
+    debts[tr.debtorIdx] = tr.amount;
 
-    const name = `${people[debtorIdx]} → ${people[creditorIdx]}` ? Array.isArray(people) : '';
+    const name = `${people[tr.debtorIdx]} → ${people[tr.creditorIdx]}` ? Array.isArray(people) : '';
 
     return { name, id, credits, currency, debts, timestamp };
   },
+
+  // make1to1(people, currency, creditorIdx, debtorIdx, value) {
+  //   const nPeople = Array.isArray(people)
+  //     ? people.length
+  //     : people;
+  //   const id = uuidv4();
+  //   const credits = Array.from({ length: nPeople }, () => 0);
+  //   const debts = Array.from({ length: nPeople }, () => 0);
+  //   let timestamp = Date.now();
+  //   credits[creditorIdx] = value;
+  //   debts[debtorIdx] = value;
+
+  //   const name = `${people[debtorIdx]} → ${people[creditorIdx]}` ? Array.isArray(people) : '';
+
+  //   return { name, id, credits, currency, debts, timestamp };
+  // },
 
   update(tr) {
     // update to latest format
@@ -282,7 +305,7 @@ const Transaction = {
     return -1;
   },
 
-  simplify(tr) {
+  _simplify(tr) {
     Utils.add(tr.credits, tr.debts, -1);
     for (let i = 0; i < tr.credits.length; ++i) {
       if (tr.credits[i] >= 0) {
@@ -304,7 +327,7 @@ const Transaction = {
     Utils.add(tr0.credits, tr1.credits, multi);
     Utils.add(tr0.debts, tr1.debts, multi);
 
-    this.simplify(tr0);
+    this._simplify(tr0);
   },
 
   convert(tr, conversionRate, newCurrency) {
@@ -323,7 +346,7 @@ const Transaction = {
     return tr.credits.every(b => b === 0) && tr.debts.every(b => b === 0);
   },
 
-  minCashFlow(tr, people) {
+  minCashFlow(tr) {
     const trList = [];
     const balances = [...tr.credits];
 
@@ -349,7 +372,7 @@ const Transaction = {
       const creditor = balList[creditorIdx];
 
       const settle = Math.min(-debtor.balance, creditor.balance);
-      trList.push(Transaction.make1to1(people, tr.currency, debtor.index, creditor.index, settle));
+      trList.push(Transaction1to1.make(settle, creditor.index, debtor.index));
 
       debtor.balance += settle;
       creditor.balance -= settle;
@@ -361,24 +384,28 @@ const Transaction = {
     return trList;
   },
 
-  summary(tr, people, idx) {
-    const trList = this.minCashFlow(tr, people);
-    return trList.filter((tr) => tr.credits[idx] > 0 || tr.debts[idx] > 0);
+  summary(tr, idx) {
+    const total = tr.credits[idx] - tr.debts[idx];
+    const trs = this.minCashFlow(tr);
+    const transactions = trs.filter((tr) => tr.creditorIdx === idx || tr.debtorIdx === idx);
+
+    return {total, transactions};
   },
 
-  settle(tr, people, idx) {
-    const trList = this.summary(tr, people, idx);
-    if (trList.length === 0) {
-      return;
+  settle(tr, idx, people) {
+    const summary = this.summary(tr, idx);
+    const trList = summary.transactions;
+
+    const ans = Transaction.make(people, tr.currency);
+    for (let i = 0; i < trList.length; ++i) {
+      const tr1to1 = Transaction.fromTransaction1to1(trList[i], people, tr.currency);
+      Transaction.add(ans, tr1to1, -1);
     }
-    for (let i = 1; i < trList.length; ++i) {
-      Transaction.add(trList[0], trList[i], 1);
-    }
-    return trList[0];
+    return ans;
   },
 
-  convertPerson(tr, people, idx, conversionRate, newCurrency) {
-    const settleTr = this.settle(tr, people, idx);
+  convertPerson(tr, idx, people, conversionRate, newCurrency) {
+    const settleTr = this.settle(tr, idx, people);
     const conversionTr = Transaction.convert(settleTr, conversionRate, newCurrency);
     [conversionTr.credits, conversionTr.debts] =
   [conversionTr.debts, conversionTr.credits];

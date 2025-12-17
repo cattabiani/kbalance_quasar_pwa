@@ -107,10 +107,10 @@ const Transaction = {
     return tr.debts.map(d => d !== 0);
   },
 
-  payerIdx(tr) {
+  payerIdx(tr, defaultIdx) {
     this.update(tr);
     const credit = this.credit(tr);
-    if (!tr.credits.length || credit === 0) return -1;
+    if (!tr.credits.length || credit === 0) return defaultIdx;
 
     for (let i = 0; i < tr.credits.length; i++) {
       if (tr.credits[i] === credit) {
@@ -118,6 +118,11 @@ const Transaction = {
       }
     }
     return -1;
+  },
+
+  position(tr, idx) {
+    this.update(tr);
+    return tr.credits[idx] - tr.debts[idx];
   },
 
 
@@ -164,7 +169,7 @@ const Transaction = {
     }
   },
 
-  setAmount(tr, value, payerIdx, debtors, exclude = new Set()) {
+  setCredit(tr, value, payerIdx, debtors, exclude = new Set()) {
     this.update(tr);
     // 1. reset + set payer credit
     for (let i = 0; i < tr.credits.length; i++) {
@@ -175,7 +180,7 @@ const Transaction = {
     this.split(tr, debtors, exclude);
   },
 
-  setCustomAmount(tr, value, payerIdx, debtors) {
+  setCustomCredit(tr, value, payerIdx, debtors) {
     this.update(tr);
     tr.credits[payerIdx] = value;
     this.split(tr, debtors);
@@ -194,11 +199,11 @@ const Transaction = {
     const totalAmount = this.credit(tr);
 
     // If fixed debts exceed total credit,
-    // reset everything using setAmount(total fixed credit).
+    // reset everything using setCredit(total fixed credit).
     if (fixedDebt > totalAmount) {
       // We must now make fixedDebt the new total credit.
       // defaultPayerIdx is the fallback payer index.
-      this.setAmount(tr, fixedDebt, defaultPayerIdx, debtors, exclude);
+      this.setCredit(tr, fixedDebt, defaultPayerIdx, debtors, exclude);
       return;
     }
 

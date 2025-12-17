@@ -90,20 +90,20 @@ describe('Transaction.debtors', () => {
 describe('Transaction.payerIdx', () => {
   it('Nobody payed when the credit is 0', () => {
     const tr = Transaction.make(3, "USD");
-    expect(Transaction.payerIdx(tr)).toBe(-1);
+    expect(Transaction.payerIdx(tr, -1)).toBe(-1);
   });
 
   it('Normal result', () => {
     const tr = Transaction.make(3, "USD");
     tr.credits = [0, 10, 0];  // total = 10
-    expect(Transaction.payerIdx(tr)).toBe(1);
+    expect(Transaction.payerIdx(tr, -1)).toBe(1);
   });
 
 
   it('Nobody payed if more than person payed', () => {
     const tr = Transaction.make(3, "USD");
     tr.credits = [5, 5, 0];   // total = 10, no entry is 10
-    expect(Transaction.payerIdx(tr)).toBe(-1);
+    expect(Transaction.payerIdx(tr, -1)).toBe(-1);
   });
 });
 
@@ -184,7 +184,7 @@ describe('Transaction.setAmount', () => {
     const tr = Transaction.make(3, "USD");
 
     const debtors = [true, true, true];
-    Transaction.setAmount(tr, 62, 1, debtors);
+    Transaction.setCredit(tr, 62, 1, debtors);
 
     expect(tr.credits).toEqual([0, 62, 0]);
   });
@@ -194,7 +194,7 @@ describe('Transaction.setAmount', () => {
     const debtors = [true, true, true];
 
     // set payer index 0 → credit = 60
-    Transaction.setAmount(tr, 62, 0, debtors);
+    Transaction.setCredit(tr, 62, 0, debtors);
 
     // split() should divide 60 equally
     expect(tr.debts).toEqual([20, 21, 21]);
@@ -204,7 +204,7 @@ describe('Transaction.setAmount', () => {
     const tr = Transaction.make(3, "USD");
     const debtors = [true, true, true];
 
-    Transaction.setAmount(tr, 0, 2, debtors);
+    Transaction.setCredit(tr, 0, 2, debtors);
 
     expect(tr.credits).toEqual([0, 0, 0]);
     expect(tr.debts).toEqual([0, 0, 0]);
@@ -423,11 +423,11 @@ describe('Transaction.state', () => {
 
   it('returns 1 when both debts >= half credit', () => {
     const tr = Transaction.make(2, "USD");
-    Transaction.setAmount(tr, 41, 0, [true, true]);
+    Transaction.setCredit(tr, 41, 0, [true, true]);
     expect(Transaction.state(tr)).toBe(1);
-    Transaction.setAmount(tr, 40, 1, [true, true]);
+    Transaction.setCredit(tr, 40, 1, [true, true]);
     expect(Transaction.state(tr)).toBe(1);
-    Transaction.setCustomAmount(tr, 41, 0, [true, true]);
+    Transaction.setCustomCredit(tr, 41, 0, [true, true]);
     expect(Transaction.state(tr)).toBe(1);
   });
 

@@ -33,12 +33,12 @@
     </q-toolbar>
   </q-header>
   <q-page>
-    <q-card class="q-my-md q-mr-md q-ml-md">
+   <q-card class="q-my-md q-mr-md q-ml-md">
       <q-card-section>
         <q-input
           ref="nameInput"
           v-model="tr.name"
-          label="Transaction Name"
+          label="Title"
           outlined
           @focus="nameInput.select()"
         />
@@ -52,25 +52,25 @@
         />
 
         <CurrencyInput
-          v-model="tr.amount"
+          v-model="credit"
           :currency="tr.currency"
           style="flex: 1"
           label="Amount"
-          @update:model-value="autoSplit()"
         />
       </q-card-section>
     </q-card>
+     
     <q-card class="q-my-md q-mr-md q-ml-md">
       <q-card-section class="column items-center" v-if="tr.debts.length === 2">
         <q-btn-dropdown class="full-width">
           <template v-slot:label>
             <TwoPeopleSplitRow
               :split="state2 === 1"
-              :payer="tr.payer"
+              :payer="payerIdx"
               :you-idx="youIdx"
               :other-name="store.getName(otherId)"
               :currency="tr.currency"
-              :amount="tr.amount"
+              :amount="credit"
               :reference-currency="store.referenceCurrency"
             />
           </template>
@@ -89,7 +89,7 @@
                   :you-idx="youIdx"
                   :other-name="store.getName(otherId)"
                   :currency="tr.currency"
-                  :amount="tr.amount"
+                  :amount="credit"
                 />
               </q-item-section>
             </q-item>
@@ -105,7 +105,7 @@
                   :you-idx="youIdx"
                   :other-name="store.getName(otherId)"
                   :currency="tr.currency"
-                  :amount="tr.amount"
+                  :amount="credit"
                 />
               </q-item-section>
             </q-item>
@@ -122,7 +122,7 @@
                   :you-idx="youIdx"
                   :other-name="store.getName(otherId)"
                   :currency="tr.currency"
-                  :amount="tr.amount"
+                  :amount="credit"
                 />
               </q-item-section>
             </q-item>
@@ -138,7 +138,7 @@
                   :you-idx="youIdx"
                   :other-name="store.getName(otherId)"
                   :currency="tr.currency"
-                  :amount="tr.amount"
+                  :amount="credit"
                 />
               </q-item-section>
             </q-item>
@@ -146,9 +146,11 @@
         </q-btn-dropdown>
       </q-card-section>
 
+      
+
       <q-card-section
         class="row justify-center items-center no-wrap"
-        v-if="tr.debts.length > 2"
+        v-if="debtors.length > 2"
       >
         <people-dropdown
           class="col-auto q-mr-sm"
@@ -173,7 +175,9 @@
         />
       </q-card-section>
 
-      <q-card-section class="row justify-center items-center">
+      {{ tr }}
+
+      <!-- <q-card-section class="row justify-center items-center">
         <q-btn
           flat
           icon="done"
@@ -190,28 +194,20 @@
           class="bg-secondary text-white"
           aria-label="Save"
         />
-      </q-card-section>
+      </q-card-section> -->
     </q-card>
-    <!-- <q-card class="q-my-md q-mr-md q-ml-md q-mb-md"> -->
-    <q-card-section>
+    <!-- <q-card-section>
       <div class="row text-bold items-center no-wrap">
-        <!-- radio header -->
         <div style="flex: 0 0 5%; text-align: left" class="q-ml-sm q-mr-md">
           Payer
         </div>
-
-        <!-- name header -->
         <div style="flex: 1 0 30%; text-align: left">Person</div>
-
-        <!-- checkbox header -->
         <div style="flex: 0 0 10%; text-align: center">Owes</div>
-
-        <!-- value header -->
         <div style="flex: 0 0 32%; text-align: right">Amount</div>
       </div>
-    </q-card-section>
+    </q-card-section> -->
 
-    <q-list class="q-my-md q-mr-md q-ml-md">
+    <!-- <q-list class="q-my-md q-mr-md q-ml-md">
       <q-item
         v-for="(id, index) in store.currentSheetPeople"
         :key="index"
@@ -225,7 +221,6 @@
         "
         class="row no-wrap items-center"
       >
-        <!-- radio left -->
         <q-item-section side style="flex: 0 0 5%; text-align: left">
           <q-radio
             v-model="tr.payer"
@@ -234,8 +229,6 @@
             dense
           />
         </q-item-section>
-
-        <!-- name flexible -->
         <q-item-section
           style="
             flex: 1 0 50%;
@@ -247,8 +240,6 @@
         >
           <person-item :id="id" />
         </q-item-section>
-
-        <!-- checkbox right -->
         <q-item-section
           side
           style="flex: 0 0 5%; text-align: center; margin-right: 6px"
@@ -259,8 +250,6 @@
             dense
           />
         </q-item-section>
-
-        <!-- value right -->
         <q-item-section side style="flex: 0 0 35%">
           <CurrencyInput
             v-model="tr.debts[index].owedAmount"
@@ -273,8 +262,7 @@
           />
         </q-item-section>
       </q-item>
-    </q-list>
-    <!-- </q-card> -->
+    </q-list> -->
   </q-page>
 </template>
 
@@ -288,7 +276,7 @@ import CurrencyInput from 'src/components/CurrencyInput.vue';
 import CurrencyDropdown from 'src/components/CurrencyDropdown.vue';
 import TwoPeopleSplitRow from 'src/components/TwoPeopleSplitRow.vue';
 import Transaction from 'src/models/transaction';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 
 const $q = useQuasar();
 const store = useStore();
@@ -299,49 +287,132 @@ const seeInactive = ref(false);
 const nameInput = ref(null);
 const edited = ref(new Set());
 
+const debtors = ref(Transaction.debtors(tr.value));
+
+let forceSetCredit = false;
+
 onMounted(() => {
   nameInput.value?.focus();
 });
 
-const payer = computed({
-  get: () => store.personIdx2Id(tr.value.payer) || '',
+const credit = computed({
+  get: () => Transaction.credit(tr.value),
   set: (newValue) => {
-    tr.value.payer = store.personId2Idx(newValue);
+    if (newValue === Transaction.credit(tr.value)) return;
+    Transaction.setCredit(tr.value, newValue, payerIdx.value, debtors.value);
+    forceSetCredit = false;
+  },
+});
+
+const payerIdx = computed({
+  get: () => Transaction.payerIdx(tr.value, youIdx),
+  set: (newValue) => {
+     if (newValue === Transaction.payerIdx(tr.value, youIdx)) return;
+    Transaction.setCredit(tr.value, credit.value, newValue, debtors.value);
+  },
+});
+
+const payer = computed({
+  get: () => store.personIdx2Id(payerIdx.value) || '',
+  set: (newValue) => {
+    if (newValue === store.personIdx2Id(payerIdx.value)) return;
+    payerIdx.value = store.personId2Idx(newValue);
+  },
+});
+
+watch(
+  debtors,
+  (newDebtors, oldDebtors) => {
+    if (newDebtors === oldDebtors) return;
+
+    Transaction.setCredit(
+      tr.value,
+      credit.value,
+      payerIdx.value,
+      newDebtors
+    );
+  },
+  { deep: true }
+);
+
+const debtorIdx = computed({
+  get: () => {
+    const idx = debtors.value.findIndex(d => d);
+    return debtors.value.filter(d => d).length === 1 ? idx : -1;
+  },
+  set: (newIdx) => {
+    if (newIdx < 0 || newIdx >= debtors.value.length) return;
+
+    // compute oldIdx directly
+    let oldIdx = debtors.value.findIndex(d => d);
+    if (debtors.value.filter(d => d).length !== 1) oldIdx = -1;
+
+    if (newIdx === oldIdx) return; // guard
+
+    debtors.value = debtors.value.map((_, i) => i === newIdx);
   },
 });
 
 const debtor = computed({
-  get: () => {
-    const debtorIndexes = tr.value.debts
-      .map((debt, idx) => (debt.isDebtor ? idx : -1))
-      .filter((idx) => idx !== -1);
-
-    return debtorIndexes.length === 1
-      ? store.personIdx2Id(debtorIndexes[0])
-      : null;
-  },
+  get: () => store.personIdx2Id(debtorIdx.value) || '',
   set: (newValue) => {
-    const newIdx = store.personId2Idx(newValue);
-
-    tr.value.debts.forEach((debt, idx) => {
-      debt.isDebtor = idx === newIdx;
-    });
-    autoSplit();
+    if (newValue === store.personIdx2Id(debtorIdx.value)) return;
+    debtorIdx.value = store.personId2Idx(newValue);
   },
 });
 
-const swapPayerDebtor = () => {
-  if (debtor.value !== null) {
-    if (payer.value === debtor.value) return;
-    const payerIdx = store.personId2Idx(payer.value);
-    const debtorIdx = store.personId2Idx(debtor.value);
 
-    tr.value.payer = debtorIdx;
-    tr.value.debts.forEach((debt, idx) => {
-      debt.isDebtor = idx === payerIdx;
-    });
-    autoSplit();
-  }
+// const payer = computed({
+//   get: () => store.personIdx2Id(payerIdx.value) || '',
+//   set: (newValue) => {
+//     if (newValue === store.personId2Idx(newValue)) return;
+//     payerIdx.value = store.personId2Idx(newValue);
+//   },
+// });
+
+// const debtorIdx = computed({
+//   get: () => Transaction.debtorIdx(tr.value, youIdx),
+//   set: (newValue) => {
+//      if (!forceSetCredit && newValue === Transaction.debtorIdx(tr.value, youIdx)) return;
+//     Transaction.setCredit(tr.value, credit.value, newValue, debtors.value);
+//     forceSetCredit = false;
+//   },
+// });
+
+// const payer = computed({
+//   get: () => store.personIdx2Id(payerIdx.value) || '',
+//   set: (newValue) => {
+//     if (newValue === store.personId2Idx(newValue)) return;
+//     payerIdx.value = store.personId2Idx(newValue);
+//   },
+// });
+
+// const debtor = computed({
+//   get: () => {
+//     const debtorIndexes = tr.value.debts
+//       .map((debt, idx) => (debt.isDebtor ? idx : -1))
+//       .filter((idx) => idx !== -1);
+
+//     return debtorIndexes.length === 1
+//       ? store.personIdx2Id(debtorIndexes[0])
+//       : null;
+//   },
+//   set: (newValue) => {
+//     const newIdx = store.personId2Idx(newValue);
+
+//     tr.value.debts.forEach((debt, idx) => {
+//       debt.isDebtor = idx === newIdx;
+//     });
+//     autoSplit();
+//   },
+// });
+
+const swapPayerDebtor = () => {
+  if (debtorIdx.value === -1) return;
+  if (payerIdx.value === -1) return;
+  if (payerIdx.value === debtorIdx.value) return;
+
+  [payerIdx.value, debtorIdx.value] = [debtorIdx.value, payerIdx.value]
 };
 
 const otherId = store.currentSheetPeople.find((item) => item !== store.user.id);
@@ -357,31 +428,27 @@ const state2 = computed(() => {
 });
 
 const splitFor2 = (idx) => {
+  forceSetCredit = true;
   switch (idx) {
     case 0:
-      tr.value.payer = youIdx;
-      tr.value.debts[0].isDebtor = true;
-      tr.value.debts[1].isDebtor = true;
+      debtors.value = [true, true];
+      payerIdx.value = youIdx;
       break;
     case 1:
-      tr.value.payer = youIdx;
-      tr.value.debts[youIdx].isDebtor = false;
-      tr.value.debts[otherIdx].isDebtor = true;
+      debtors.value = (youIdx === 0) ? [false, true] : [true, false];
+      payerIdx.value = youIdx;
       break;
     case 2:
-      tr.value.payer = otherIdx;
-      tr.value.debts[0].isDebtor = true;
-      tr.value.debts[1].isDebtor = true;
+      debtors.value = [true, true];
+      payerIdx.value = otherIdx;
       break;
     case 3:
-      tr.value.payer = otherIdx;
-      tr.value.debts[youIdx].isDebtor = true;
-      tr.value.debts[otherIdx].isDebtor = false;
+      debtors.value = (youIdx === 1) ? [false, true] : [true, false];
+      payerIdx.value = otherIdx;
       break;
     default:
       return;
   }
-  autoSplit();
 };
 
 const customSplit = (index) => {
@@ -389,10 +456,10 @@ const customSplit = (index) => {
   split();
 };
 
-const autoSplit = () => {
-  edited.value.clear();
-  split();
-};
+// const autoSplit = () => {
+//   edited.value.clear();
+//   split();
+// };
 
 const split = () => {
   const ans = Transaction.split(tr.value, edited.value);

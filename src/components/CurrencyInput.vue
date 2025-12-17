@@ -10,9 +10,10 @@
       :readonly="props.readonly"
       :bg-color="props.bgColor"
     />
+
     <CurrencyDisplay
       v-if="
-        props.currency !== store.referenceCurrency && props.modelValue !== 0
+        store.referenceCurrency && props.currency !== store.referenceCurrency && props.modelValue !== 0
       "
       :currency="store.referenceCurrency"
       :amount="

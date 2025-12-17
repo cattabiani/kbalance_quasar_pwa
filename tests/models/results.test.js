@@ -153,7 +153,7 @@ describe('currencies()', () => {
     expect(Transaction.isEmpty(results.perCurrencyBalance['EUR'])).toBe(true);
 
     const cur = Results.currencies(results);
-    expect(cur).toEqual([]);
+    expect(cur).toEqual(new Set());
   });
 
   it('returns only currencies with non-empty aggregates', () => {
@@ -176,7 +176,7 @@ describe('currencies()', () => {
     expect(Transaction.isEmpty(eur)).toBe(true);
 
     const cur = Results.currencies(results);
-    expect(cur).toEqual(['USD']);
+    expect(cur).toEqual(new Set(['USD']));
   });
 
   it('returns multiple non-empty currencies', () => {
@@ -189,8 +189,8 @@ describe('currencies()', () => {
       perCurrencyBalance: { USD: usd, EUR: eur }
     };
 
-    const cur = Results.currencies(results).sort();
-    expect(cur).toEqual(['EUR', 'USD']);
+    const cur = Results.currencies(results);
+    expect(cur).toEqual(new Set(['EUR', 'USD']));
   });
 });
 

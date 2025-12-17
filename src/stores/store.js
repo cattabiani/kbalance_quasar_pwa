@@ -74,10 +74,9 @@ export const useStore = defineStore('mainStore', {
     },
 
     currencies() {
-      if (this.currentSheet) {
-        return new Set(Results.getCurrencies(this.currentSheetResults));
-      }
-      return new Set();
+      return this.currentSheet
+        ? Results.currencies(this.currentSheetResults)
+        : new Set();
     },
 
     lastCurrency() {

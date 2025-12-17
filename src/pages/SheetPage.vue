@@ -103,7 +103,7 @@
   </q-header>
 
   <q-page>
-    <!-- <q-card class="q-my-md q-mr-md q-ml-md">
+    <q-card class="q-my-md q-mr-md q-ml-md">
       <q-card-section class="row no-wrap items-center">
         <div class="col-6" style="text-overflow: ellipsis; white-space: nowrap">
           <people-dropdown
@@ -134,13 +134,13 @@
           />
         </div>
       </q-card-section>
-    </q-card> -->
+    </q-card>
 
     <summary-card :summary="summary" :selectedPerson="selectedPerson" />
 
 
 
-    <!-- <div class="row justify-center items-center q-pb-md">
+    <div class="row justify-center items-center q-pb-md">
       <q-btn
         class="bg-primary text-white"
         icon="note_add"
@@ -155,7 +155,7 @@
       :search-string="searchString"
       @remove="removeTransaction"
       @edit="editTransaction"
-    /> -->
+    />
   </q-page>
 </template>
 

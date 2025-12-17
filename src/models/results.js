@@ -25,13 +25,16 @@ const Results = {
     ++results.nTransactions;
   },
 
-  currencies(results) {
-        return Object.entries(results.perCurrencyBalance)
+currencies(results) {
+  return new Set(
+    Object.entries(results.perCurrencyBalance)
       .filter(([_, res]) => !Transaction.isEmpty(res))
-      .map(([currency]) => currency);
-  },
+      .map(([currency]) => currency)
+  );
+},
 
   summary(results, idx){
+    if (!results || !results.perCurrencyBalance) return {};
     const ans = {};
     for (const [currency, tr] of Object.entries(results.perCurrencyBalance)) {
       const total = tr.credits[idx] - tr.debts[idx];

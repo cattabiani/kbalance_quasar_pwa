@@ -35,18 +35,18 @@
               <q-item-label
                 :class="{ 'text-grey': store.pendingTransactionIds.has(id) }"
               >
-                {{ Transaction.name(transactions[id]) }}
+                {{ transactions[id].name || "New Transaction" }}
               </q-item-label>
               <q-item-label caption>
-                {{ store.getName(store.personIdx2Id(transactions[id].payer)) }}
+                {{ store.getName(store.personIdx2Id(Transaction.payerIdx(transactions[id], selectedPersonIdx))) }}
                 paid
                 <CurrencyDisplay
                   :currency="transactions[id].currency"
-                  :amount="transactions[id].amount"
+                  :amount="Transaction.credit(transactions[id])"
                   :reference-currency="store.referenceCurrency"
                   :converted-amount="
                     store.convertCurrency(
-                      transactions[id].amount,
+                      Transaction.credit(transactions[id]),
                       transactions[id].currency,
                       store.referenceCurrency,
                     )
@@ -82,7 +82,7 @@
                 "
               >
                 {{
-                  selectedPersonIdx !== transactions[id].payer
+                  selectedPersonIdx !== Transaction.payerIdx(transactions[id])
                     ? 'Not Involved'
                     : 'Personal'
                 }}
@@ -156,6 +156,19 @@ const itemsPerPage = 20;
 const currentIndex = ref(0);
 const startIndex = ref(0);
 
+const transactionList = computed(() => {
+  const search = (props.searchString || '').toLowerCase();
+  const isNum = !isNaN(parseFloat(search));
+
+  const list = Transaction.getTransactionList(props.transactions);
+
+  return list.filter((id) => {
+    const tr = props.transactions[id];
+    if (isNum) return Transaction.searchString(tr).includes(search);
+    return tr.name.toLowerCase().includes(search);
+  });
+});
+
 const getDividerLabel = (visibleIndex) => {
   const index = startIndex.value + visibleIndex;
   if (index < 0 || index >= transactionList.value.length) return '';
@@ -191,18 +204,6 @@ const getDividerLabel = (visibleIndex) => {
 const selectedPersonIdx = computed(() =>
   store.personId2Idx(props.selectedPerson),
 );
-
-const transactionList = computed(() => {
-  const search = (props.searchString || '').toLowerCase();
-  const isNum = !isNaN(parseFloat(search));
-  const list = Transaction.getTransactionList(props.transactions);
-
-  return list.filter((id) => {
-    const tr = props.transactions[id];
-    if (isNum) return Transaction.searchString(tr).includes(search);
-    return Transaction.name(tr).toLowerCase().includes(search);
-  });
-});
 
 const emit = defineEmits(['edit', 'remove']);
 

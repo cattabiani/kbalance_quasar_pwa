@@ -138,8 +138,6 @@
 
     <summary-card :summary="summary" :selectedPerson="selectedPerson" />
 
-
-
     <div class="row justify-center items-center q-pb-md">
       <q-btn
         class="bg-primary text-white"
@@ -195,7 +193,8 @@ const summary = computed(() => {
 const removeTransaction = async (reset, id) => {
   try {
     const message = `Are you sure you want to remove ${
-      store.currentSheet.transactions[id] || '(New Transaction)'}?`;
+      store.currentSheet.transactions[id] || '(New Transaction)'
+    }?`;
 
     $q.notify({
       message,

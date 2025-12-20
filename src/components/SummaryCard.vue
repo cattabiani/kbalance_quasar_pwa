@@ -6,7 +6,7 @@
         store.currentSheetPeople.length > 2
       "
       class="q-my-md q-mr-md q-ml-md"
-    > 
+    >
       <div class="q-pa-md">
         <div v-if="negativeTotals.length">
           {{ store.getName(props.selectedPerson) }} owes
@@ -52,36 +52,42 @@
       </div>
     </q-card>
 
-<q-card
-  v-if="!props.summary || Object.keys(props.summary).length === 0"
-  class="q-my-md q-mr-md q-ml-md"
->
-  <div class="q-pa-md">
-    <div>All Settled!</div>
-  </div>
-</q-card>
+    <q-card
+      v-if="!props.summary || Object.keys(props.summary).length === 0"
+      class="q-my-md q-mr-md q-ml-md"
+    >
+      <div class="q-pa-md">
+        <div>All Settled!</div>
+      </div>
+    </q-card>
 
-  <q-card v-if="summaryItems.length" class="q-my-md q-mr-md q-ml-md">
-  <div class="q-pa-md">
-    <div v-for="item in summaryItems" :key="item.id">
-      <span>
-        {{ store.getName(store.personIdx2Id(item.debtorIdx)) }}
-      </span>
-      <span> owes </span>
-      <span>
-        {{ store.getName(store.personIdx2Id(item.creditorIdx)) }}
-        &nbsp;
-      </span>
-      <CurrencyDisplay
-        :currency="item.currency"
-        :amount="item.amount"
-        :color="item.creditorIdx === selectedPersonIdx ? 'green' : 'red'"
-        :converted-amount="store.convertCurrency(Math.abs(item.amount), item.currency, store.referenceCurrency)"
-        :reference-currency="store.referenceCurrency"
-      />
-    </div>
-  </div>
-</q-card>
+    <q-card v-if="summaryItems.length" class="q-my-md q-mr-md q-ml-md">
+      <div class="q-pa-md">
+        <div v-for="item in summaryItems" :key="item.id">
+          <span>
+            {{ store.getName(store.personIdx2Id(item.debtorIdx)) }}
+          </span>
+          <span> owes </span>
+          <span>
+            {{ store.getName(store.personIdx2Id(item.creditorIdx)) }}
+            &nbsp;
+          </span>
+          <CurrencyDisplay
+            :currency="item.currency"
+            :amount="item.amount"
+            :color="item.creditorIdx === selectedPersonIdx ? 'green' : 'red'"
+            :converted-amount="
+              store.convertCurrency(
+                Math.abs(item.amount),
+                item.currency,
+                store.referenceCurrency,
+              )
+            "
+            :reference-currency="store.referenceCurrency"
+          />
+        </div>
+      </div>
+    </q-card>
   </div>
 </template>
 
@@ -111,22 +117,19 @@ const selectedPersonIdx = computed(() =>
 const summaryItems = computed(() => {
   if (!props.summary) return [];
 
-  
-  const ans = Object.entries(props.summary).flatMap(
-    ([currency, data]) => {
-      const list = data.transactions;
+  const ans = Object.entries(props.summary).flatMap(([currency, data]) => {
+    const list = data.transactions;
 
-      if (!Array.isArray(list)) return [];
+    if (!Array.isArray(list)) return [];
 
-      return list.map((tx, idx) => ({
-        id: `${currency}-${idx}`,
-        currency,
-        amount: tx.amount,
-        creditorIdx: tx.creditorIdx,
-        debtorIdx: tx.debtorIdx,
-      }));
-    }
-  );
+    return list.map((tx, idx) => ({
+      id: `${currency}-${idx}`,
+      currency,
+      amount: tx.amount,
+      creditorIdx: tx.creditorIdx,
+      debtorIdx: tx.debtorIdx,
+    }));
+  });
 
   return ans;
 });

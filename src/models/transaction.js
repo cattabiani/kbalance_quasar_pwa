@@ -3,16 +3,13 @@ import Utils from '../utils/utils.js';
 
 const Transaction1to1 = {
   make(amount, creditorIdx, debtorIdx) {
-    return {amount, creditorIdx, debtorIdx};
-  }
+    return { amount, creditorIdx, debtorIdx };
+  },
 };
-
 
 const Transaction = {
   make(people, currency) {
-    const nPeople = Array.isArray(people)
-      ? people.length
-      : people;
+    const nPeople = Array.isArray(people) ? people.length : people;
     let name = '';
     const id = uuidv4();
     const credits = Array.from({ length: nPeople }, () => 0);
@@ -22,9 +19,7 @@ const Transaction = {
   },
 
   fromTransaction1to1(tr, people, currency) {
-    const nPeople = Array.isArray(people)
-      ? people.length
-      : people;
+    const nPeople = Array.isArray(people) ? people.length : people;
     const id = uuidv4();
     const credits = Array.from({ length: nPeople }, () => 0);
     const debts = Array.from({ length: nPeople }, () => 0);
@@ -32,7 +27,9 @@ const Transaction = {
     credits[tr.creditorIdx] = tr.amount;
     debts[tr.debtorIdx] = tr.amount;
 
-    const name = `${people[tr.debtorIdx]} → ${people[tr.creditorIdx]}` ? Array.isArray(people) : '';
+    const name = `${people[tr.debtorIdx]} → ${people[tr.creditorIdx]}`
+      ? Array.isArray(people)
+      : '';
 
     return { name, id, credits, currency, debts, timestamp };
   },
@@ -55,7 +52,7 @@ const Transaction = {
 
   update(tr) {
     // update to latest format
-    if (!("amount" in tr)) return tr;
+    if (!('amount' in tr)) return tr;
 
     const n = tr.debts.length;
 
@@ -64,7 +61,7 @@ const Transaction = {
 
     tr.credits = credits;
 
-    tr.debts = tr.debts.map(d => d.owedAmount ?? 0);
+    tr.debts = tr.debts.map((d) => d.owedAmount ?? 0);
 
     delete tr.amount;
     delete tr.payer;
@@ -86,14 +83,10 @@ const Transaction = {
     if (delta <= 0) return;
 
     // Extend debts
-   tr.debts.push(
-      ...Array.from({ length: delta }, () => 0)
-    );
+    tr.debts.push(...Array.from({ length: delta }, () => 0));
 
     // Extend credits
-    tr.credits.push(
-      ...Array.from({ length: delta }, () => 0)
-    );
+    tr.credits.push(...Array.from({ length: delta }, () => 0));
   },
 
   debtors(tr) {
@@ -104,7 +97,7 @@ const Transaction = {
       return tr.debts.map(() => true);
     }
 
-    return tr.debts.map(d => d !== 0);
+    return tr.debts.map((d) => d !== 0);
   },
 
   payerIdx(tr, defaultIdx) {
@@ -124,7 +117,6 @@ const Transaction = {
     this.update(tr);
     return tr.credits[idx] - tr.debts[idx];
   },
-
 
   split(tr, debtors, exclude = new Set()) {
     this.update(tr);
@@ -173,7 +165,7 @@ const Transaction = {
     this.update(tr);
     // 1. reset + set payer credit
     for (let i = 0; i < tr.credits.length; i++) {
-      tr.credits[i] = (i === payerIdx) ? value : 0;
+      tr.credits[i] = i === payerIdx ? value : 0;
     }
 
     // 2. run split
@@ -198,9 +190,16 @@ const Transaction = {
 
     const totalAmount = this.credit(tr);
 
+    const debtorSet = new Set(debtors.flatMap((d, i) => (d ? i : [])));
+
+    // Check if `exclude` and `debtorSet` are exactly the same
+    const setsAreEqual =
+      exclude.size === debtorSet.size &&
+      [...exclude].every((i) => debtorSet.has(i));
+
     // If fixed debts exceed total credit,
     // reset everything using setCredit(total fixed credit).
-    if (fixedDebt > totalAmount) {
+    if (fixedDebt > totalAmount || setsAreEqual) {
       // We must now make fixedDebt the new total credit.
       // defaultPayerIdx is the fallback payer index.
       this.setCredit(tr, fixedDebt, defaultPayerIdx, debtors, exclude);
@@ -213,15 +212,15 @@ const Transaction = {
 
   searchString(tr) {
     const name = (tr.name || '').toLowerCase();
-    
+
     const credits = (tr.credits || [])
-      .filter(a => a > 0)           // only non-zero credits
-      .map(a => String(a).toLowerCase())
+      .filter((a) => a > 0) // only non-zero credits
+      .map((a) => String(a).toLowerCase())
       .join(' ');
 
     const debts = (tr.debts || [])
-      .filter(a => a > 0)           // only non-zero credits
-      .map(a => String(a).toLowerCase())
+      .filter((a) => a > 0) // only non-zero credits
+      .map((a) => String(a).toLowerCase())
       .join(' ');
 
     return `${name}|${credits}|${debts}`;
@@ -282,7 +281,6 @@ const Transaction = {
     ];
   },
 
-
   state(tr) {
     this.update(tr);
 
@@ -295,11 +293,11 @@ const Transaction = {
     }
 
     if (tr.debts[0] === 0) {
-        return 0;
+      return 0;
     }
 
     if (tr.debts[1] === 0) {
-        return 0;
+      return 0;
     }
 
     const credit2 = Math.floor(this.credit(tr) / 2);
@@ -314,7 +312,7 @@ const Transaction = {
     Utils.add(tr.credits, tr.debts, -1);
     for (let i = 0; i < tr.credits.length; ++i) {
       if (tr.credits[i] >= 0) {
-         tr.debts[i] = 0;
+        tr.debts[i] = 0;
       } else {
         tr.debts[i] = -tr.credits[i];
         tr.credits[i] = 0;
@@ -324,7 +322,9 @@ const Transaction = {
 
   add(tr0, tr1, multi) {
     if (tr0.currency !== tr1.currency) {
-      throw new Error(`Trying to combine transactions with different currencies: ${tr0.currency} with ${tr1.currency}`)
+      throw new Error(
+        `Trying to combine transactions with different currencies: ${tr0.currency} with ${tr1.currency}`,
+      );
     }
 
     tr0.name = '';
@@ -342,20 +342,20 @@ const Transaction = {
 
     const ans = Transaction.make(tr.credits.length, newCurrency);
     ans.credits = Utils.convertArray(tr.credits, conversionRate);
-    ans.debts = Utils.convertArray(tr.debts, conversionRate)
+    ans.debts = Utils.convertArray(tr.debts, conversionRate);
 
     return ans;
   },
 
   isEmpty(tr) {
-    return tr.credits.every(b => b === 0) && tr.debts.every(b => b === 0);
+    return tr.credits.every((b) => b === 0) && tr.debts.every((b) => b === 0);
   },
 
   minCashFlow(tr) {
     const trList = [];
     const balances = [...tr.credits];
 
-    Utils.add(balances, tr.debts, -1);    
+    Utils.add(balances, tr.debts, -1);
     let balList = balances
       .map((balance, index) => ({ index, balance }))
       .filter(({ balance }) => balance !== 0);
@@ -392,9 +392,11 @@ const Transaction = {
   summary(tr, idx) {
     const total = tr.credits[idx] - tr.debts[idx];
     const trs = this.minCashFlow(tr);
-    const transactions = trs.filter((tr) => tr.creditorIdx === idx || tr.debtorIdx === idx);
+    const transactions = trs.filter(
+      (tr) => tr.creditorIdx === idx || tr.debtorIdx === idx,
+    );
 
-    return {total, transactions};
+    return { total, transactions };
   },
 
   settle(tr, idx, people) {
@@ -403,7 +405,11 @@ const Transaction = {
 
     const ans = Transaction.make(people, tr.currency);
     for (let i = 0; i < trList.length; ++i) {
-      const tr1to1 = Transaction.fromTransaction1to1(trList[i], people, tr.currency);
+      const tr1to1 = Transaction.fromTransaction1to1(
+        trList[i],
+        people,
+        tr.currency,
+      );
       Transaction.add(ans, tr1to1, -1);
     }
     return ans;
@@ -411,13 +417,18 @@ const Transaction = {
 
   convertPerson(tr, idx, people, conversionRate, newCurrency) {
     const settleTr = this.settle(tr, idx, people);
-    const conversionTr = Transaction.convert(settleTr, conversionRate, newCurrency);
-    [conversionTr.credits, conversionTr.debts] =
-  [conversionTr.debts, conversionTr.credits];
+    const conversionTr = Transaction.convert(
+      settleTr,
+      conversionRate,
+      newCurrency,
+    );
+    [conversionTr.credits, conversionTr.debts] = [
+      conversionTr.debts,
+      conversionTr.credits,
+    ];
 
-    return [settleTr, conversionTr]
+    return [settleTr, conversionTr];
   },
-
 };
 
 export default Transaction;

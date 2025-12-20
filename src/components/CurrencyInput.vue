@@ -13,7 +13,9 @@
 
     <CurrencyDisplay
       v-if="
-        store.referenceCurrency && props.currency !== store.referenceCurrency && props.modelValue !== 0
+        store.referenceCurrency &&
+        props.currency !== store.referenceCurrency &&
+        props.modelValue !== 0
       "
       :currency="store.referenceCurrency"
       :amount="

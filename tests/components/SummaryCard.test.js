@@ -47,8 +47,6 @@ const factory = (overrides = {}) => {
   });
 };
 
-
-
 describe('SummaryCard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -69,5 +67,4 @@ describe('SummaryCard', () => {
 
     expect(wrapper.text()).toContain('All Settled!');
   });
-
 });

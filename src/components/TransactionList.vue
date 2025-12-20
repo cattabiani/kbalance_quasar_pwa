@@ -35,10 +35,16 @@
               <q-item-label
                 :class="{ 'text-grey': store.pendingTransactionIds.has(id) }"
               >
-                {{ transactions[id].name || "New Transaction" }}
+                {{ transactions[id].name || 'New Transaction' }}
               </q-item-label>
               <q-item-label caption>
-                {{ store.getName(store.personIdx2Id(Transaction.payerIdx(transactions[id], selectedPersonIdx))) }}
+                {{
+                  store.getName(
+                    store.personIdx2Id(
+                      Transaction.payerIdx(transactions[id], selectedPersonIdx),
+                    ),
+                  )
+                }}
                 paid
                 <CurrencyDisplay
                   :currency="transactions[id].currency"

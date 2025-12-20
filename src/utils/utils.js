@@ -62,8 +62,8 @@ const Utils = {
   convertArray(arr, rate) {
     if (!arr || arr.length === 0) return arr;
 
-    const floats = arr.map(v => v * rate);
-    const floors = floats.map(v => Math.floor(v));
+    const floats = arr.map((v) => v * rate);
+    const floors = floats.map((v) => Math.floor(v));
 
     const floatSum = floats.reduce((a, b) => a + b, 0);
     const floorSum = floors.reduce((a, b) => a + b, 0);
@@ -83,8 +83,7 @@ const Utils = {
     }
 
     return result;
-  }
-
+  },
 };
 
 export default Utils;

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import Results from '../../src/models/results.js'
-import Transaction from '../../src/models/transaction.js'
+import Results from '../../src/models/results.js';
+import Transaction from '../../src/models/transaction.js';
 
 // Helper to build a valid transaction quickly.
 // Invariants enforced by tests:
@@ -29,7 +29,7 @@ describe('make()', () => {
       4,
       'USD',
       [10, 0, 0, 0],
-      [0, 5, 5, 0] // person 4 has both zeros allowed
+      [0, 5, 5, 0], // person 4 has both zeros allowed
     );
 
     const res = Results.make({ a: tr }, 4);
@@ -45,14 +45,14 @@ describe('make()', () => {
       3,
       'USD',
       [5, 0, 0],
-      [0, 3, 2]    // sum = 5; person 3 non-zero debt
+      [0, 3, 2], // sum = 5; person 3 non-zero debt
     );
 
     const tr2 = validTr(
       3,
       'USD',
       [0, 7, 0],
-      [3, 0, 4]    // sum = 7; person 1 gets debt part
+      [3, 0, 4], // sum = 7; person 1 gets debt part
     );
 
     const res = Results.make({ t1: tr1, t2: tr2 }, 3);
@@ -63,19 +63,9 @@ describe('make()', () => {
   });
 
   it('handles transactions of different currencies independently', () => {
-    const usd = validTr(
-      2,
-      'USD',
-      [10, 0],
-      [0, 10]
-    );
+    const usd = validTr(2, 'USD', [10, 0], [0, 10]);
 
-    const eur = validTr(
-      2,
-      'EUR',
-      [0, 6],
-      [6, 0]
-    );
+    const eur = validTr(2, 'EUR', [0, 6], [6, 0]);
 
     const res = Results.make({ u: usd, e: eur }, 2);
 
@@ -90,14 +80,14 @@ describe('applyTransaction()', () => {
     const results = {
       nPeople: 3,
       nTransactions: 0,
-      perCurrencyBalance: {}
+      perCurrencyBalance: {},
     };
 
     const tr = validTr(
       3,
       'CHF',
       [4, 0, 0],
-      [0, 4, 0] // person 3 allowed to be zero in both arrays
+      [0, 4, 0], // person 3 allowed to be zero in both arrays
     );
 
     Results.applyTransaction(results, tr, 3);
@@ -112,21 +102,11 @@ describe('applyTransaction()', () => {
       nPeople: 3,
       nTransactions: 0,
       perCurrencyBalance: {
-        USD: validTr(
-          3,
-          'USD',
-          [3, 0, 0],
-          [0, 1, 2]
-        )
-      }
+        USD: validTr(3, 'USD', [3, 0, 0], [0, 1, 2]),
+      },
     };
 
-    const incoming = validTr(
-      3,
-      'USD',
-      [0, 5, 0],
-      [3, 0, 2]
-    );
+    const incoming = validTr(3, 'USD', [0, 5, 0], [3, 0, 2]);
 
     Results.applyTransaction(results, incoming, 3);
 
@@ -136,7 +116,6 @@ describe('applyTransaction()', () => {
   });
 });
 
-
 describe('currencies()', () => {
   it('returns empty list when everything is empty', () => {
     const results = {
@@ -144,8 +123,8 @@ describe('currencies()', () => {
       nTransactions: 0,
       perCurrencyBalance: {
         USD: Transaction.make(3, 'USD'),
-        EUR: Transaction.make(3, 'EUR')
-      }
+        EUR: Transaction.make(3, 'EUR'),
+      },
     };
 
     // Ensure Result.isEmpty returns true for these empty aggregates
@@ -157,18 +136,14 @@ describe('currencies()', () => {
   });
 
   it('returns only currencies with non-empty aggregates', () => {
-    const usd = validTr(
-      3, 'USD',
-      [10, 0, 0],
-      [0, 10, 0]
-    );
+    const usd = validTr(3, 'USD', [10, 0, 0], [0, 10, 0]);
 
     const eur = Transaction.make(3, 'EUR'); // empty
 
     const results = {
       nPeople: 3,
       nTransactions: 1,
-      perCurrencyBalance: { USD: usd, EUR: eur }
+      perCurrencyBalance: { USD: usd, EUR: eur },
     };
 
     // mock: USD is non-empty, EUR is empty
@@ -186,14 +161,13 @@ describe('currencies()', () => {
     const results = {
       nPeople: 2,
       nTransactions: 2,
-      perCurrencyBalance: { USD: usd, EUR: eur }
+      perCurrencyBalance: { USD: usd, EUR: eur },
     };
 
     const cur = Results.currencies(results);
     expect(cur).toEqual(new Set(['EUR', 'USD']));
   });
 });
-
 
 describe('summary()', () => {
   it('returns empty object if all totals are zero for person idx', () => {
@@ -202,7 +176,7 @@ describe('summary()', () => {
     const eur = validTr(2, 'EUR', [0, 7], [0, 7]); // person 0: 0-0 = 0
 
     const results = {
-      perCurrencyBalance: { USD: usd, EUR: eur }
+      perCurrencyBalance: { USD: usd, EUR: eur },
     };
 
     const ans = Results.summary(results, 0);
@@ -211,18 +185,20 @@ describe('summary()', () => {
 
   it('includes only currencies where person idx has non-zero total', () => {
     const usd = validTr(
-      3, 'USD',
-      [10, 0, 0],   // person 1 = 0
-      [0, 0, 10]
+      3,
+      'USD',
+      [10, 0, 0], // person 1 = 0
+      [0, 0, 10],
     );
     const eur = validTr(
-      3, 'EUR',
-      [0, 4, 0],    // person 1 contributes: credits[1]=4, debts[1]=0 -> net +4
-      [0, 0, 4]
+      3,
+      'EUR',
+      [0, 4, 0], // person 1 contributes: credits[1]=4, debts[1]=0 -> net +4
+      [0, 0, 4],
     );
 
     const results = {
-      perCurrencyBalance: { USD: usd, EUR: eur }
+      perCurrencyBalance: { USD: usd, EUR: eur },
     };
 
     const ans = Results.summary(results, 1);
@@ -235,25 +211,32 @@ describe('summary()', () => {
 
   it('accumulates multiple transactions per currency for the same person', () => {
     const t1 = validTr(
-      3, 'USD',
-      [0, 5, 0],     // person 1: +5
-      [3, 0, 2]
+      3,
+      'USD',
+      [0, 5, 0], // person 1: +5
+      [3, 0, 2],
     );
 
-    Transaction.add(t1, validTr(
-      3, 'USD',
-      [0, 7, 0],     // person 1: +7
-      [4, 0, 3]
-    ), 1);
+    Transaction.add(
+      t1,
+      validTr(
+        3,
+        'USD',
+        [0, 7, 0], // person 1: +7
+        [4, 0, 3],
+      ),
+      1,
+    );
 
     const ttot = validTr(
-      3, 'USD',
-      [0, 12, 0],    // total credits
-      [7, 0, 5]      // total debts
+      3,
+      'USD',
+      [0, 12, 0], // total credits
+      [7, 0, 5], // total debts
     );
 
     const results = {
-      perCurrencyBalance: { USD: t1 }
+      perCurrencyBalance: { USD: t1 },
     };
 
     const ans = Results.summary(results, 1);
@@ -264,13 +247,14 @@ describe('summary()', () => {
 
   it('ignores currencies where idx has net zero even if transactions exist', () => {
     const usd = validTr(
-      2, 'USD',
+      2,
+      'USD',
       [10, 0],
-      [10, 0]    // person 1 has 0 - 0 = 0
+      [10, 0], // person 1 has 0 - 0 = 0
     );
 
     const results = {
-      perCurrencyBalance: { USD: usd }
+      perCurrencyBalance: { USD: usd },
     };
 
     const ans = Results.summary(results, 1);

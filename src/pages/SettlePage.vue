@@ -10,15 +10,6 @@
       />
       <q-space />
       <q-btn
-        v-if="store.currentSheetPeople.length > 2"
-        flat
-        :icon="store.simplifiedTransactions ? 'toggle_on' : 'toggle_off'"
-        :label="store.simplifiedTransactions ? 'Simplify: ON' : 'Simplify: OFF'"
-        @click="store.simplifiedTransactions = !store.simplifiedTransactions"
-        class="q-ml-md bg-white text-primary"
-        aria-label="Simplify"
-      />
-      <q-btn
         flat
         icon="done"
         label="Confirm"
@@ -31,7 +22,6 @@
 
   <q-page>
     <q-card class="q-my-md q-mx-md row items-stretch q-gutter-x-md">
-      <!-- Left: flexible -->
       <q-card-section class="col">
         <people-dropdown
           class="full-width"
@@ -42,18 +32,17 @@
         />
       </q-card-section>
 
-      <!-- Right: auto width, stretches to same height -->
       <q-card-section class="row items-stretch">
         <CurrencyDropdown
           v-model="currency"
-          :usedCurrencies="usedCurrencies"
+          :usedCurrencies="currencies"
           :expandable="false"
           class="text-subtitle1 full-height"
         />
       </q-card-section>
     </q-card>
 
-    <summary-card :summaries="summaries" :selectedPerson="selectedPerson" />
+    <summary-card :summary="summary" :selectedPerson="selectedPerson" />
 
     <transaction-list
       :transactions="transactions"
@@ -78,6 +67,7 @@ import CurrencyDropdown from 'src/components/CurrencyDropdown.vue';
 import Results from 'src/models/results';
 import SummaryCard from 'src/components/SummaryCard.vue';
 import TransactionList from 'src/components/TransactionList.vue';
+import Transaction from 'src/models/transaction';
 import { ref, computed, onMounted } from 'vue';
 
 const store = useStore();
@@ -89,42 +79,54 @@ const selectedPersonIdx = computed(() =>
   store.personId2Idx(selectedPerson.value),
 );
 
-const baseSummaries = computed(() => {
-  return Results.getSummary(store.currentSheetResults, selectedPersonIdx.value);
+const baseSummary = computed(() => {
+  return Results.summary(store.currentSheetResults, selectedPersonIdx.value);
 });
-const usedCurrencies = computed(() => {
-  return new Set(Object.keys(baseSummaries.value.totals));
+
+const currencies = computed(() => {
+  return new Set(Object.keys(baseSummary.value));
 });
-const keys = Object.keys(baseSummaries.value.totals);
-const currency = ref(keys.length > 0 ? keys[0] : 'USD');
+
+const currency = ref(
+  currencies.value.size > 0 ? Array.from(currencies.value)[0] : 'USD',
+);
+
+const settleTr = computed(() => {
+  const tr = Transaction.settle(
+    store.currentSheetResults.perCurrencyBalance[currency.value],
+    selectedPersonIdx.value,
+    store.currentSheetPeople,
+  );
+
+  tr.name = `🤖 settle ${store.getName(selectedPerson.value)} (${
+    currency.value
+  })`;
+
+  return tr;
+});
+
+const transactions = computed(() => {
+  if (!store.currentSheet) return {};
+
+  const ans = {
+    ...store.currentSheet.transactions,
+    [settleTr.value.id]: settleTr.value,
+  };
+
+  return ans;
+});
+
+const results = computed(() => {
+  return Results.make(transactions.value, store.currentSheetPeople.length);
+});
+
+const summary = computed(() => {
+  return Results.summary(results.value, selectedPersonIdx.value);
+});
 
 const goBack = () => {
   router.go(-1);
 };
-
-const transactions = computed(() => {
-  let msg = `🤖 settle ${store.getName(selectedPerson.value)}`;
-  const settleTransactions = store.makeEquivalentTransactionBatch(
-    currency.value,
-    selectedPersonIdx.value,
-    msg,
-  );
-
-  return { ...settleTransactions };
-});
-
-const results = computed(() => {
-  const res = store.getEditableCurrentSheetResults();
-  Results.applyTransactions(
-    res,
-    transactions.value,
-    store.currentSheetPeople.length || 0,
-  );
-  return res;
-});
-const summaries = computed(() => {
-  return Results.getSummary(results.value, selectedPersonIdx.value);
-});
 
 const saveAndGoBack = async () => {
   try {

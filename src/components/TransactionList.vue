@@ -38,14 +38,7 @@
                 {{ transactions[id].name || 'New Transaction' }}
               </q-item-label>
               <q-item-label caption>
-                {{
-                  store.getName(
-                    store.personIdx2Id(
-                      Transaction.payerIdx(transactions[id], selectedPersonIdx),
-                    ),
-                  )
-                }}
-                paid
+                {{ payerLabel(transactions[id]) }}
                 <CurrencyDisplay
                   :currency="transactions[id].currency"
                   :amount="Transaction.credit(transactions[id])"
@@ -171,6 +164,7 @@ const transactionList = computed(() => {
   return list.filter((id) => {
     const tr = props.transactions[id];
     if (isNum) return Transaction.searchString(tr).includes(search);
+
     return tr.name.toLowerCase().includes(search);
   });
 });
@@ -246,4 +240,16 @@ watch(transactionList, () => {
   currentIndex.value = 0;
   loadMore(0, () => {});
 });
+
+const payerLabel = (tr) => {
+  const payers = Transaction.payerIdxs(tr);
+
+  if (payers.length === 0) return '';
+  if (payers.length === 1) {
+    return `${store.getName(store.personIdx2Id(payers[0]))} paid`;
+  }
+
+  const first = store.getName(store.personIdx2Id(payers[0]));
+  return `${first} + ${payers.length - 1} paid`;
+};
 </script>

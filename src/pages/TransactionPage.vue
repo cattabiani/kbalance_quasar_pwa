@@ -289,8 +289,6 @@
         </q-item-section>
       </q-item>
     </q-list>
-
-    {{ tr }}
   </q-page>
 </template>
 

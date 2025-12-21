@@ -54,8 +54,6 @@ export const useStore = defineStore('mainStore', {
     conversionRatesUpdatedAt: null,
     conversionRatesAutoUpdateRate: 24 * 60 * 60 * 1000, // daily
 
-    simplifiedTransactions: true,
-
     // firebase
     firebaseReady: false,
     authReady: false,
@@ -144,7 +142,6 @@ export const useStore = defineStore('mainStore', {
       return Results.make(
         this.currentSheet.transactions,
         this.currentSheetPeople.length || 0,
-        this.simplifiedTransactions,
       );
     },
   },
@@ -880,7 +877,6 @@ export const useStore = defineStore('mainStore', {
       'conversionRates',
       'conversionRatesUpdatedAt',
       'conversionRatesAutoUpdateRate',
-      'simplifiedTransactions',
     ],
     serializer: {
       serialize: (state) =>

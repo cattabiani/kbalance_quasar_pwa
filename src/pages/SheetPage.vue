@@ -33,12 +33,7 @@
             </q-item-section>
             <q-item-section>People</q-item-section>
           </q-item>
-          <q-item
-            clickable
-            v-close-popup
-            @click="goToConvert"
-            v-if="Object.keys(summaries).length > 1"
-          >
+          <q-item clickable v-close-popup @click="goToConvert">
             <q-item-section avatar>
               <q-icon name="currency_exchange" />
             </q-item-section>
@@ -49,7 +44,7 @@
             clickable
             v-close-popup
             @click="goToSettle"
-            v-if="summaries.length"
+            v-if="Object.keys(summary).length > 0"
           >
             <q-item-section avatar>
               <q-icon name="payments" />
@@ -62,28 +57,6 @@
               <q-icon name="download" />
             </q-item-section>
             <q-item-section>Download (csv)</q-item-section>
-          </q-item>
-
-          <q-item
-            v-if="store.currentSheetPeople.length > 2"
-            clickable
-            v-close-popup
-            @click="
-              store.simplifiedTransactions = !store.simplifiedTransactions
-            "
-          >
-            <q-item-section avatar>
-              <q-icon
-                :name="
-                  store.simplifiedTransactions ? 'toggle_on' : 'toggle_off'
-                "
-              />
-            </q-item-section>
-            <q-item-section>
-              {{
-                store.simplifiedTransactions ? 'Simplify: ON' : 'Simplify: OFF'
-              }}
-            </q-item-section>
           </q-item>
         </q-list>
       </q-btn-dropdown>

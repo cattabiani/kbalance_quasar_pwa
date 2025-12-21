@@ -113,6 +113,14 @@ const Transaction = {
     return -1;
   },
 
+  payerIdxs(tr) {
+    return tr.credits
+      .map((credit, idx) => ({ credit, idx }))
+      .filter((e) => e.credit !== 0)
+      .sort((a, b) => b.credit - a.credit)
+      .map((e) => e.idx);
+  },
+
   position(tr, idx) {
     this.update(tr);
     return tr.credits[idx] - tr.debts[idx];
@@ -341,6 +349,10 @@ const Transaction = {
     }
 
     const ans = Transaction.make(tr.credits.length, newCurrency);
+
+    if (ans.timestamp <= tr.timestamp) {
+      ans.timestamp += 1;
+    }
     ans.credits = Utils.convertArray(tr.credits, conversionRate);
     ans.debts = Utils.convertArray(tr.debts, conversionRate);
 

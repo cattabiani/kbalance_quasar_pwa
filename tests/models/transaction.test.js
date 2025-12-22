@@ -346,10 +346,10 @@ describe('Transaction.csvHeader', () => {
       'currency',
       'timestamp',
       'date',
-      'Alice',
-      'Bob',
-      'Alice',
-      'Bob',
+      'credits.Alice',
+      'credits.Bob',
+      'debts.Alice',
+      'debts.Bob',
     ]);
   });
 
@@ -384,8 +384,8 @@ describe('Transaction.toCsvLine', () => {
       formattedDate,
       10,
       20,
-      undefined,
-      undefined, // because tr.debts.map(d => d.owedAmount)
+      1,
+      2, // because tr.debts.map(d => d.owedAmount)
     ]);
   });
 });

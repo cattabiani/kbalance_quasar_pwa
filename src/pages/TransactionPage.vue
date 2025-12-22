@@ -416,7 +416,6 @@ const state2 = computed(() => {
 });
 
 const splitFor2 = (idx) => {
-  forceSetCredit = true;
   switch (idx) {
     case 0:
       debtors.value = [true, true];

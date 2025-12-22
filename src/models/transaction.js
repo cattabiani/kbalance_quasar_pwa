@@ -260,20 +260,21 @@ const Transaction = {
   },
 
   csvHeader(peopleNames = []) {
+    const creditNames = peopleNames.map((name) => `credits.${name}`);
+    const debtNames = peopleNames.map((name) => `debts.${name}`);
     return [
       'id',
       'name',
       'currency',
       'timestamp',
       'date',
-      ...peopleNames,
-      ...peopleNames,
+      ...creditNames,
+      ...debtNames,
     ];
   },
 
   toCsvLine(tr) {
     this.update(tr);
-    const debts = tr.debts.map((d, idx) => d.owedAmount);
     const dateStr = new Intl.DateTimeFormat('en-GB').format(
       new Date(tr.timestamp),
     );
@@ -285,7 +286,7 @@ const Transaction = {
       tr.timestamp,
       dateStr,
       ...tr.credits,
-      ...debts,
+      ...tr.debts,
     ];
   },
 
@@ -350,9 +351,6 @@ const Transaction = {
 
     const ans = Transaction.make(tr.credits.length, newCurrency);
 
-    if (ans.timestamp <= tr.timestamp) {
-      ans.timestamp += 1;
-    }
     ans.credits = Utils.convertArray(tr.credits, conversionRate);
     ans.debts = Utils.convertArray(tr.debts, conversionRate);
 
@@ -438,6 +436,24 @@ const Transaction = {
       conversionTr.debts,
       conversionTr.credits,
     ];
+
+    if (settleTr.timestamp <= conversionTr.timestamp) {
+      conversionTr.timestamp += 1;
+    }
+
+    return [settleTr, conversionTr];
+  },
+
+  convertAll(tr, conversionRate, newCurrency) {
+    this.update(tr);
+    const settleTr = Transaction.make(tr.debts.length, tr.currency);
+    settleTr.debts = [...tr.credits];
+    settleTr.credits = [...tr.debts];
+    const conversionTr = Transaction.convert(tr, conversionRate, newCurrency);
+
+    if (settleTr.timestamp <= conversionTr.timestamp) {
+      conversionTr.timestamp += 1;
+    }
 
     return [settleTr, conversionTr];
   },

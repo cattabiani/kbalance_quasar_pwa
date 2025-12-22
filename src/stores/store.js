@@ -824,7 +824,7 @@ export const useStore = defineStore('mainStore', {
 
     async fetchConversionRates() {
       if (!navigator.onLine) {
-        return;
+        throw new Error(`I cannot fetch rates. We are offline!`);
       }
 
       // const apiUrl = 'https://api.frankfurter.dev/v1/latest'

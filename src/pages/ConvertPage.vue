@@ -22,13 +22,23 @@
 
   <q-page>
     <q-card class="q-my-md q-mr-md q-ml-md">
-      <q-card-section class="full-width">
+      <q-card-section class="full-width row no-wrap items-center">
         <people-dropdown
-          class="full-width"
+          class="q-mr-md"
           v-if="store.currentSheet"
           v-model="selectedPerson"
           :people="store.currentSheet.people"
           :sorted-people="store.currentSheetPeople"
+          style="flex: 1 1 auto"
+        />
+
+        <q-btn
+          :icon="convertAll ? 'apps' : 'person'"
+          :label="convertAll ? 'All' : store.getName(selectedPerson)"
+          color="primary"
+          toggle
+          dense
+          @click="convertAll = !convertAll"
         />
       </q-card-section>
       <q-card-section class="full-width row items-center justify-center">
@@ -93,12 +103,13 @@ import Results from 'src/models/results';
 import SummaryCard from 'src/components/SummaryCard.vue';
 import TransactionList from 'src/components/TransactionList.vue';
 import Transaction from 'src/models/transaction';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 
 const store = useStore();
 const router = useRouter();
 const $q = useQuasar();
 
+const convertAll = ref(false);
 const conversionInputRef = ref(null);
 const selectedPerson = ref(store.user.id);
 const selectedPersonIdx = computed(() =>
@@ -111,6 +122,15 @@ const baseSummary = computed(() => {
 
 const fromCurrencies = computed(() => {
   return new Set(Object.keys(baseSummary.value));
+});
+
+watch(convertAll, (newVal) => {
+  const msg = newVal
+    ? `Convert all the balance sheet`
+    : `Convert only ${store.getName(selectedPerson.value)}'s part`;
+  $q.notify({
+    message: msg,
+  });
 });
 
 const initCurrencies = (currencies, referenceCurrency) => {
@@ -172,13 +192,23 @@ const goBack = () => {
 };
 
 const convertionTransactions = computed(() => {
-  const ans = Transaction.convertPerson(
-    store.currentSheetResults.perCurrencyBalance[fromCurrency.value],
-    selectedPersonIdx.value,
-    store.currentSheetPeople,
-    conversionMulti.value,
-    toCurrency.value,
-  );
+  let ans = [];
+
+  if (convertAll.value) {
+    ans = Transaction.convertAll(
+      store.currentSheetResults.perCurrencyBalance[fromCurrency.value],
+      conversionMulti.value,
+      toCurrency.value,
+    );
+  } else {
+    ans = Transaction.convertPerson(
+      store.currentSheetResults.perCurrencyBalance[fromCurrency.value],
+      selectedPersonIdx.value,
+      store.currentSheetPeople,
+      conversionMulti.value,
+      toCurrency.value,
+    );
+  }
 
   if (ans.length >= 2) {
     ans[0].name = `🤖 settle ${store.getName(selectedPerson.value)} (${

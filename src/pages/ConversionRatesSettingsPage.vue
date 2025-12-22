@@ -44,7 +44,7 @@
       </q-card-section>
 
       <q-card-section class="column items-center">
-        Rates from: {{ prettyRatesDate }}
+        Rates at: {{ prettyRatesDate }}
       </q-card-section>
 
       <q-card-section
@@ -109,7 +109,9 @@ const goBack = () => router.go(-1);
 const updateRates = async () => {
   try {
     await store.fetchConversionRates();
-    $q.notify({ message: 'Conversion rates updated!' });
+    $q.notify({
+      message: `Conversion rates updated! Latest version: ${prettyRatesDate.value}`,
+    });
   } catch (error) {
     $q.notify({ message: error.message || error, color: 'negative' });
   }

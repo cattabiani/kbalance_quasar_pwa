@@ -33,12 +33,7 @@
             </q-item-section>
             <q-item-section>People</q-item-section>
           </q-item>
-          <q-item
-            clickable
-            v-close-popup
-            @click="goToConvert"
-            v-if="Object.keys(summaries.totals).length > 1"
-          >
+          <q-item clickable v-close-popup @click="goToConvert">
             <q-item-section avatar>
               <q-icon name="currency_exchange" />
             </q-item-section>
@@ -49,7 +44,7 @@
             clickable
             v-close-popup
             @click="goToSettle"
-            v-if="summaries.ans.length"
+            v-if="Object.keys(summary).length > 0"
           >
             <q-item-section avatar>
               <q-icon name="payments" />
@@ -62,28 +57,6 @@
               <q-icon name="download" />
             </q-item-section>
             <q-item-section>Download (csv)</q-item-section>
-          </q-item>
-
-          <q-item
-            v-if="store.currentSheetPeople.length > 2"
-            clickable
-            v-close-popup
-            @click="
-              store.simplifiedTransactions = !store.simplifiedTransactions
-            "
-          >
-            <q-item-section avatar>
-              <q-icon
-                :name="
-                  store.simplifiedTransactions ? 'toggle_on' : 'toggle_off'
-                "
-              />
-            </q-item-section>
-            <q-item-section>
-              {{
-                store.simplifiedTransactions ? 'Simplify: ON' : 'Simplify: OFF'
-              }}
-            </q-item-section>
           </q-item>
         </q-list>
       </q-btn-dropdown>
@@ -105,7 +78,6 @@
   <q-page>
     <q-card class="q-my-md q-mr-md q-ml-md">
       <q-card-section class="row no-wrap items-center">
-        <!-- dropdown 50% -->
         <div class="col-6" style="text-overflow: ellipsis; white-space: nowrap">
           <people-dropdown
             v-if="store.currentSheet"
@@ -116,7 +88,6 @@
           />
         </div>
 
-        <!-- input 50% with small margin -->
         <div
           class="col-6"
           style="
@@ -138,7 +109,7 @@
       </q-card-section>
     </q-card>
 
-    <summary-card :summaries="summaries" :selectedPerson="selectedPerson" />
+    <summary-card :summary="summary" :selectedPerson="selectedPerson" />
 
     <div class="row justify-center items-center q-pb-md">
       <q-btn
@@ -188,15 +159,15 @@ const searchString = ref(null);
 const searchActive = ref(false);
 const searchInput = ref(null);
 
-const summaries = computed(() => {
-  return Results.getSummary(store.currentSheetResults, selectedPersonIdx.value);
+const summary = computed(() => {
+  return Results.summary(store.currentSheetResults, selectedPersonIdx.value);
 });
 
 const removeTransaction = async (reset, id) => {
   try {
-    const message = `Are you sure you want to remove ${Transaction.name(
-      store.currentSheet.transactions[id],
-    )}?`;
+    const message = `Are you sure you want to remove ${
+      store.currentSheet.transactions[id] || '(New Transaction)'
+    }?`;
 
     $q.notify({
       message,

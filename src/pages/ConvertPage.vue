@@ -10,15 +10,6 @@
       />
       <q-space />
       <q-btn
-        v-if="store.currentSheetPeople.length > 2"
-        flat
-        :icon="store.simplifiedTransactions ? 'toggle_on' : 'toggle_off'"
-        :label="store.simplifiedTransactions ? 'Simplify: ON' : 'Simplify: OFF'"
-        @click="store.simplifiedTransactions = !store.simplifiedTransactions"
-        class="q-ml-md bg-white text-primary"
-        aria-label="Simplify"
-      />
-      <q-btn
         flat
         icon="done"
         label="Confirm"
@@ -31,35 +22,47 @@
 
   <q-page>
     <q-card class="q-my-md q-mr-md q-ml-md">
-      <q-card-section class="full-width">
+      <q-card-section class="full-width row no-wrap items-center">
         <people-dropdown
-          class="full-width"
+          class="q-mr-md"
           v-if="store.currentSheet"
           v-model="selectedPerson"
           :people="store.currentSheet.people"
           :sorted-people="store.currentSheetPeople"
+          style="flex: 1 1 auto"
+        />
+
+        <q-btn
+          :icon="convertAll ? 'apps' : 'person'"
+          :label="convertAll ? 'All' : store.getName(selectedPerson)"
+          color="primary"
+          toggle
+          dense
+          @click="convertAll = !convertAll"
         />
       </q-card-section>
-
-      <q-card-section class="full-width row justify-center">
+      <q-card-section class="full-width row items-center justify-center">
         <CurrencyDropdown
-          v-model="currency1"
+          v-model="fromCurrency"
           :usedCurrencies="fromCurrencies"
           dense
           :expandable="false"
-          class="q-mr-md"
+          class="q-mr-sm"
         />
-        <q-btn
-          class="q-mr-md"
-          :icon="direction ? 'arrow_forward' : 'arrow_back'"
-          @click="direction = !direction"
-        />
+
+        <div class="column items-center q-mx-sm">
+          <q-icon name="arrow_forward" size="md" class="q-mb-xs" />
+          <q-btn dense round icon="swap_horiz" @click="swapCurrencies" />
+        </div>
+
         <CurrencyDropdown
-          v-model="currency2"
+          v-model="toCurrency"
           :usedCurrencies="fromCurrencies"
           dense
+          class="q-ml-sm"
         />
       </q-card-section>
+
       <q-card-section class="full-width row justify-center">
         <q-input
           ref="conversionInputRef"
@@ -74,7 +77,7 @@
       </q-card-section>
     </q-card>
 
-    <summary-card :summaries="summaries" :selectedPerson="selectedPerson" />
+    <summary-card :summary="summary" :selectedPerson="selectedPerson" />
 
     <transaction-list
       :transactions="transactions"
@@ -99,82 +102,182 @@ import CurrencyDropdown from 'src/components/CurrencyDropdown.vue';
 import Results from 'src/models/results';
 import SummaryCard from 'src/components/SummaryCard.vue';
 import TransactionList from 'src/components/TransactionList.vue';
-import { ref, computed, onMounted } from 'vue';
+import Transaction from 'src/models/transaction';
+import { ref, computed, onMounted, watch } from 'vue';
 
 const store = useStore();
 const router = useRouter();
 const $q = useQuasar();
 
+const convertAll = ref(false);
 const conversionInputRef = ref(null);
 const selectedPerson = ref(store.user.id);
 const selectedPersonIdx = computed(() =>
   store.personId2Idx(selectedPerson.value),
 );
 
-const baseSummaries = computed(() => {
-  return Results.getSummary(store.currentSheetResults, selectedPersonIdx.value);
+const baseSummary = computed(() => {
+  return Results.summary(store.currentSheetResults, selectedPersonIdx.value);
 });
 
 const fromCurrencies = computed(() => {
-  return new Set(Object.keys(baseSummaries.value.totals));
+  return new Set(Object.keys(baseSummary.value));
 });
 
-const keys = Object.keys(baseSummaries.value.totals);
-const currency1 = ref(keys.length > 0 ? keys[0] : 'USD');
-const currency2 = ref(
-  keys.length > 1 ? keys[1] : keys.length > 0 ? keys[0] : 'USD',
+watch(convertAll, (newVal) => {
+  const msg = newVal
+    ? `Convert all the balance sheet`
+    : `Convert only ${store.getName(selectedPerson.value)}'s part`;
+  $q.notify({
+    message: msg,
+  });
+});
+
+const initCurrencies = (currencies, referenceCurrency) => {
+  const arr = [...currencies];
+  let to = null;
+  let from = null;
+
+  if (arr.length === 0) {
+    return { from, to };
+  }
+
+  if (arr.length === 1) {
+    to =
+      referenceCurrency && referenceCurrency !== arr[0]
+        ? referenceCurrency
+        : arr[0];
+    from = arr[0];
+  } else {
+    to = arr.includes(referenceCurrency) ? referenceCurrency : arr[0];
+    from =
+      arr.find((c) => c !== to && c !== referenceCurrency) ||
+      arr.find((c) => c !== to) ||
+      arr[0];
+  }
+
+  return { from, to };
+};
+
+const { from: initialFrom, to: initialTo } = initCurrencies(
+  new Set(Object.keys(baseSummary.value)),
+  store.referenceCurrency,
 );
-const direction = ref(true);
+
+const fromCurrency = ref(initialFrom);
+const toCurrency = ref(initialTo);
+
+const swapCurrencies = () => {
+  if (fromCurrency === toCurrency) return;
+
+  if (!fromCurrencies.value.has(toCurrency.value)) {
+    $q.notify({
+      message: `Cannot swap currencies: no balance in ${fromCurrency.value}.`,
+    });
+    return;
+  }
+
+  [fromCurrency.value, toCurrency.value] = [
+    toCurrency.value,
+    fromCurrency.value,
+  ];
+};
 
 const conversionMulti = computed(() => {
-  if (direction.value) {
-    return store.convertCurrency(1, currency1.value, currency2.value);
-  } else {
-    return store.convertCurrency(1, currency2.value, currency1.value);
-  }
+  return store.convertCurrency(1, fromCurrency.value, toCurrency.value);
 }); // 1.00
 
 const goBack = () => {
   router.go(-1);
 };
 
-const transactions = computed(() => {
-  let curr1 = currency1.value;
-  let curr2 = currency2.value;
+const convertionTransactions = computed(() => {
+  let ans = [];
 
-  if (!direction.value) {
-    [curr1, curr2] = [curr2, curr1];
+  if (convertAll.value) {
+    ans = Transaction.convertAll(
+      store.currentSheetResults.perCurrencyBalance[fromCurrency.value],
+      conversionMulti.value,
+      toCurrency.value,
+    );
+  } else {
+    ans = Transaction.convertPerson(
+      store.currentSheetResults.perCurrencyBalance[fromCurrency.value],
+      selectedPersonIdx.value,
+      store.currentSheetPeople,
+      conversionMulti.value,
+      toCurrency.value,
+    );
   }
 
-  let msg = `🤖 settle ${store.getName(selectedPerson.value)}`;
-  const settleTransactions = store.makeEquivalentTransactionBatch(
-    curr1,
-    selectedPersonIdx.value,
-    msg,
-  );
-  msg = `🤖 convert ${store.getName(selectedPerson.value)}`;
-  const conversionTransactions = store.makeEquivalentTransactionBatch(
-    curr1,
-    selectedPersonIdx.value,
-    msg,
-    -conversionMulti.value,
-    curr2,
-  );
+  if (ans.length >= 2) {
+    ans[0].name = `🤖 settle ${store.getName(selectedPerson.value)} (${
+      fromCurrency.value
+    })`;
+    ans[1].name = `🤖 convert ${store.getName(selectedPerson.value)} (${
+      fromCurrency.value
+    } → ${toCurrency.value})`;
+    return { [ans[0].id]: ans[0], [ans[1].id]: ans[1] };
+  }
+  return {};
+});
 
-  return { ...settleTransactions, ...conversionTransactions };
+const transactions = computed(() => {
+  if (!store.currentSheet) return {};
+
+  const ans = {
+    ...store.currentSheet.transactions,
+    ...convertionTransactions.value,
+  };
+
+  return ans;
 });
+
 const results = computed(() => {
-  const res = store.getEditableCurrentSheetResults();
-  Results.applyTransactions(
-    res,
-    transactions.value,
-    store.currentSheetPeople.length || 0,
-  );
-  return res;
+  return Results.make(transactions.value, store.currentSheetPeople.length);
 });
-const summaries = computed(() => {
-  return Results.getSummary(results.value, selectedPersonIdx.value);
+
+const summary = computed(() => {
+  return Results.summary(results.value, selectedPersonIdx.value);
 });
+
+// const transactions = computed(() => {
+//   let curr1 = currency1.value;
+//   let curr2 = currency2.value;
+
+//   if (!direction.value) {
+//     [curr1, curr2] = [curr2, curr1];
+//   }
+
+//   let msg = `🤖 settle ${store.getName(selectedPerson.value)}`;
+//   const settleTransactions = store.makeEquivalentTransactionBatch(
+//     curr1,
+//     selectedPersonIdx.value,
+//     msg,
+//   );
+//   msg = `🤖 convert ${store.getName(selectedPerson.value)}`;
+//   const conversionTransactions = store.makeEquivalentTransactionBatch(
+//     curr1,
+//     selectedPersonIdx.value,
+//     msg,
+//     -conversionMulti.value,
+//     curr2,
+//   );
+
+//   return { ...settleTransactions, ...conversionTransactions };
+// });
+// const results = computed(() => {
+//   const res = store.getEditableCurrentSheetResults();
+//   Results.applyTransactions(
+//     res,
+//     transactions.value,
+//     store.currentSheetPeople.length || 0,
+//   );
+//   return res;
+// });
+// const summaries = computed(() => {
+//   return Results.getSummary(results.value, selectedPersonIdx.value);
+// });
 
 const saveAndGoBack = async () => {
   try {

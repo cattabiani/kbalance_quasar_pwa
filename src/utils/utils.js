@@ -52,6 +52,38 @@ const Utils = {
       window.navigator.standalone === true
     );
   },
+
+  add(a, b, multi = 1) {
+    for (let i = 0; i < a.length; ++i) {
+      a[i] += multi * b[i];
+    }
+  },
+
+  convertArray(arr, rate) {
+    if (!arr || arr.length === 0) return arr;
+
+    const floats = arr.map((v) => v * rate);
+    const floors = floats.map((v) => Math.floor(v));
+
+    const floatSum = floats.reduce((a, b) => a + b, 0);
+    const floorSum = floors.reduce((a, b) => a + b, 0);
+    let diff = Math.round(floatSum - floorSum);
+
+    if (diff === 0) return floors;
+
+    // largest fractional parts first
+    const fractions = floats.map((v, i) => ({ i, frac: v - floors[i] }));
+    fractions.sort((a, b) => b.frac - a.frac);
+
+    const result = [...floors];
+
+    // distribute remainder
+    for (let k = 0; k < diff; k++) {
+      result[fractions[k].i] += 1;
+    }
+
+    return result;
+  },
 };
 
 export default Utils;

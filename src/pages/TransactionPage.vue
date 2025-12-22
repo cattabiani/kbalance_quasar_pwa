@@ -38,7 +38,7 @@
         <q-input
           ref="nameInput"
           v-model="tr.name"
-          label="Transaction Name"
+          label="Title"
           outlined
           @focus="nameInput.select()"
         />
@@ -52,25 +52,25 @@
         />
 
         <CurrencyInput
-          v-model="tr.amount"
+          v-model="credit"
           :currency="tr.currency"
           style="flex: 1"
           label="Amount"
-          @update:model-value="autoSplit()"
         />
       </q-card-section>
     </q-card>
+
     <q-card class="q-my-md q-mr-md q-ml-md">
       <q-card-section class="column items-center" v-if="tr.debts.length === 2">
         <q-btn-dropdown class="full-width">
           <template v-slot:label>
             <TwoPeopleSplitRow
               :split="state2 === 1"
-              :payer="tr.payer"
+              :payer="payerIdx"
               :you-idx="youIdx"
               :other-name="store.getName(otherId)"
               :currency="tr.currency"
-              :amount="tr.amount"
+              :amount="credit"
               :reference-currency="store.referenceCurrency"
             />
           </template>
@@ -89,7 +89,7 @@
                   :you-idx="youIdx"
                   :other-name="store.getName(otherId)"
                   :currency="tr.currency"
-                  :amount="tr.amount"
+                  :amount="credit"
                 />
               </q-item-section>
             </q-item>
@@ -105,7 +105,7 @@
                   :you-idx="youIdx"
                   :other-name="store.getName(otherId)"
                   :currency="tr.currency"
-                  :amount="tr.amount"
+                  :amount="credit"
                 />
               </q-item-section>
             </q-item>
@@ -122,7 +122,7 @@
                   :you-idx="youIdx"
                   :other-name="store.getName(otherId)"
                   :currency="tr.currency"
-                  :amount="tr.amount"
+                  :amount="credit"
                 />
               </q-item-section>
             </q-item>
@@ -138,7 +138,7 @@
                   :you-idx="youIdx"
                   :other-name="store.getName(otherId)"
                   :currency="tr.currency"
-                  :amount="tr.amount"
+                  :amount="credit"
                 />
               </q-item-section>
             </q-item>
@@ -148,7 +148,7 @@
 
       <q-card-section
         class="row justify-center items-center no-wrap"
-        v-if="tr.debts.length > 2"
+        v-if="debtors.length > 2"
       >
         <people-dropdown
           class="col-auto q-mr-sm"
@@ -192,21 +192,22 @@
         />
       </q-card-section>
     </q-card>
-    <!-- <q-card class="q-my-md q-mr-md q-ml-md q-mb-md"> -->
     <q-card-section>
       <div class="row text-bold items-center no-wrap">
-        <!-- radio header -->
-        <div style="flex: 0 0 5%; text-align: left" class="q-ml-sm q-mr-md">
-          Payer
+        <div
+          class="row items-center q-ml-sm q-mr-md"
+          :style="`flex: 0 0 ${customCredits ? 18 : 5}%`"
+        >
+          <q-btn
+            dense
+            @click="customCredits = !customCredits"
+            label="Payer"
+            class="text-bold"
+            aria-label="Toggle payer mode"
+          />
         </div>
-
-        <!-- name header -->
         <div style="flex: 1 0 30%; text-align: left">Person</div>
-
-        <!-- checkbox header -->
         <div style="flex: 0 0 10%; text-align: center">Owes</div>
-
-        <!-- value header -->
         <div style="flex: 0 0 32%; text-align: right">Amount</div>
       </div>
     </q-card-section>
@@ -219,62 +220,75 @@
         v-show="
           store.currentSheet.people[id].active ||
           seeInactive ||
-          tr.payer === index ||
-          tr.debts[index].owedAmount !== 0 ||
-          tr.debts[index].isDebtor
+          payerIdx === index ||
+          tr.debts[index] !== 0 ||
+          debtors[index]
         "
         class="row no-wrap items-center"
       >
-        <!-- radio left -->
-        <q-item-section side style="flex: 0 0 5%; text-align: left">
+        <q-item-section
+          side
+          :style="`flex: 0 0 ${customCredits ? 25 : 5}%; text-align: left`"
+          class="q-pa-none"
+        >
           <q-radio
-            v-model="tr.payer"
+            v-if="!customCredits"
+            v-model="payerIdx"
             :val="index"
-            @update:model-value="autoSplit()"
             dense
           />
+          <CurrencyInput
+            v-else
+            :model-value="tr.credits[index]"
+            :currency="tr.currency"
+            dense
+            @update:model-value="
+              (val) => {
+                edited.clear();
+                Transaction.setCustomCredit(tr, val, index, debtors);
+              }
+            "
+          />
         </q-item-section>
-
-        <!-- name flexible -->
         <q-item-section
-          style="
-            flex: 1 0 50%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            text-align: right;
-          "
+          :style="`
+    flex: 1 0 ${customCredits ? 25 : 50}%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: right;
+  `"
         >
           <person-item :id="id" />
         </q-item-section>
-
-        <!-- checkbox right -->
         <q-item-section
           side
           style="flex: 0 0 5%; text-align: center; margin-right: 6px"
         >
-          <q-checkbox
-            v-model="tr.debts[index].isDebtor"
-            @update:model-value="autoSplit()"
-            dense
-          />
+          <q-checkbox v-model="debtors[index]" dense />
         </q-item-section>
-
-        <!-- value right -->
         <q-item-section side style="flex: 0 0 35%">
           <CurrencyInput
-            v-model="tr.debts[index].owedAmount"
+            :model-value="tr.debts[index]"
             :currency="tr.currency"
             dense
-            style="width: auto; min-width: 4ch; border-color: green"
-            @update:model-value="customSplit(index)"
-            :readonly="!tr.debts[index].isDebtor"
+            :readonly="!debtors[index]"
+            @update:model-value="
+              (val) =>
+                Transaction.setCustomDebt(
+                  tr,
+                  val,
+                  index,
+                  debtors,
+                  edited,
+                  youIdx,
+                )
+            "
             :bg-color="edited.has(index) ? 'green-1' : ''"
           />
         </q-item-section>
       </q-item>
     </q-list>
-    <!-- </q-card> -->
   </q-page>
 </template>
 
@@ -288,7 +302,7 @@ import CurrencyInput from 'src/components/CurrencyInput.vue';
 import CurrencyDropdown from 'src/components/CurrencyDropdown.vue';
 import TwoPeopleSplitRow from 'src/components/TwoPeopleSplitRow.vue';
 import Transaction from 'src/models/transaction';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 
 const $q = useQuasar();
 const store = useStore();
@@ -297,59 +311,104 @@ const router = useRouter();
 const tr = ref(store.getEditableTransaction());
 const seeInactive = ref(false);
 const nameInput = ref(null);
-const edited = ref(new Set());
+const edited = new Set();
+
+const debtors = ref(Transaction.debtors(tr.value));
 
 onMounted(() => {
   nameInput.value?.focus();
 });
 
-const payer = computed({
-  get: () => store.personIdx2Id(tr.value.payer) || '',
+const youIdx = store.currentSheetPeople.findIndex(
+  (item) => item === store.user.id,
+);
+
+const credit = computed({
+  get: () => Transaction.credit(tr.value),
   set: (newValue) => {
-    tr.value.payer = store.personId2Idx(newValue);
+    if (newValue === Transaction.credit(tr.value)) return;
+    customCredits.value = false;
+    edited.clear();
+    Transaction.setCredit(
+      tr.value,
+      newValue,
+      payerIdx.value >= 0 ? payerIdx.value : youIdx,
+      debtors.value,
+    );
+  },
+});
+
+const payerIdx = computed({
+  get: () => Transaction.payerIdx(tr.value, youIdx),
+  set: (newValue) => {
+    if (newValue === Transaction.payerIdx(tr.value, youIdx)) return;
+    Transaction.setCredit(
+      tr.value,
+      credit.value,
+      newValue,
+      debtors.value,
+      edited,
+    );
+  },
+});
+
+const customCredits = ref(payerIdx.value < 0);
+
+const payer = computed({
+  get: () => store.personIdx2Id(payerIdx.value) || '',
+  set: (newValue) => {
+    if (newValue === store.personIdx2Id(payerIdx.value)) return;
+    edited.clear();
+    payerIdx.value = store.personId2Idx(newValue);
+  },
+});
+
+watch(
+  debtors,
+  (newDebtors) => {
+    edited.clear();
+    Transaction.split(tr.value, newDebtors);
+  },
+  { deep: true },
+);
+
+const debtorIdx = computed({
+  get: () => {
+    const idx = debtors.value.findIndex((d) => d);
+    return debtors.value.filter((d) => d).length === 1 ? idx : -1;
+  },
+  set: (newIdx) => {
+    if (newIdx < 0 || newIdx >= debtors.value.length) return;
+
+    // compute oldIdx directly
+    let oldIdx = debtors.value.findIndex((d) => d);
+    if (debtors.value.filter((d) => d).length !== 1) oldIdx = -1;
+
+    if (newIdx === oldIdx) return; // guard
+
+    debtors.value = debtors.value.map((_, i) => i === newIdx);
   },
 });
 
 const debtor = computed({
-  get: () => {
-    const debtorIndexes = tr.value.debts
-      .map((debt, idx) => (debt.isDebtor ? idx : -1))
-      .filter((idx) => idx !== -1);
-
-    return debtorIndexes.length === 1
-      ? store.personIdx2Id(debtorIndexes[0])
-      : null;
-  },
+  get: () => store.personIdx2Id(debtorIdx.value) || '',
   set: (newValue) => {
-    const newIdx = store.personId2Idx(newValue);
-
-    tr.value.debts.forEach((debt, idx) => {
-      debt.isDebtor = idx === newIdx;
-    });
-    autoSplit();
+    if (newValue === store.personIdx2Id(debtorIdx.value)) return;
+    debtorIdx.value = store.personId2Idx(newValue);
   },
 });
 
 const swapPayerDebtor = () => {
-  if (debtor.value !== null) {
-    if (payer.value === debtor.value) return;
-    const payerIdx = store.personId2Idx(payer.value);
-    const debtorIdx = store.personId2Idx(debtor.value);
+  if (debtorIdx.value === -1) return;
+  if (payerIdx.value === -1) return;
+  if (payerIdx.value === debtorIdx.value) return;
 
-    tr.value.payer = debtorIdx;
-    tr.value.debts.forEach((debt, idx) => {
-      debt.isDebtor = idx === payerIdx;
-    });
-    autoSplit();
-  }
+  [payerIdx.value, debtorIdx.value] = [debtorIdx.value, payerIdx.value];
 };
 
 const otherId = store.currentSheetPeople.find((item) => item !== store.user.id);
 const otherIdx = store.currentSheetPeople.findIndex(
   (item) => item !== store.user.id,
-);
-const youIdx = store.currentSheetPeople.findIndex(
-  (item) => item === store.user.id,
 );
 
 const state2 = computed(() => {
@@ -359,49 +418,23 @@ const state2 = computed(() => {
 const splitFor2 = (idx) => {
   switch (idx) {
     case 0:
-      tr.value.payer = youIdx;
-      tr.value.debts[0].isDebtor = true;
-      tr.value.debts[1].isDebtor = true;
+      debtors.value = [true, true];
+      payerIdx.value = youIdx;
       break;
     case 1:
-      tr.value.payer = youIdx;
-      tr.value.debts[youIdx].isDebtor = false;
-      tr.value.debts[otherIdx].isDebtor = true;
+      debtors.value = youIdx === 0 ? [false, true] : [true, false];
+      payerIdx.value = youIdx;
       break;
     case 2:
-      tr.value.payer = otherIdx;
-      tr.value.debts[0].isDebtor = true;
-      tr.value.debts[1].isDebtor = true;
+      debtors.value = [true, true];
+      payerIdx.value = otherIdx;
       break;
     case 3:
-      tr.value.payer = otherIdx;
-      tr.value.debts[youIdx].isDebtor = true;
-      tr.value.debts[otherIdx].isDebtor = false;
+      debtors.value = youIdx === 1 ? [false, true] : [true, false];
+      payerIdx.value = otherIdx;
       break;
     default:
       return;
-  }
-  autoSplit();
-};
-
-const customSplit = (index) => {
-  edited.value.add(index);
-  split();
-};
-
-const autoSplit = () => {
-  edited.value.clear();
-  split();
-};
-
-const split = () => {
-  const ans = Transaction.split(tr.value, edited.value);
-  if (ans === 1) {
-    $q.notify('The amount has been increased to match the sum of the shares.');
-  }
-
-  if (ans === 2) {
-    $q.notify('The amount has been decreased to match the sum of the shares.');
   }
 };
 
@@ -424,4 +457,70 @@ const saveAndGoBack = async () => {
     return;
   }
 };
+
+// const payer = computed({
+//   get: () => store.personIdx2Id(payerIdx.value) || '',
+//   set: (newValue) => {
+//     if (newValue === store.personId2Idx(newValue)) return;
+//     payerIdx.value = store.personId2Idx(newValue);
+//   },
+// });
+
+// const debtorIdx = computed({
+//   get: () => Transaction.debtorIdx(tr.value, youIdx),
+//   set: (newValue) => {
+//      if (!forceSetCredit && newValue === Transaction.debtorIdx(tr.value, youIdx)) return;
+//     Transaction.setCredit(tr.value, credit.value, newValue, debtors.value);
+//     forceSetCredit = false;
+//   },
+// });
+
+// const payer = computed({
+//   get: () => store.personIdx2Id(payerIdx.value) || '',
+//   set: (newValue) => {
+//     if (newValue === store.personId2Idx(newValue)) return;
+//     payerIdx.value = store.personId2Idx(newValue);
+//   },
+// });
+
+// const debtor = computed({
+//   get: () => {
+//     const debtorIndexes = tr.value.debts
+//       .map((debt, idx) => (debt.isDebtor ? idx : -1))
+//       .filter((idx) => idx !== -1);
+
+//     return debtorIndexes.length === 1
+//       ? store.personIdx2Id(debtorIndexes[0])
+//       : null;
+//   },
+//   set: (newValue) => {
+//     const newIdx = store.personId2Idx(newValue);
+
+//     tr.value.debts.forEach((debt, idx) => {
+//       debt.isDebtor = idx === newIdx;
+//     });
+//     autoSplit();
+//   },
+// });
+
+// const customSplit = (index) => {
+//   edited.value.add(index);
+//   split();
+// };
+
+// const autoSplit = () => {
+//   edited.value.clear();
+//   split();
+// };
+
+// const split = () => {
+//   const ans = Transaction.split(tr.value, edited.value);
+//   if (ans === 1) {
+//     $q.notify('The amount has been increased to match the sum of the shares.');
+//   }
+
+//   if (ans === 2) {
+//     $q.notify('The amount has been decreased to match the sum of the shares.');
+//   }
+// };
 </script>

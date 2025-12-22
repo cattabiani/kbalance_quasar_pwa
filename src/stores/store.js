@@ -54,8 +54,6 @@ export const useStore = defineStore('mainStore', {
     conversionRatesUpdatedAt: null,
     conversionRatesAutoUpdateRate: 24 * 60 * 60 * 1000, // daily
 
-    simplifiedTransactions: true,
-
     // firebase
     firebaseReady: false,
     authReady: false,
@@ -74,10 +72,9 @@ export const useStore = defineStore('mainStore', {
     },
 
     currencies() {
-      if (this.currentSheet) {
-        return new Set(Results.getCurrencies(this.currentSheetResults));
-      }
-      return new Set();
+      return this.currentSheet
+        ? Results.currencies(this.currentSheetResults)
+        : new Set();
     },
 
     lastCurrency() {
@@ -145,7 +142,6 @@ export const useStore = defineStore('mainStore', {
       return Results.make(
         this.currentSheet.transactions,
         this.currentSheetPeople.length || 0,
-        this.simplifiedTransactions,
       );
     },
   },
@@ -828,7 +824,7 @@ export const useStore = defineStore('mainStore', {
 
     async fetchConversionRates() {
       if (!navigator.onLine) {
-        return;
+        throw new Error(`I cannot fetch rates. We are offline!`);
       }
 
       // const apiUrl = 'https://api.frankfurter.dev/v1/latest'
@@ -881,7 +877,6 @@ export const useStore = defineStore('mainStore', {
       'conversionRates',
       'conversionRatesUpdatedAt',
       'conversionRatesAutoUpdateRate',
-      'simplifiedTransactions',
     ],
     serializer: {
       serialize: (state) =>

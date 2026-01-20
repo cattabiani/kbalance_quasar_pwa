@@ -184,21 +184,13 @@ const getDividerLabel = (visibleIndex) => {
     tPrev = props.transactions[idPrev].timestamp;
   }
 
-  const yearPrev = Utils.getYear(tPrev);
   const monthPrev = Utils.getMonth(tPrev);
-  const yearCurr = Utils.getYear(tCurr);
   const monthCurr = Utils.getMonth(tCurr);
 
-  if (yearPrev === yearCurr && monthPrev === monthCurr) return '';
+  if (monthPrev === monthCurr) return '';
 
-  let label = '';
-  if (monthPrev !== monthCurr) label += Utils.getMonth(tCurr, false);
-  if (yearPrev !== yearCurr) {
-    if (label) label += ' ';
-    label += yearCurr;
-  }
-
-  return label;
+  const yearCurr = Utils.getYear(tCurr);
+  return Utils.getMonth(tCurr, false) + ' ' + yearCurr;
 };
 
 const selectedPersonIdx = computed(() =>

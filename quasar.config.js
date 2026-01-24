@@ -3,7 +3,7 @@ import { configure } from 'quasar/wrappers';
 import checker from 'vite-plugin-checker';
 
 export default configure(() => ({
-  boot: [],
+  boot: ['apexcharts'],
 
   css: ['app.scss'],
 

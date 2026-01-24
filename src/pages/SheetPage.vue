@@ -245,8 +245,6 @@ const goBack = () => {
   }
 };
 
-
-
 watch(
   store.currentSheet,
   async (newValue) => {

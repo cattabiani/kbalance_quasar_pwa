@@ -25,8 +25,9 @@ const Statistics = {
     return results;
   },
 
-    computeTotalMonthsAndIndex(statsArray) {
-    if (!statsArray || statsArray.length === 0) return { totalMonths: 0, monthIndexMap: {} };
+  computeTotalMonthsAndIndex(statsArray) {
+    if (!statsArray || statsArray.length === 0)
+      return { totalMonths: 0, monthIndexMap: {} };
 
     const firstDate = new Date(statsArray[0].timestamp);
     const lastDate = new Date(statsArray[statsArray.length - 1].timestamp);
@@ -36,17 +37,18 @@ const Statistics = {
     const endYear = lastDate.getFullYear();
     const endMonth = lastDate.getMonth();
 
-    const totalMonths = (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
+    const totalMonths =
+      (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
     const monthIndexMap = {};
 
     for (let i = 0; i < totalMonths; i++) {
-        const y = startYear + Math.floor((startMonth + i) / 12);
-        const m = (startMonth + i) % 12;
-        monthIndexMap[`${y}-${m}`] = i;
+      const y = startYear + Math.floor((startMonth + i) / 12);
+      const m = (startMonth + i) % 12;
+      monthIndexMap[`${y}-${m}`] = i;
     }
 
     return { totalMonths, monthIndexMap };
-    }
+  },
 };
 
 export default Statistics;

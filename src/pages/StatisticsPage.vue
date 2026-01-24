@@ -14,7 +14,6 @@
   </q-header>
 
   <q-page padding>
-
     <!-- Command bar: toggle conversion -->
     <q-card flat bordered class="q-mb-md">
       <q-card-section class="row items-center justify-center">
@@ -32,7 +31,6 @@
           :usedCurrencies="store.currencies"
           class="text-subtitle1 full-height"
           :expandable="false"
-
         />
       </q-card-section>
     </q-card>
@@ -68,57 +66,53 @@
       </q-card-section>
     </q-card>
 
-<q-card flat bordered class="q-mb-md">
-  <q-card-section class="row items-center justify-start q-gutter-md">
-      <!-- Compare mode toggle -->
-    <q-btn
-      :color="compareByRollingMonths ? 'primary' : 'secondary'"
-      :label="compareByRollingMonths ? 'Last Months' : 'Years Ago'"
-      :icon="compareByRollingMonths ? 'event_repeat' : 'calendar_today'"
-      class="text-white"
-      unelevated
-      @click="compareByRollingMonths = !compareByRollingMonths"
-    />
+    <q-card flat bordered class="q-mb-md">
+      <q-card-section class="row items-center justify-start q-gutter-md">
+        <!-- Compare mode toggle -->
+        <q-btn
+          :color="compareByRollingMonths ? 'primary' : 'secondary'"
+          :label="compareByRollingMonths ? 'Last Months' : 'Years Ago'"
+          :icon="compareByRollingMonths ? 'event_repeat' : 'calendar_today'"
+          class="text-white"
+          unelevated
+          @click="compareByRollingMonths = !compareByRollingMonths"
+        />
 
-    <!-- Number of comparisons slider -->
-    <div class="row items-center" style="flex: 1">
-      <q-slider
-        v-model.number="nCompares"
-        :min="1"
-        :max="maxNcompares"
-        :step="1"
-        snap
-        label
-        label-always
-        markers
-        color="primary"
-        style="width: 100%;"
-      />
-    </div>
+        <!-- Number of comparisons slider -->
+        <div class="row items-center" style="flex: 1">
+          <q-slider
+            v-model.number="nCompares"
+            :min="1"
+            :max="maxNcompares"
+            :step="1"
+            snap
+            label
+            label-always
+            markers
+            color="primary"
+            style="width: 100%"
+          />
+        </div>
+      </q-card-section>
 
-
-
-
-  </q-card-section>
-
-<q-card-section class="row items-stretch justify-start q-gutter-md" style="height: 300px;">
-
-
-  <div class="col">
-    <ApexChart
-      type="line"
-      :options="chartOptions"
-      :series="monthData"
-      height="100%"
-      width="100%"
-    />
-  </div>
-</q-card-section>
-</q-card>
+      <q-card-section
+        class="row items-stretch justify-start q-gutter-md"
+        style="height: 300px"
+      >
+        <div class="col">
+          <ApexChart
+            type="line"
+            :options="chartOptions"
+            :series="monthData"
+            height="100%"
+            width="100%"
+          />
+        </div>
+      </q-card-section>
+    </q-card>
 
     <!-- Graphs and stats go here -->
   </q-page>
-
 </template>
 
 <script setup>
@@ -131,10 +125,10 @@ import { useRouter } from 'vue-router';
 import { useStore } from 'src/stores/store';
 import Statistics from 'src/models/statistics';
 import Utils from 'src/utils/utils';
-import { ref, computed, watch} from 'vue';
+import { ref, computed, watch } from 'vue';
 import bounds from 'binary-search-bounds';
 import CurrencyDropdown from 'src/components/CurrencyDropdown.vue';
-import ApexChart from "vue3-apexcharts";
+import ApexChart from 'vue3-apexcharts';
 
 const store = useStore();
 const router = useRouter();
@@ -142,15 +136,12 @@ const $q = useQuasar();
 
 const goBack = () => router.go(-1);
 
-
 const currencies = store.currencies;
 const now = new Date();
 const rawStats = Statistics.make(store.currentSheet.transactions);
-const { totalMonths, monthIndexMap } = Statistics.computeTotalMonthsAndIndex(rawStats);
-const monthIndex = ref(totalMonths-1);
-
-
-
+const { totalMonths, monthIndexMap } =
+  Statistics.computeTotalMonthsAndIndex(rawStats);
+const monthIndex = ref(totalMonths - 1);
 
 const currency = ref(store.referenceCurrency || store.lastCurrency);
 const withKeywords = ref('');
@@ -161,47 +152,53 @@ const compareByRollingMonths = ref(true);
 const nCompares = ref(1);
 
 const toggleConversion = () => {
-  convertCurrency.value = convertCurrency.value
-    ? null
-    : store.convertCurrency
-}
+  convertCurrency.value = convertCurrency.value ? null : store.convertCurrency;
+};
 
 const stats = computed(() => {
   // tokenize keywords
   const includeKw = withKeywords.value
     .split(' ')
-    .map(k => k.trim().toLowerCase())
-    .filter(k => k.length > 0);
+    .map((k) => k.trim().toLowerCase())
+    .filter((k) => k.length > 0);
   const excludeKw = withoutKeywords.value
     .split(' ')
-    .map(k => k.trim().toLowerCase())
-    .filter(k => k.length > 0);
+    .map((k) => k.trim().toLowerCase())
+    .filter((k) => k.length > 0);
   const invertKw = inverseKeywords.value
     .split(' ')
-    .map(k => k.trim().toLowerCase())
-    .filter(k => k.length > 0);
+    .map((k) => k.trim().toLowerCase())
+    .filter((k) => k.length > 0);
 
   const filtered = rawStats
-    .filter(tr => {
+    .filter((tr) => {
       const name = (tr.name || '').toLowerCase();
 
       // 1. Exclude
-      if (excludeKw.some(k => name.includes(k))) return false;
+      if (excludeKw.some((k) => name.includes(k))) return false;
 
       // 2. Include check (only if includeKw is non-empty)
 
-      if (includeKw.length > 0 && !includeKw.concat(invertKw).some(k => name.includes(k))) return false;
+      if (
+        includeKw.length > 0 &&
+        !includeKw.concat(invertKw).some((k) => name.includes(k))
+      )
+        return false;
 
       return true;
     })
-    .map(tr => {
+    .map((tr) => {
       const trCurrency = tr.currency;
 
       // skip if currencies do not match and no conversion
       if (trCurrency !== currency.value && !convertCurrency.value) return null;
 
       // determine sign
-      const sign = invertKw.some(k => (tr.name || '').toLowerCase().includes(k)) ? -1 : 1;
+      const sign = invertKw.some((k) =>
+        (tr.name || '').toLowerCase().includes(k),
+      )
+        ? -1
+        : 1;
 
       // compute value with optional conversion
       let value = tr.value * sign;
@@ -221,33 +218,28 @@ const stats = computed(() => {
       };
     })
     // remove skipped entries
-    .filter(tr => tr !== null)
+    .filter((tr) => tr !== null)
     .sort((a, b) => a.timestamp - b.timestamp); // ensure ascending timestamp
-
 
   // compute partial sum
   let runningSum = 0;
-  return filtered.map(tr => {
+  return filtered.map((tr) => {
     runningSum += tr.value;
     return { ...tr, partialSum: runningSum };
   });
 });
 
-
-
 const maxNcompares = computed(() => {
   if (!stats.value.length) return 1;
 
-    let ans = totalMonths;
+  let ans = totalMonths;
 
-      if (!compareByRollingMonths.value) {
-ans = Math.floor(ans / 12) + 1;
-      }
-    
+  if (!compareByRollingMonths.value) {
+    ans = Math.floor(ans / 12) + 1;
+  }
+
   return Math.min(ans, 12);
 });
-
-
 
 const allMonthData = computed(() => {
   if (!rawStats || rawStats.length === 0) return [];
@@ -263,7 +255,9 @@ const allMonthData = computed(() => {
     const m = (startMonth + i) % 12;
 
     return {
-      name: `${Utils.getYear(new Date(y, m).getTime())} ${Utils.getMonth(new Date(y, m).getTime())}`,
+      name: `${Utils.getYear(new Date(y, m).getTime())} ${Utils.getMonth(
+        new Date(y, m).getTime(),
+      )}`,
       year: y,
       month: m,
       data: [],
@@ -283,26 +277,23 @@ const allMonthData = computed(() => {
     monthIndex = monthIndexMap[monthKey];
 
     if (monthIndex != null && monthIndex < months.length) {
-      months[monthIndex].data.push([stat.timestamp, (stat.partialSum - prevPartial) / 100, idx]);
+      months[monthIndex].data.push([
+        stat.timestamp,
+        (stat.partialSum - prevPartial) / 100,
+        idx,
+      ]);
     }
   });
 
   return months;
 });
 
-
-
-
-
-
 const monthData = computed(() => {
-
   const n = nCompares.value;
   const rollingMonths = compareByRollingMonths.value;
 
   const result = [];
   const step = rollingMonths ? 1 : 12;
-
 
   let current = monthIndex.value;
 
@@ -310,11 +301,11 @@ const monthData = computed(() => {
   const firstMonth = allMonthData.value[current];
   if (!firstMonth) return result;
 
-
-
-  const firstMonthTimestamp = new Date(firstMonth.year, firstMonth.month, 1).getTime();
-
-
+  const firstMonthTimestamp = new Date(
+    firstMonth.year,
+    firstMonth.month,
+    1,
+  ).getTime();
 
   result.push({
     name: firstMonth.name,
@@ -355,12 +346,6 @@ const monthData = computed(() => {
   return result.reverse(); // oldest first
 });
 
-
-
-
-
-
-
 const chartOptions = computed(() => {
   return {
     chart: {
@@ -379,23 +364,25 @@ const chartOptions = computed(() => {
       },
       tickAmount: nCompares.value === 1 ? undefined : 31,
 
-    tooltip: {
-      enabled: true,
-      formatter: (val, { seriesIndex, w }) => {
+      tooltip: {
+        enabled: true,
+        formatter: (val, { seriesIndex, w }) => {
+          const series = w.globals.initialSeries?.[seriesIndex];
+          if (!series) return '';
 
-        const series = w.globals.initialSeries?.[seriesIndex];
-        if (!series) return '';
+          const day = new Date(val).getDate().toString().padStart(2, '0');
+          const monthStr = new Date(2000, series.month).toLocaleDateString(
+            undefined,
+            { month: 'short' },
+          );
 
-        const day = new Date(val).getDate().toString().padStart(2, '0');
-        const monthStr = new Date(2000, series.month).toLocaleDateString(undefined, { month: 'short' });
-
-        return `${day} ${monthStr}`;
+          return `${day} ${monthStr}`;
+        },
       },
-  },
     },
     yaxis: {
       labels: {
-        formatter: val => {
+        formatter: (val) => {
           if (val >= 1e6) return (val / 1e6).toFixed(1) + 'M';
           if (val >= 1e3) return (val / 1e3).toFixed(1) + 'k';
           return val.toFixed(0);
@@ -405,36 +392,35 @@ const chartOptions = computed(() => {
         style: { fontSize: '10px' },
       },
     },
-tooltip: {
-  shared: false,
-  custom: ({ seriesIndex, dataPointIndex, w }) => {
-    const series = w.globals.initialSeries?.[seriesIndex];
-    const seriesData = series?.data;
+    tooltip: {
+      shared: false,
+      custom: ({ seriesIndex, dataPointIndex, w }) => {
+        const series = w.globals.initialSeries?.[seriesIndex];
+        const seriesData = series?.data;
 
-    if (!seriesData || !seriesData[dataPointIndex]) {
-      return '<div style="padding:6px 10px;">No data</div>';
-    }
+        if (!seriesData || !seriesData[dataPointIndex]) {
+          return '<div style="padding:6px 10px;">No data</div>';
+        }
 
-    const [, , statIdx] = seriesData[dataPointIndex];
-    const baseStatIdx = seriesData[0]?.[2];
+        const [, , statIdx] = seriesData[dataPointIndex];
+        const baseStatIdx = seriesData[0]?.[2];
 
-    const stat = stats.value[statIdx];
-    const baseStat = stats.value[baseStatIdx];
-    if (!stat || !baseStat) {
-      return '<div style="padding:6px 10px;">No data</div>';
-    }
+        const stat = stats.value[statIdx];
+        const baseStat = stats.value[baseStatIdx];
+        if (!stat || !baseStat) {
+          return '<div style="padding:6px 10px;">No data</div>';
+        }
 
-    const formatVal = v => {
-      const x = v / 100;
-      if (x >= 1e6) return (x / 1e6).toFixed(1) + 'M';
-      if (x >= 1e3) return (x / 1e3).toFixed(1) + 'k';
-      return x.toFixed(0);
-    };
+        const formatVal = (v) => {
+          const x = v / 100;
+          if (x >= 1e6) return (x / 1e6).toFixed(1) + 'M';
+          if (x >= 1e3) return (x / 1e3).toFixed(1) + 'k';
+          return x.toFixed(0);
+        };
 
-    const rebasedTotal =
-      stat.partialSum - baseStat.partialSum + stat.value;
+        const rebasedTotal = stat.partialSum - baseStat.partialSum + stat.value;
 
-    return `
+        return `
       <div style="
         line-height:1.3;
         text-align:left;
@@ -451,15 +437,11 @@ tooltip: {
         Val: ${formatVal(stat.value)}, Tot: ${formatVal(rebasedTotal)}
       </div>
     `;
-  },
-},
+      },
+    },
 
     stroke: { curve: 'smooth', width: 2 },
     markers: { size: 5 },
   };
 });
-
-
-
-
 </script>

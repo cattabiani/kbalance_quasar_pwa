@@ -104,6 +104,22 @@
             Create new sheets with ease using the wizard
           </div>
         </q-carousel-slide>
+
+        <q-carousel-slide
+          name="stats"
+          class="column"
+          style="height: 100%; justify-content: space-between"
+        >
+          <q-img
+            src="screenshots/stats.png"
+            alt="Stats"
+            fit="contain"
+            style="flex: 1; width: 100%"
+          />
+          <div class="carousel-caption text-h6 text-center">
+            Stats with Filtering!
+          </div>
+        </q-carousel-slide>
       </q-carousel>
     </div>
 

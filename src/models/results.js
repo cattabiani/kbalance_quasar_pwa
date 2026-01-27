@@ -1,5 +1,4 @@
 import Transaction from './transaction';
-import Utils from '../utils/utils.js';
 
 const Results = {
   make(transactions, nPeople) {

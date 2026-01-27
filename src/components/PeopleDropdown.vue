@@ -1,24 +1,27 @@
 <template>
   <q-btn-dropdown
-    v-if="filteredPeople.length"
+    v-if="filteredOptions.length"
+    ref="addUserRef"
     :color="props.fixedLabel ? 'primary' : void 0"
     :icon="
-      Boolean(props.fixedLabel)
+      props.fixedLabel
         ? props.fixedLabel === 'Upgrade'
           ? 'arrow_circle_up'
           : 'person'
         : void 0
     "
-    ref="addUserRef"
   >
+    <!-- Button label -->
     <template #label>
       <span
-        v-if="fixedLabel"
+        v-if="props.fixedLabel"
         style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap"
-        >{{ props.fixedLabel }}</span
       >
+        {{ props.fixedLabel }}
+      </span>
+
       <person-item
-        v-else
+        v-else-if="isPerson(props.modelValue)"
         :id="props.modelValue"
         :people="props.people"
         :max-length="13"
@@ -29,18 +32,29 @@
           white-space: nowrap;
         "
       />
+
+      <span v-else>
+        {{ allLabel }}
+      </span>
     </template>
 
+    <!-- Dropdown list -->
     <q-list>
       <q-item
-        v-for="(id, index) in filteredPeople"
-        :key="id"
-        @click="handleClick(id)"
+        v-for="(opt, index) in filteredOptions"
+        :key="opt.id"
         clickable
+        @click="handleClick(opt.id)"
         :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'"
       >
         <q-item-section>
-          <person-item :id="id" :people="props.people" :max-length="13" />
+          <person-item
+            v-if="opt.isPerson"
+            :id="opt.id"
+            :people="props.people"
+            :max-length="13"
+          />
+          <span v-else>{{ opt.label }}</span>
         </q-item-section>
       </q-item>
     </q-list>
@@ -48,9 +62,9 @@
 </template>
 
 <script setup>
+import { computed, ref } from 'vue';
 import Person from 'src/models/person';
 import PersonItem from 'src/components/PersonItem.vue';
-import { computed, ref } from 'vue';
 
 const addUserRef = ref(null);
 
@@ -75,23 +89,46 @@ const props = defineProps({
     type: String,
     default: null,
   },
+
+  /* "All" support */
+  allLabel: {
+    type: String,
+    default: null, // e.g. "All"
+  },
+  allValue: {
+    type: String,
+    default: '__ALL__',
+  },
 });
 
-const emit = defineEmits(['itemClick', 'update:modelValue']);
+const emit = defineEmits(['update:modelValue', 'itemClick']);
+
+const isPerson = (id) =>
+  id != null && id !== props.allValue && id in props.people;
 
 const handleClick = (id) => {
   emit('update:modelValue', id);
   emit('itemClick', id);
-  addUserRef.value.hide();
+  addUserRef.value?.hide();
 };
 
-const filteredPeople = computed(() => {
+const filteredOptions = computed(() => {
+  const options = [];
+
+  // Optional "All"
+  if (props.allLabel) {
+    options.push({
+      id: props.allValue,
+      label: props.allLabel,
+      isPerson: false,
+    });
+  }
+
   let peopleList = Object.values(props.people).filter(
-    (value) => !(value.id in (props?.ignoredPeople ?? {})),
-  ); // Exclude ignored people
+    (p) => !(p.id in (props?.ignoredPeople ?? {})),
+  );
 
   if (props.sortedPeople) {
-    // Sort based on sortedPeople order
     const orderMap = new Map(
       props.sortedPeople.map((id, index) => [id, index]),
     );
@@ -100,10 +137,18 @@ const filteredPeople = computed(() => {
         (orderMap.get(a.id) ?? Infinity) - (orderMap.get(b.id) ?? Infinity),
     );
   } else {
-    // Default sorting
     peopleList.sort((a, b) => Person.compare(a, b));
   }
 
-  return peopleList.map((value) => value.id); // Extract only the IDs
+  options.push(
+    ...peopleList.map((p) => ({
+      id: p.id,
+      isPerson: true,
+    })),
+  );
+
+  return options;
 });
+
+const allLabel = computed(() => props.allLabel ?? '');
 </script>

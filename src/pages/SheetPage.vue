@@ -33,6 +33,7 @@
             </q-item-section>
             <q-item-section>People</q-item-section>
           </q-item>
+
           <q-item clickable v-close-popup @click="goToConvert">
             <q-item-section avatar>
               <q-icon name="currency_exchange" />
@@ -57,6 +58,13 @@
               <q-icon name="download" />
             </q-item-section>
             <q-item-section>Download (csv)</q-item-section>
+          </q-item>
+
+          <q-item clickable v-close-popup @click="goToStatistics">
+            <q-item-section avatar>
+              <q-icon name="insights" />
+            </q-item-section>
+            <q-item-section>Statistics</q-item-section>
           </q-item>
         </q-list>
       </q-btn-dropdown>
@@ -141,9 +149,6 @@ import { useStore } from 'src/stores/store';
 import PeopleDropdown from 'src/components/PeopleDropdown.vue';
 import SummaryCard from 'src/components/SummaryCard.vue';
 import TransactionList from 'src/components/TransactionList.vue';
-import CurrencyDropdown from 'src/components/CurrencyDropdown.vue';
-import Utils from 'src/utils/utils';
-import Transaction from 'src/models/transaction';
 import Results from 'src/models/results';
 import { ref, watch, computed, nextTick } from 'vue';
 
@@ -221,6 +226,10 @@ const goToConvert = () => {
 
 const goToSettle = () => {
   router.push({ name: 'SettlePage' });
+};
+
+const goToStatistics = () => {
+  router.push({ name: 'StatisticsPage' });
 };
 
 const goBack = () => {

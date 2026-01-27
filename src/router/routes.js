@@ -46,6 +46,16 @@ const routes = [
         }, // Protect this route
       },
       {
+        path: '/sheet/statistics',
+        name: 'StatisticsPage',
+        component: () => import('pages/StatisticsPage.vue'),
+        meta: {
+          requiresAuth: true,
+          requiresFirebase: true,
+          requiresSheet: true,
+        }, // Protect this route
+      },
+      {
         path: '/conversionRatesSettings',
         name: 'ConversionRatesSettingsPage',
         component: () => import('pages/ConversionRatesSettingsPage.vue'),

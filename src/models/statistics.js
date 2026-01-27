@@ -1,53 +1,59 @@
 import Transaction from './transaction';
+import Utils from '../utils/utils';
 
 const Statistics = {
-  /**
-   * Compute baseline stats from transactions.
-   * Only returns name, currency, and value (sum of credits).
-   * Does NOT filter or apply convertCurrency.
-   */
-  make(transactions) {
-    const results = [];
+  getTotalMonths(startTs, endTs) {
+    if (!startTs || !endTs) return { totalMonths: 0, monthIndexMap: {} };
 
-    for (const tr of Object.values(transactions)) {
-      const value = Transaction.credit(tr); // sum of credits
-      results.push({
-        name: tr.name,
-        currency: tr.currency,
-        value,
-        timestamp: tr.timestamp,
-      });
-    }
+    const start = new Date(startTs);
+    const end = new Date(endTs);
 
-    // Sort by timestamp ascending
-    results.sort((a, b) => a.timestamp - b.timestamp);
-
-    return results;
-  },
-
-  computeTotalMonthsAndIndex(statsArray) {
-    if (!statsArray || statsArray.length === 0)
-      return { totalMonths: 0, monthIndexMap: {} };
-
-    const firstDate = new Date(statsArray[0].timestamp);
-    const lastDate = new Date(statsArray[statsArray.length - 1].timestamp);
-
-    const startYear = firstDate.getFullYear();
-    const startMonth = firstDate.getMonth();
-    const endYear = lastDate.getFullYear();
-    const endMonth = lastDate.getMonth();
+    const startYear = start.getFullYear();
+    const startMonth = start.getMonth();
+    const endYear = end.getFullYear();
+    const endMonth = end.getMonth();
 
     const totalMonths =
       (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
-    const monthIndexMap = {};
+    return totalMonths;
+  },
 
+  getTotalYears(startTs, endTs) {
+    if (!startTs || !endTs) return { totalMonths: 0, monthIndexMap: {} };
+
+    const start = new Date(startTs);
+    const end = new Date(endTs);
+
+    const startYear = start.getFullYear();
+    const endYear = end.getFullYear();
+
+    return endYear - startYear + 1;
+  },
+
+  getMonthIndexMap(startTs, totalMonths) {
+    const start = new Date(startTs);
+    const startYear = start.getFullYear();
+    const startMonth = start.getMonth();
+    const monthIndexMap = {};
     for (let i = 0; i < totalMonths; i++) {
       const y = startYear + Math.floor((startMonth + i) / 12);
       const m = (startMonth + i) % 12;
       monthIndexMap[`${y}-${m}`] = i;
     }
+    return monthIndexMap;
+  },
 
-    return { totalMonths, monthIndexMap };
+  monthIdx2date(startTs, idx) {
+    const start = new Date(startTs);
+    const startYear = start.getFullYear();
+    const startMonth = start.getMonth();
+
+    const y = startYear + Math.floor((startMonth + idx) / 12);
+    const m = (startMonth + idx) % 12;
+
+    const date = new Date(y, m, 1);
+
+    return date.toLocaleString('en-US', { month: 'short', year: 'numeric' });
   },
 };
 

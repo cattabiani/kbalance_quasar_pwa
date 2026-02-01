@@ -287,6 +287,7 @@ export const useStore = defineStore('mainStore', {
       if (this.currentSheet && id in this.currentSheet.transactions) {
         const ans = _.cloneDeep(this.currentSheet.transactions[id]);
         Transaction.updatePeople(ans, this.currentSheetPeople.length);
+        Transaction.update(ans);
         return ans;
       }
 

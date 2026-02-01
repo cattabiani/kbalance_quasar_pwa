@@ -90,7 +90,7 @@ describe('applyTransaction()', () => {
       [0, 4, 0], // person 3 allowed to be zero in both arrays
     );
 
-    Results.applyTransaction(results, tr, 3);
+    Results.applyTransaction(results, tr, 3, 3);
 
     expect(results.nTransactions).toBe(1);
     expect(results.perCurrencyBalance['CHF'].credits).toEqual([12, 0, 0]);
@@ -108,7 +108,7 @@ describe('applyTransaction()', () => {
 
     const incoming = validTr(3, 'USD', [0, 5, 0], [3, 0, 2]);
 
-    Results.applyTransaction(results, incoming, 3);
+    Results.applyTransaction(results, incoming, 3, 3);
 
     expect(results.nTransactions).toBe(1);
     expect(results.perCurrencyBalance['USD'].credits).toEqual([0, 14, 0]);

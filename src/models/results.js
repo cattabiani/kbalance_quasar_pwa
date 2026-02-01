@@ -10,12 +10,13 @@ const Results = {
       return results;
     }
     Object.values(transactions).forEach((tr) => {
-      this.applyTransaction(results, tr);
+      this.applyTransaction(results, tr, nPeople);
     });
     return results;
   },
 
-  applyTransaction(results, tr, multi = 1) {
+  applyTransaction(results, tr, nPeople, multi = 1) {
+    Transaction.updatePeople(tr, nPeople);
     Transaction.update(tr);
     if (!(tr.currency in results.perCurrencyBalance)) {
       results.perCurrencyBalance[tr.currency] = Transaction.make(

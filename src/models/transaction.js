@@ -34,22 +34,6 @@ const Transaction = {
     return { name, id, credits, currency, debts, timestamp };
   },
 
-  // make1to1(people, currency, creditorIdx, debtorIdx, value) {
-  //   const nPeople = Array.isArray(people)
-  //     ? people.length
-  //     : people;
-  //   const id = uuidv4();
-  //   const credits = Array.from({ length: nPeople }, () => 0);
-  //   const debts = Array.from({ length: nPeople }, () => 0);
-  //   let timestamp = Date.now();
-  //   credits[creditorIdx] = value;
-  //   debts[debtorIdx] = value;
-
-  //   const name = `${people[debtorIdx]} → ${people[creditorIdx]}` ? Array.isArray(people) : '';
-
-  //   return { name, id, credits, currency, debts, timestamp };
-  // },
-
   update(tr) {
     // update to latest format
     if (!('amount' in tr)) return tr;
@@ -78,15 +62,16 @@ const Transaction = {
   },
 
   updatePeople(tr, nPeople) {
-    this.update(tr);
     const delta = nPeople - tr.debts.length;
     if (delta <= 0) return;
 
     // Extend debts
     tr.debts.push(...Array.from({ length: delta }, () => 0));
 
-    // Extend credits
-    tr.credits.push(...Array.from({ length: delta }, () => 0));
+    if (Array.isArray(tr.credits)) {
+      // Extend credits
+      tr.credits.push(...Array.from({ length: delta }, () => 0));
+    }
   },
 
   debtors(tr) {

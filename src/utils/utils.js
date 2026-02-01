@@ -54,8 +54,10 @@ const Utils = {
   },
 
   add(a, b, multi = 1) {
-    for (let i = 0; i < a.length; ++i) {
-      a[i] += multi * b[i];
+    const n = Math.max(a.length, b.length);
+
+    for (let i = 0; i < n; ++i) {
+      a[i] = (a[i] ?? 0) + multi * (b[i] ?? 0);
     }
   },
 

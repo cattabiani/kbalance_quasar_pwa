@@ -205,14 +205,27 @@ export const useStore = defineStore('mainStore', {
         return;
       }
 
-      const repaired = {};
+      const ids = Object.keys(this.currentSheet.transactions);
+      const total = ids.length;
+      console.log(`Starting repair: ${total} transactions`);
 
-      for (const id of Object.keys(this.currentSheet.transactions)) {
-        const tx = this.getEditableTransaction(id);
-        repaired[tx.id] = tx;
+      const BATCH_SIZE = 100;
+
+      for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+        const batch = writeBatch(db);
+        const end = Math.min(i + BATCH_SIZE, ids.length);
+
+        for (let j = i; j < end; j++) {
+          const id = ids[j];
+          const tx = this.getEditableTransaction(id);
+          await this.addTransaction(tx, batch);
+        }
+
+        console.log(`Committing batch: ${end}/${total}`);
+        await batch.commit();
       }
 
-      await this.addTransactions(repaired);
+      console.log('Repair complete!');
     },
 
     // sheet

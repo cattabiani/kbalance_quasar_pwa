@@ -66,6 +66,13 @@
             </q-item-section>
             <q-item-section>Statistics</q-item-section>
           </q-item>
+
+          <!-- <q-item clickable v-close-popup @click="repairSheet">
+          <q-item-section avatar>
+            <q-icon name="build" />
+          </q-item-section>
+          <q-item-section>Repair</q-item-section>
+        </q-item> -->
         </q-list>
       </q-btn-dropdown>
     </q-toolbar>
@@ -230,6 +237,20 @@ const goToSettle = () => {
 
 const goToStatistics = () => {
   router.push({ name: 'StatisticsPage' });
+};
+
+const repairSheet = async () => {
+  try {
+    await store.repairSheet();
+    $q.notify({
+      message: 'Sheet repaired successfully',
+    });
+  } catch (error) {
+    $q.notify({
+      message: error?.message || String(error),
+      color: 'negative',
+    });
+  }
 };
 
 const goBack = () => {

@@ -191,14 +191,7 @@ const getDividerLabel = (visibleIndex) => {
 
   if (yearPrev === yearCurr && monthPrev === monthCurr) return '';
 
-  let label = '';
-  if (monthPrev !== monthCurr) label += Utils.getMonth(tCurr, false);
-  if (yearPrev !== yearCurr) {
-    if (label) label += ' ';
-    label += yearCurr;
-  }
-
-  return label;
+  return Utils.getMonth(tCurr, false) + ' ' + yearCurr;
 };
 
 const selectedPersonIdx = computed(() =>
@@ -242,7 +235,7 @@ watch(transactionList, () => {
 });
 
 const payerLabel = (tr) => {
-  const payers = Transaction.payerIdxs(tr);
+  const payers = Transaction.payerIdxs(tr, store.currentSheetPeople.length);
 
   if (payers.length === 0) return '';
   if (payers.length === 1) {

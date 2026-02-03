@@ -45,7 +45,9 @@ const Transaction = {
 
     tr.credits = credits;
 
-    tr.debts = tr.debts.map((d) => d.owedAmount ?? 0);
+    if (tr.debts.some((d) => d && typeof d === 'object' && 'owedAmount' in d)) {
+      tr.debts = tr.debts.map((d) => d.owedAmount ?? 0);
+    }
 
     delete tr.amount;
     delete tr.payer;
@@ -98,7 +100,9 @@ const Transaction = {
     return -1;
   },
 
-  payerIdxs(tr) {
+  payerIdxs(tr, nPeople) {
+    this.updatePeople(tr, nPeople);
+    this.update(tr);
     return tr.credits
       .map((credit, idx) => ({ credit, idx }))
       .filter((e) => e.credit !== 0)

@@ -200,6 +200,21 @@ export const useStore = defineStore('mainStore', {
       );
     },
 
+    async repairSheet() {
+      if (!this.currentSheet || !this.currentSheet.transactions) {
+        return;
+      }
+
+      const repaired = {};
+
+      for (const id of Object.keys(this.currentSheet.transactions)) {
+        const tx = this.getEditableTransaction(id);
+        repaired[tx.id] = tx;
+      }
+
+      await this.addTransactions(repaired);
+    },
+
     // sheet
 
     getEditableCurrentSheetResults() {

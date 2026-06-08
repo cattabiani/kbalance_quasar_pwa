@@ -72,7 +72,7 @@
           min="0"
           label="Conversion Rate"
           input-class="text-center"
-          @focus="conversionInputRef.select()"
+          @focus="conversionInputRef?.select()"
         />
       </q-card-section>
     </q-card>
@@ -97,13 +97,12 @@ import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import { useStore } from 'src/stores/store';
 import PeopleDropdown from 'src/components/PeopleDropdown.vue';
-import Utils from 'src/utils/utils';
 import CurrencyDropdown from 'src/components/CurrencyDropdown.vue';
 import Results from 'src/models/results';
 import SummaryCard from 'src/components/SummaryCard.vue';
 import TransactionList from 'src/components/TransactionList.vue';
 import Transaction from 'src/models/transaction';
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 
 const store = useStore();
 const router = useRouter();
@@ -168,7 +167,7 @@ const fromCurrency = ref(initialFrom);
 const toCurrency = ref(initialTo);
 
 const swapCurrencies = () => {
-  if (fromCurrency === toCurrency) return;
+  if (fromCurrency.value === toCurrency.value) return;
 
   if (!fromCurrencies.value.has(toCurrency.value)) {
     $q.notify({
@@ -183,9 +182,20 @@ const swapCurrencies = () => {
   ];
 };
 
-const conversionMulti = computed(() => {
-  return store.convertCurrency(1, fromCurrency.value, toCurrency.value);
-}); // 1.00
+const conversionMulti = ref(
+  store.convertCurrency(1, fromCurrency.value, toCurrency.value),
+);
+
+watch(
+  [fromCurrency, toCurrency],
+  () => {
+    conversionMulti.value = store.convertCurrency(
+      1,
+      fromCurrency.value,
+      toCurrency.value,
+    );
+  },
+);
 
 const goBack = () => {
   router.go(-1);
@@ -280,8 +290,16 @@ const summary = computed(() => {
 // });
 
 const saveAndGoBack = async () => {
+  const newTransactions = convertionTransactions.value;
+  if (!newTransactions || Object.keys(newTransactions).length === 0) {
+    $q.notify({
+      message: 'No conversion transactions to add.',
+      color: 'warning',
+    });
+    return;
+  }
   try {
-    await store.addTransactions(transactions.value);
+    await store.addTransactions(newTransactions);
     goBack();
   } catch (error) {
     $q.notify({

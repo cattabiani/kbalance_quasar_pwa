@@ -258,14 +258,7 @@ export const useStore = defineStore('mainStore', {
         msg,
       );
 
-      try {
-        await this.addTransactions(transactions);
-      } catch (error) {
-        $q.notify({
-          message: error.message || error,
-          color: 'negative',
-        });
-      }
+      await this.addTransactions(transactions);
     },
 
     async setPeople(people, batch = null) {
@@ -327,7 +320,6 @@ export const useStore = defineStore('mainStore', {
       return Transaction.make(
         peopleActive,
         this.lastCurrency,
-        this.personId2Idx(auth.currentUser.uid),
       );
     },
 

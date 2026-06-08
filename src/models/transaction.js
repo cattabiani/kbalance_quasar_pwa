@@ -27,8 +27,8 @@ const Transaction = {
     credits[tr.creditorIdx] = tr.amount;
     debts[tr.debtorIdx] = tr.amount;
 
-    const name = `${people[tr.debtorIdx]} → ${people[tr.creditorIdx]}`
-      ? Array.isArray(people)
+    const name = Array.isArray(people)
+      ? `${people[tr.debtorIdx]} → ${people[tr.creditorIdx]}`
       : '';
 
     return { name, id, credits, currency, debts, timestamp };

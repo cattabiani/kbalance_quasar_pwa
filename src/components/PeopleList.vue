@@ -60,7 +60,7 @@
 <script setup>
 import { useRouter } from 'vue-router';
 import { useStore } from 'src/stores/store.js';
-import { event, useQuasar } from 'quasar';
+import { useQuasar } from 'quasar';
 import { ref, computed, watch } from 'vue';
 import ReceiveString from 'src/components/ReceiveString.vue';
 import PeopleDropdown from 'src/components/PeopleDropdown.vue';

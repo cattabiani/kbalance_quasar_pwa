@@ -42,7 +42,10 @@
 
 <script setup>
 import { QrcodeStream } from 'vue-qrcode-reader';
-import { ref, computed, nextTick, hydrateOnIdle } from 'vue';
+import { ref, computed, nextTick } from 'vue';
+import { useQuasar } from 'quasar';
+
+const $q = useQuasar();
 
 // Props for the value to encode in the QR code
 const props = defineProps({

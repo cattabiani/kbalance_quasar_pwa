@@ -87,7 +87,7 @@ const logout = async () => {
 };
 
 watch(
-  store.userLedger,
+  () => store.userLedger,
   async (newValue) => {
     if (newValue === null) {
       await logout();

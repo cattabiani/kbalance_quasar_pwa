@@ -70,7 +70,7 @@ const goBack = () => {
 };
 
 watch(
-  store.currentSheet,
+  () => store.currentSheet,
   async (newValue) => {
     if (newValue === null) {
       goBack();
@@ -93,7 +93,7 @@ const logout = async () => {
 };
 
 watch(
-  store.userLedger,
+  () => store.userLedger,
   async (newValue) => {
     if (newValue === null) {
       await logout();

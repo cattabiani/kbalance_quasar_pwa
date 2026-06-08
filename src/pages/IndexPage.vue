@@ -161,7 +161,7 @@
               :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'"
             >
               <q-item-section>
-                <person-item :id="id" :people="store.friends" />
+                <person-item :id="id" :people="store.userLedger.friends" />
               </q-item-section>
             </q-item>
           </q-slide-item>
@@ -399,7 +399,7 @@ const logout = async () => {
 };
 
 watch(
-  store.userLedger,
+  () => store.userLedger,
   async (newValue) => {
     if (newValue === null) {
       await logout();

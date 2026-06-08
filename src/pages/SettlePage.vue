@@ -62,13 +62,12 @@ import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import { useStore } from 'src/stores/store';
 import PeopleDropdown from 'src/components/PeopleDropdown.vue';
-import Utils from 'src/utils/utils';
 import CurrencyDropdown from 'src/components/CurrencyDropdown.vue';
 import Results from 'src/models/results';
 import SummaryCard from 'src/components/SummaryCard.vue';
 import TransactionList from 'src/components/TransactionList.vue';
 import Transaction from 'src/models/transaction';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 
 const store = useStore();
 const router = useRouter();
@@ -129,8 +128,16 @@ const goBack = () => {
 };
 
 const saveAndGoBack = async () => {
+  const tr = settleTr.value;
+  if (!tr || Transaction.isEmpty(tr)) {
+    $q.notify({
+      message: 'No settle transaction to add.',
+      color: 'warning',
+    });
+    return;
+  }
   try {
-    await store.addTransactions(transactions.value);
+    await store.addTransactions({ [tr.id]: tr });
     goBack();
   } catch (error) {
     $q.notify({

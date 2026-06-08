@@ -221,11 +221,15 @@ const selectedPersonIdx = computed(() =>
 );
 
 const firstTr =
-  store.currentSheet.transactions[
-    store.currentSheetTransactions[store.currentSheetTransactions.length - 1]
-  ];
+  store.currentSheetTransactions.length > 0
+    ? store.currentSheet.transactions[
+        store.currentSheetTransactions[store.currentSheetTransactions.length - 1]
+      ]
+    : { timestamp: Date.now() };
 const lastTr =
-  store.currentSheet.transactions[store.currentSheetTransactions[0]];
+  store.currentSheetTransactions.length > 0
+    ? store.currentSheet.transactions[store.currentSheetTransactions[0]]
+    : { timestamp: Date.now() };
 
 const totalMonths = Statistics.getTotalMonths(
   firstTr.timestamp,
@@ -303,7 +307,7 @@ const stats = computed(() => {
       const trCurrency = tr.currency;
 
       // skip if currencies do not match and no conversion
-      if (trCurrency !== currency && !convertCurrency) return null;
+      if (trCurrency !== currency.value && !convertCurrency.value) return null;
 
       let value = 0;
 
@@ -327,7 +331,7 @@ const stats = computed(() => {
 
       if (trCurrency !== currency.value && convertCurrency.value) {
         value = convertCurrency.value(value, trCurrency, currency.value);
-        finalCurrency = currency;
+        finalCurrency = currency.value;
       }
 
       return {

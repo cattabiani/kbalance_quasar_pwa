@@ -144,6 +144,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  disableEdit: {
+    type: Boolean,
+    default: false,
+  },
   searchString: {
     type: String,
     default: null,
@@ -201,6 +205,7 @@ const selectedPersonIdx = computed(() =>
 const emit = defineEmits(['edit', 'remove']);
 
 const editTransaction = (id) => {
+  if (props.disableEdit) return;
   emit('edit', id);
 };
 

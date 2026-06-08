@@ -40,7 +40,7 @@
           v-model="tr.name"
           label="Title"
           outlined
-          @focus="nameInput.select()"
+          @focus="nameInput?.select()"
         />
       </q-card-section>
 
@@ -178,9 +178,9 @@
           flat
           icon="done"
           label="Cancel"
-          @click="saveAndGoBack"
+          @click="goBack"
           class="q-mr-md bg-red text-white"
-          aria-label="Save"
+          aria-label="Cancel"
         />
         <q-btn
           flat
@@ -311,7 +311,7 @@ const router = useRouter();
 const tr = ref(store.getEditableTransaction());
 const seeInactive = ref(false);
 const nameInput = ref(null);
-const edited = new Set();
+const edited = ref(new Set());
 
 const debtors = ref(Transaction.debtors(tr.value));
 
@@ -328,7 +328,7 @@ const credit = computed({
   set: (newValue) => {
     if (newValue === Transaction.credit(tr.value)) return;
     customCredits.value = false;
-    edited.clear();
+    edited.value.clear();
     Transaction.setCredit(
       tr.value,
       newValue,
@@ -347,7 +347,7 @@ const payerIdx = computed({
       credit.value,
       newValue,
       debtors.value,
-      edited,
+      edited.value,
     );
   },
 });
@@ -358,7 +358,7 @@ const payer = computed({
   get: () => store.personIdx2Id(payerIdx.value) || '',
   set: (newValue) => {
     if (newValue === store.personIdx2Id(payerIdx.value)) return;
-    edited.clear();
+    edited.value.clear();
     payerIdx.value = store.personId2Idx(newValue);
   },
 });
@@ -366,7 +366,7 @@ const payer = computed({
 watch(
   debtors,
   (newDebtors) => {
-    edited.clear();
+    edited.value.clear();
     Transaction.split(tr.value, newDebtors);
   },
   { deep: true },

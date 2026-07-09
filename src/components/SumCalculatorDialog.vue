@@ -3,7 +3,7 @@
     :model-value="props.modelValue"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <q-card style="min-width: 320px">
+    <q-card style="min-width: 320px; min-height: 300px" class="column justify-between">
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">Sum Calculator</div>
         <q-space />
@@ -17,7 +17,7 @@
           outlined
           placeholder="Enter one number per line (e.g.&#10;10&#10;25.50&#10;5)"
           autofocus
-          rows="4"
+          rows="5"
           inputmode="decimal"
         />
         <div class="row justify-between items-center q-mt-md text-subtitle1">

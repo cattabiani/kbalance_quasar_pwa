@@ -15,7 +15,7 @@
           v-model="calcExpression"
           type="textarea"
           outlined
-          placeholder="Enter numbers (e.g. 10 + 25.50 + 5 or list line-by-line)"
+          placeholder="Enter one number per line (e.g.&#10;10&#10;25.50&#10;5)"
           autofocus
           rows="4"
           inputmode="decimal"

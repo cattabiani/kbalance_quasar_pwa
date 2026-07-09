@@ -136,7 +136,7 @@ const openCalculator = () => {
 };
 
 const applySum = () => {
-  emit('update:modelValue', computedSum.value);
+  emit('update:modelValue', Math.round(computedSum.value * 100));
   calcDialogOpen.value = false;
 };
 

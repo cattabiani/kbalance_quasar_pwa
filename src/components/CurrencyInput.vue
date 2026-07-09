@@ -41,7 +41,21 @@
           />
           <div class="row justify-between items-center q-mt-md text-subtitle1">
             <span class="text-weight-bold">Total:</span>
-            <span class="text-primary text-weight-bold">{{ formattedSum }}</span>
+            <CurrencyDisplay
+              :currency="props.currency"
+              :amount="computedSumCents"
+              :referenceCurrency="store.referenceCurrency"
+              :convertedAmount="
+                store.convertCurrency(
+                  computedSumCents,
+                  props.currency,
+                  store.referenceCurrency,
+                )
+              "
+              inlineConversion
+              color="var(--q-primary)"
+              class="text-weight-bold"
+            />
           </div>
         </q-card-section>
 
@@ -123,11 +137,8 @@ const computedSum = computed(() => {
   return numbers.reduce((sum, num) => sum + parseFloat(num), 0);
 });
 
-const formattedSum = computed(() => {
-  return `${computedSum.value.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })} ${props.currency || ''}`;
+const computedSumCents = computed(() => {
+  return Math.round(computedSum.value * 100);
 });
 
 const openCalculator = () => {
@@ -136,7 +147,7 @@ const openCalculator = () => {
 };
 
 const applySum = () => {
-  emit('update:modelValue', Math.round(computedSum.value * 100));
+  emit('update:modelValue', computedSumCents.value);
   calcDialogOpen.value = false;
 };
 

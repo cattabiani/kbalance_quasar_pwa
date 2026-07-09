@@ -9,6 +9,23 @@
       :input-class="props.alignRight ? 'text-right' : 'text-left'"
       :readonly="props.readonly"
       :bg-color="props.bgColor"
+    >
+      <template v-slot:append v-if="!props.readonly">
+        <q-btn
+          flat
+          round
+          dense
+          icon="calculate"
+          @click="calcDialogOpen = true"
+          aria-label="Calculate sum"
+        />
+      </template>
+    </q-input>
+
+    <SumCalculatorDialog
+      v-model="calcDialogOpen"
+      :currency="props.currency"
+      @apply="applySum"
     />
 
     <CurrencyDisplay
@@ -32,8 +49,9 @@
 
 <script setup>
 import { useCurrencyInput } from 'vue-currency-input';
-import { watch } from 'vue';
+import { ref, watch } from 'vue';
 import CurrencyDisplay from './CurrencyDisplay.vue';
+import SumCalculatorDialog from './SumCalculatorDialog.vue';
 import { useStore } from 'src/stores/store.js';
 
 const store = useStore();
@@ -70,6 +88,12 @@ const { inputRef, formattedValue, setValue, setOptions } = useCurrencyInput({
   autoSign: true,
   locale: 'it-CH',
 });
+
+const calcDialogOpen = ref(false);
+
+const applySum = (sumCents) => {
+  emit('update:modelValue', sumCents);
+};
 
 watch(
   () => props.modelValue,

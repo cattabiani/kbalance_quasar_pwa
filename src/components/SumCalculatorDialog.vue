@@ -18,6 +18,7 @@
           placeholder="Enter numbers (e.g. 10 + 25.50 + 5 or list line-by-line)"
           autofocus
           rows="4"
+          inputmode="decimal"
         />
         <div class="row justify-between items-center q-mt-md text-subtitle1">
           <span class="text-weight-bold">Total:</span>

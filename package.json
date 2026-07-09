@@ -19,7 +19,6 @@
     "binary-search-bounds": "^2.0.5",
     "currency-codes": "^2.2.0",
     "firebase": "^12.16.0",
-    "firebaseui": "^6.1.0",
     "lodash": "^4.17.21",
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.1.3",

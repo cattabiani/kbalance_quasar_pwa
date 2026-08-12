@@ -1,0 +1,1 @@
+import{x as e}from"./index-I4SmX-EJ.js";import{t}from"./vue3-apexcharts-BhfO_0NW.js";var n=e(({app:e})=>{e.component(`apexchart`,t)});export{n as default};

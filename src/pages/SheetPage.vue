@@ -124,6 +124,31 @@
       </q-card-section>
     </q-card>
 
+    <!-- TEMP debug harness for verifying the history-cutoff math before
+         wiring it to actual scroll position. Remove once confirmed. -->
+    <q-card class="q-my-md q-mr-md q-ml-md bg-yellow-2">
+      <q-card-section>
+        <div class="text-caption">
+          DEBUG: viewing
+          {{
+            historyCutoff === null
+              ? 'live (current)'
+              : `as of ${Utils.getMonth(historyCutoff, false)} ${Utils.getDay(
+                  historyCutoff,
+                )}, ${Utils.getYear(historyCutoff)}`
+          }}
+        </div>
+        <q-slider
+          v-model="historyCutoffIndex"
+          :min="0"
+          :max="sortedTransactionIds.length"
+          :step="1"
+          label
+          :label-value="historyCutoffIndex === 0 ? 'Live' : historyCutoffIndex"
+        />
+      </q-card-section>
+    </q-card>
+
     <summary-card :summary="summary" :selectedPerson="selectedPerson" />
 
     <div class="row justify-center items-center q-pb-md">
@@ -157,6 +182,8 @@ import PeopleDropdown from 'src/components/PeopleDropdown.vue';
 import SummaryCard from 'src/components/SummaryCard.vue';
 import TransactionList from 'src/components/TransactionList.vue';
 import Results from 'src/models/results';
+import Transaction from 'src/models/transaction';
+import Utils from 'src/utils/utils';
 import { ref, watch, computed, nextTick } from 'vue';
 
 const store = useStore();
@@ -171,8 +198,42 @@ const searchString = ref(null);
 const searchActive = ref(false);
 const searchInput = ref(null);
 
+// null = viewing the live/current state. Otherwise, the timestamp of the
+// most-recent transaction still included -- i.e. "as of" this point.
+// TEMP: driven by a debug slider for now (index into the full,
+// unfiltered, newest-first transaction list). Will be replaced by
+// scroll-position detection in TransactionList.
+const historyCutoffIndex = ref(0); // 0 = live
+
+const sortedTransactionIds = computed(() =>
+  Transaction.getTransactionList(store.currentSheet?.transactions || {}),
+);
+
+const historyCutoff = computed(() => {
+  if (historyCutoffIndex.value <= 0) return null;
+  const id = sortedTransactionIds.value[historyCutoffIndex.value - 1];
+  return id ? store.currentSheet.transactions[id].timestamp : null;
+});
+
+// Historical results always fold over the *full* transaction set up to
+// the cutoff, regardless of any active search filter -- "as of" a date
+// must reflect everything that actually happened by then, not just what
+// currently matches the search.
+const historicalResults = computed(() => {
+  if (historyCutoff.value === null || !store.currentSheet?.transactions) {
+    return store.currentSheetResults;
+  }
+
+  const filtered = Object.fromEntries(
+    Object.entries(store.currentSheet.transactions).filter(
+      ([, tr]) => tr.timestamp <= historyCutoff.value,
+    ),
+  );
+  return Results.make(filtered, store.currentSheetPeople.length || 0);
+});
+
 const summary = computed(() => {
-  return Results.summary(store.currentSheetResults, selectedPersonIdx.value);
+  return Results.summary(historicalResults.value, selectedPersonIdx.value);
 });
 
 const removeTransaction = async (reset, id) => {

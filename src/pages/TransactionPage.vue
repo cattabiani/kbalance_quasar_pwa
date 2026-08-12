@@ -220,9 +220,7 @@
         class="column q-py-sm"
       >
         <div class="row items-center no-wrap full-width">
-          <div
-            :class="customCredits ? 'col-5 q-mr-sm' : 'col-auto q-mr-sm'"
-          >
+          <div :class="customCredits ? 'col-5 q-mr-sm' : 'col-auto q-mr-sm'">
             <q-radio
               v-if="!customCredits"
               v-model="payerIdx"
@@ -245,10 +243,14 @@
           <div class="col ellipsis text-weight-medium">
             <person-item :id="id" />
           </div>
+          <q-checkbox
+            v-model="debtors[index]"
+            dense
+            class="col-auto q-ml-sm"
+          />
         </div>
 
         <div class="row items-center no-wrap full-width q-mt-xs">
-          <q-checkbox v-model="debtors[index]" dense class="col-auto q-mr-sm" />
           <div class="col">
             <CurrencyInput
               :model-value="tr.debts[index]"

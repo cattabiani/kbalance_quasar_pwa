@@ -193,18 +193,14 @@
       </q-card-section>
     </q-card>
     <q-card-section class="row justify-center q-py-none">
-      <q-chip
-        clickable
-        square
-        :outline="!customCredits"
-        :color="customCredits ? 'primary' : 'grey-4'"
-        :text-color="customCredits ? 'white' : 'grey-8'"
+      <q-toggle
+        v-model="customCredits"
+        dense
+        color="primary"
         icon="group"
-        @click="customCredits = !customCredits"
-        aria-label="Toggle multiple payers"
-      >
-        Multiple payers
-      </q-chip>
+        label="Multiple payers"
+        aria-label="Enable multiple payers"
+      />
     </q-card-section>
 
     <div class="q-my-sm q-mr-md q-ml-md">

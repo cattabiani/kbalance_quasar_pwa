@@ -192,27 +192,20 @@
         />
       </q-card-section>
     </q-card>
-    <q-card-section>
-      <div class="row text-bold items-center no-wrap">
-        <div
-          class="row items-center q-ml-sm q-mr-md"
-          :style="`flex: 0 0 ${customCredits ? 18 : 5}%`"
-        >
-          <q-btn
-            dense
-            @click="customCredits = !customCredits"
-            label="Payer"
-            class="text-bold"
-            aria-label="Toggle payer mode"
-          />
-        </div>
-        <div style="flex: 1 0 30%; text-align: left">Person</div>
-        <div style="flex: 0 0 10%; text-align: center">Owes</div>
-        <div style="flex: 0 0 32%; text-align: right">Amount</div>
-      </div>
+    <q-card-section class="row items-center justify-end q-py-none">
+      <q-btn
+        dense
+        flat
+        size="sm"
+        icon="swap_horiz"
+        :label="customCredits ? 'Multiple payers' : 'Single payer'"
+        @click="customCredits = !customCredits"
+        class="text-bold"
+        aria-label="Toggle payer mode"
+      />
     </q-card-section>
 
-    <q-list class="q-my-md q-mr-md q-ml-md">
+    <q-list class="q-my-sm q-mr-md q-ml-md">
       <q-item
         v-for="(id, index) in store.currentSheetPeople"
         :key="index"
@@ -224,69 +217,59 @@
           tr.debts[index] !== 0 ||
           debtors[index]
         "
-        class="row no-wrap items-center"
+        class="column q-py-sm"
       >
-        <q-item-section
-          side
-          :style="`flex: 0 0 ${customCredits ? 25 : 5}%; text-align: left`"
-          class="q-pa-none"
-        >
-          <q-radio
-            v-if="!customCredits"
-            v-model="payerIdx"
-            :val="index"
-            dense
-          />
-          <CurrencyInput
-            v-else
-            :model-value="tr.credits[index]"
-            :currency="tr.currency"
-            dense
-            @update:model-value="
-              (val) => {
-                edited.clear();
-                Transaction.setCustomCredit(tr, val, index, debtors);
-              }
-            "
-          />
-        </q-item-section>
-        <q-item-section
-          :style="`
-    flex: 1 0 ${customCredits ? 25 : 50}%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    text-align: right;
-  `"
-        >
-          <person-item :id="id" />
-        </q-item-section>
-        <q-item-section
-          side
-          style="flex: 0 0 5%; text-align: center; margin-right: 6px"
-        >
-          <q-checkbox v-model="debtors[index]" dense />
-        </q-item-section>
-        <q-item-section side style="flex: 0 0 35%">
-          <CurrencyInput
-            :model-value="tr.debts[index]"
-            :currency="tr.currency"
-            dense
-            :readonly="!debtors[index]"
-            @update:model-value="
-              (val) =>
-                Transaction.setCustomDebt(
-                  tr,
-                  val,
-                  index,
-                  debtors,
-                  edited,
-                  youIdx,
-                )
-            "
-            :bg-color="edited.has(index) ? 'green-1' : ''"
-          />
-        </q-item-section>
+        <div class="row items-center no-wrap full-width">
+          <div
+            :class="customCredits ? 'col-5 q-mr-sm' : 'col-auto q-mr-sm'"
+          >
+            <q-radio
+              v-if="!customCredits"
+              v-model="payerIdx"
+              :val="index"
+              dense
+            />
+            <CurrencyInput
+              v-else
+              :model-value="tr.credits[index]"
+              :currency="tr.currency"
+              label="Paid"
+              @update:model-value="
+                (val) => {
+                  edited.clear();
+                  Transaction.setCustomCredit(tr, val, index, debtors);
+                }
+              "
+            />
+          </div>
+          <div class="col ellipsis text-weight-medium">
+            <person-item :id="id" />
+          </div>
+        </div>
+
+        <div class="row items-center no-wrap full-width q-mt-xs">
+          <q-checkbox v-model="debtors[index]" dense class="col-auto q-mr-sm" />
+          <div class="col">
+            <CurrencyInput
+              :model-value="tr.debts[index]"
+              :currency="tr.currency"
+              label="Owes"
+              :readonly="!debtors[index]"
+              @update:model-value="
+                (val) =>
+                  Transaction.setCustomDebt(
+                    tr,
+                    val,
+                    index,
+                    debtors,
+                    edited,
+                    youIdx,
+                  )
+              "
+              :bg-color="edited.has(index) ? 'green-1' : ''"
+            />
+          </div>
+        </div>
       </q-item>
     </q-list>
   </q-page>

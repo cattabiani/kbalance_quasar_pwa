@@ -253,12 +253,12 @@
 
         <q-card flat bordered class="col">
           <q-card-section
-            class="row items-center justify-between bg-blue-1 q-px-sm q-py-xs"
+            class="row items-center no-wrap bg-blue-1 q-px-sm q-py-xs"
           >
-            <div class="ellipsis text-body1 text-weight-bold">
+            <div class="col ellipsis text-body1 text-weight-bold">
               <person-item :id="id" />
             </div>
-            <q-checkbox v-model="debtors[index]" dense />
+            <q-checkbox v-model="debtors[index]" dense class="col-auto" />
           </q-card-section>
 
           <q-card-section class="q-pt-sm">

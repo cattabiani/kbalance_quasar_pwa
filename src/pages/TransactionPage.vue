@@ -225,23 +225,24 @@
           <q-card-section
             class="row items-center no-wrap bg-blue-1 q-px-sm q-py-xs"
           >
-            <q-radio
-              v-if="!customCredits"
-              v-model="payerIdx"
-              :val="index"
-              dense
-              label="Payer"
-              class="col-auto q-mr-sm text-caption"
-            />
+            <div v-if="!customCredits" class="col-auto q-mr-sm text-center">
+              <div
+                class="text-caption text-grey-8"
+                style="line-height: 1"
+              >
+                Payer
+              </div>
+              <q-radio v-model="payerIdx" :val="index" dense />
+            </div>
             <div class="col ellipsis text-body1 text-weight-bold">
               <person-item :id="id" />
             </div>
-            <q-checkbox
-              v-model="debtors[index]"
-              dense
-              label="Owes"
-              class="col-auto text-caption"
-            />
+            <div class="col-auto text-center">
+              <div class="text-caption text-grey-8" style="line-height: 1">
+                Owes
+              </div>
+              <q-checkbox v-model="debtors[index]" dense />
+            </div>
           </q-card-section>
 
           <q-card-section class="row items-end no-wrap q-pt-sm">

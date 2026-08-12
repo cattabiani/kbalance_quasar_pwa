@@ -34,6 +34,23 @@
               </q-item-section>
               <q-item-section class="text-primary">About</q-item-section>
             </q-item>
+            <q-item clickable v-ripple @click="showArchived = !showArchived">
+              <q-item-section avatar class="text-primary">
+                <q-icon name="archive" />
+              </q-item-section>
+              <q-item-section class="text-primary">
+                <div class="text-center">Show<br />Archived</div>
+              </q-item-section>
+              <q-item-section side>
+                <q-toggle
+                  v-model="showArchived"
+                  dense
+                  color="primary"
+                  aria-label="Show archived sheets"
+                  @click.stop
+                />
+              </q-item-section>
+            </q-item>
             <q-item clickable v-ripple @click="logout">
               <q-item-section avatar class="text-primary">
                 <q-icon name="logout" />
@@ -109,7 +126,7 @@
     <q-tab-panels v-model="activeTab" animated>
       <q-tab-panel name="Sheets" class="q-pt-sm q-pl-none q-pr-none">
         <q-card flat bordered class="q-mb-sm">
-          <q-card-section class="row items-center justify-between">
+          <q-card-section class="row justify-center">
             <q-btn
               icon="note_add"
               label="Add Sheet"
@@ -117,24 +134,6 @@
               aria-label="Add a new balance sheet"
               @click="goToNewSheetWizard"
             />
-            <q-toggle
-              v-model="showArchived"
-              dense
-              color="primary"
-              aria-label="Show archived sheets"
-            >
-              <div
-                class="row items-center q-px-sm q-py-xs rounded-borders shadow-2"
-                :class="
-                  showArchived
-                    ? 'bg-primary text-white'
-                    : 'bg-grey-4 text-grey-8'
-                "
-              >
-                <q-icon name="archive" class="q-mr-xs" />
-                <span>Show archived</span>
-              </div>
-            </q-toggle>
           </q-card-section>
 
           <template v-for="(id, index) in store.userLedgerSheets" :key="index">

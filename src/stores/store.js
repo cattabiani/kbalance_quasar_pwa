@@ -829,13 +829,9 @@ export const useStore = defineStore('mainStore', {
 
       if (isStandalone) {
         const batch = args[args.length - 1];
-
-        // Fire-and-forget the commit without awaiting it,
-        // but return the commit Promise so caller can catch errors
-        batch.commit();
+        await batch.commit();
       }
 
-      // Return result immediately without waiting for commit to finish
       return result;
     },
 

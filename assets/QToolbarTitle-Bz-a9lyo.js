@@ -1,1 +1,0 @@
-import{s as e,y as t}from"./runtime-core.esm-bundler-oLWqJZnV.js";import{c as n,x as r}from"./dom-vlDycE0d.js";var i=r({name:`QToolbarTitle`,props:{shrink:Boolean},setup(r,{slots:i}){let a=e(()=>`q-toolbar__title ellipsis`+(r.shrink===!0?` col-shrink`:``));return()=>t(`div`,{class:a.value},n(i.default))}});export{i as t};

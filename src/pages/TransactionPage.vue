@@ -197,10 +197,17 @@
         v-model="customCredits"
         dense
         color="primary"
-        icon="group"
-        label="Multiple payers"
         aria-label="Enable multiple payers"
-      />
+      >
+        <q-icon
+          name="group"
+          :color="customCredits ? 'primary' : 'grey-6'"
+          class="q-mr-xs"
+        />
+        <span :class="customCredits ? 'text-primary' : 'text-grey-6'">
+          Multiple payers
+        </span>
+      </q-toggle>
     </q-card-section>
 
     <div class="q-my-sm q-mr-md q-ml-md">

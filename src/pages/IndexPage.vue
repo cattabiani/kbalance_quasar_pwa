@@ -177,19 +177,21 @@
                 :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'"
               >
                 <q-item-section>
-                  <q-item-label
-                    :class="{
-                      'text-grey-6': store.userLedger.sheets[id].archived,
-                    }"
-                  >
-                    {{ store.userLedger.sheets[id].name
-                    }}<q-icon
+                  <div class="row items-center no-wrap">
+                    <q-icon
                       v-if="store.userLedger.sheets[id].archived"
                       name="archive"
                       size="xs"
-                      class="q-ml-xs"
+                      class="q-mr-xs"
                     />
-                  </q-item-label>
+                    <q-item-label
+                      :class="{
+                        'text-grey-6': store.userLedger.sheets[id].archived,
+                      }"
+                    >
+                      {{ store.userLedger.sheets[id].name }}
+                    </q-item-label>
+                  </div>
                 </q-item-section>
               </q-item>
             </q-slide-item>

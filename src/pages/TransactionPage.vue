@@ -218,7 +218,7 @@
     </q-card-section>
 
     <div class="q-my-sm q-mr-md q-ml-md">
-      <q-card
+      <div
         v-for="(id, index) in store.currentSheetPeople"
         :key="index"
         v-show="
@@ -228,43 +228,40 @@
           tr.debts[index] !== 0 ||
           debtors[index]
         "
-        flat
-        bordered
-        class="q-mb-sm"
+        class="row items-end no-wrap q-mb-sm"
       >
-        <q-card-section
-          class="ellipsis text-body1 text-weight-bold bg-blue-1 q-px-sm q-py-xs"
-        >
-          <person-item :id="id" />
-        </q-card-section>
-
-        <q-card-section class="row items-end no-wrap q-pt-sm">
-          <div :class="customCredits ? 'col-5 q-mr-md' : 'col-auto q-mr-md'">
-            <q-radio
-              v-if="!customCredits"
-              v-model="payerIdx"
-              :val="index"
-              dense
-            />
-            <CurrencyInput
-              v-else
-              :model-value="tr.credits[index]"
-              :currency="tr.currency"
-              label="Paid"
-              @update:model-value="
-                (val) => {
-                  edited.clear();
-                  Transaction.setCustomCredit(tr, val, index, debtors);
-                }
-              "
-            />
-          </div>
-          <q-checkbox
-            v-model="debtors[index]"
+        <div class="col-auto q-mr-sm" style="width: 84px">
+          <q-radio
+            v-if="!customCredits"
+            v-model="payerIdx"
+            :val="index"
             dense
-            class="col-auto q-mr-md"
           />
-          <div class="col">
+          <CurrencyInput
+            v-else
+            :model-value="tr.credits[index]"
+            :currency="tr.currency"
+            label="Paid"
+            @update:model-value="
+              (val) => {
+                edited.clear();
+                Transaction.setCustomCredit(tr, val, index, debtors);
+              }
+            "
+          />
+        </div>
+
+        <q-card flat bordered class="col">
+          <q-card-section
+            class="row items-center justify-between bg-blue-1 q-px-sm q-py-xs"
+          >
+            <div class="ellipsis text-body1 text-weight-bold">
+              <person-item :id="id" />
+            </div>
+            <q-checkbox v-model="debtors[index]" dense />
+          </q-card-section>
+
+          <q-card-section class="q-pt-sm">
             <CurrencyInput
               :model-value="tr.debts[index]"
               :currency="tr.currency"
@@ -283,9 +280,9 @@
               "
               :bg-color="edited.has(index) ? 'green-1' : ''"
             />
-          </div>
-        </q-card-section>
-      </q-card>
+          </q-card-section>
+        </q-card>
+      </div>
     </div>
   </q-page>
 </template>

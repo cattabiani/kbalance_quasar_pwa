@@ -192,28 +192,19 @@
         />
       </q-card-section>
     </q-card>
-    <q-card-section class="row items-center justify-between q-py-none">
-      <div class="text-caption text-grey-8">
-        <q-icon name="radio_button_checked" size="xs" class="q-mr-xs" />
-        Payer
-        <q-icon
-          name="check_box"
-          size="xs"
-          class="q-ml-md q-mr-xs"
-        />
-        Owes a share
-      </div>
-      <q-btn
+    <q-card-section class="row justify-center q-py-none">
+      <q-btn-toggle
+        v-model="customCredits"
         dense
         unelevated
-        color="warning"
-        text-color="black"
-        size="sm"
-        icon="swap_horiz"
-        :label="customCredits ? 'Multiple payers' : 'Single payer'"
-        @click="customCredits = !customCredits"
-        class="text-bold"
-        aria-label="Toggle payer mode"
+        toggle-color="warning"
+        text-color="grey-8"
+        toggle-text-color="black"
+        :options="[
+          { label: 'Single payer', value: false },
+          { label: 'Multiple payers', value: true },
+        ]"
+        aria-label="Payer mode"
       />
     </q-card-section>
 
@@ -239,12 +230,18 @@
               v-model="payerIdx"
               :val="index"
               dense
-              class="col-auto q-mr-sm"
+              label="Payer"
+              class="col-auto q-mr-sm text-caption"
             />
             <div class="col ellipsis text-body1 text-weight-bold">
               <person-item :id="id" />
             </div>
-            <q-checkbox v-model="debtors[index]" dense class="col-auto" />
+            <q-checkbox
+              v-model="debtors[index]"
+              dense
+              label="Owes"
+              class="col-auto text-caption"
+            />
           </q-card-section>
 
           <q-card-section class="row items-end no-wrap q-pt-sm">

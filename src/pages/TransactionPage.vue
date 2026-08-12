@@ -192,10 +192,20 @@
         />
       </q-card-section>
     </q-card>
-    <q-card-section class="row items-center justify-end q-py-none">
+    <q-card-section class="row items-center justify-between q-py-none">
+      <div class="text-caption text-grey-8">
+        <q-icon name="radio_button_checked" size="xs" class="q-mr-xs" />
+        Payer
+        <q-icon
+          name="check_box"
+          size="xs"
+          class="q-ml-md q-mr-xs"
+        />
+        Owes a share
+      </div>
       <q-btn
         dense
-        flat
+        outline
         size="sm"
         icon="swap_horiz"
         :label="customCredits ? 'Multiple payers' : 'Single payer'"
@@ -219,7 +229,10 @@
         "
         class="column q-py-sm"
       >
-        <div class="full-width ellipsis text-body1 text-weight-medium">
+        <div
+          class="full-width ellipsis text-body1 text-weight-bold bg-blue-1 q-px-sm q-py-xs"
+          style="border-radius: 4px"
+        >
           <person-item :id="id" />
         </div>
 

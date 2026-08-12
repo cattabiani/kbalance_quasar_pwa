@@ -108,104 +108,116 @@
     </q-tabs>
     <q-tab-panels v-model="activeTab" animated>
       <q-tab-panel name="Sheets" class="q-pt-sm q-pl-none q-pr-none">
-        <div class="row items-center justify-end q-mb-sm q-mr-sm">
-          <q-toggle
-            v-model="showArchived"
-            dense
-            color="primary"
-            label="Show archived"
-            aria-label="Show archived sheets"
-          />
-        </div>
-
-        <q-list bordered class="q-mb-sm">
-          <q-slide-item
-            v-for="(id, index) in store.userLedgerSheets"
-            :key="index"
-            @left="(event) => removeSheet(event, id, index)"
-            @right="(event) => toggleArchiveSheet(event, id)"
-            @click="editSheet(id)"
-            left-color="red"
-            right-color="grey-7"
-          >
-            <template v-slot:left>
-              <q-icon name="delete" />
-            </template>
-            <template v-slot:right>
-              <q-icon
-                :name="
-                  store.userLedger.sheets[id].archived ? 'unarchive' : 'archive'
-                "
-              />
-            </template>
-            <q-item
-              clickable
-              :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'"
+        <q-card flat bordered class="q-mb-sm">
+          <q-card-section class="row items-center justify-between">
+            <q-btn
+              icon="note_add"
+              label="Add Sheet"
+              color="primary"
+              aria-label="Add a new balance sheet"
+              @click="goToNewSheetWizard"
+            />
+            <q-toggle
+              v-model="showArchived"
+              dense
+              color="primary"
+              aria-label="Show archived sheets"
             >
-              <q-item-section>
-                <q-item-label
-                  :class="{
-                    'text-grey-6': store.userLedger.sheets[id].archived,
-                  }"
-                >
-                  {{ store.userLedger.sheets[id].name
-                  }}<q-icon
-                    v-if="store.userLedger.sheets[id].archived"
-                    name="archive"
-                    size="xs"
-                    class="q-ml-xs"
-                  />
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-slide-item>
-        </q-list>
+              <div
+                class="row items-center q-px-sm q-py-xs rounded-borders shadow-2"
+                :class="
+                  showArchived
+                    ? 'bg-primary text-white'
+                    : 'bg-grey-4 text-grey-8'
+                "
+              >
+                <q-icon name="archive" class="q-mr-xs" />
+                <span>Show archived</span>
+              </div>
+            </q-toggle>
+          </q-card-section>
 
-        <div
-          style="display: flex; justify-content: center; align-items: center"
-        >
-          <q-btn
-            icon="note_add"
-            label="Add Sheet"
-            color="primary"
-            aria-label="Add a new balance sheet"
-            @click="goToNewSheetWizard"
-          />
-        </div>
+          <template v-for="(id, index) in store.userLedgerSheets" :key="index">
+            <q-separator v-if="index > 0" />
+            <q-slide-item
+              @left="(event) => removeSheet(event, id, index)"
+              @right="(event) => toggleArchiveSheet(event, id)"
+              @click="editSheet(id)"
+              left-color="red"
+              right-color="grey-7"
+            >
+              <template v-slot:left>
+                <q-icon name="delete" />
+              </template>
+              <template v-slot:right>
+                <q-icon
+                  :name="
+                    store.userLedger.sheets[id].archived
+                      ? 'unarchive'
+                      : 'archive'
+                  "
+                />
+              </template>
+              <q-item
+                clickable
+                :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'"
+              >
+                <q-item-section>
+                  <q-item-label
+                    :class="{
+                      'text-grey-6': store.userLedger.sheets[id].archived,
+                    }"
+                  >
+                    {{ store.userLedger.sheets[id].name
+                    }}<q-icon
+                      v-if="store.userLedger.sheets[id].archived"
+                      name="archive"
+                      size="xs"
+                      class="q-ml-xs"
+                    />
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-slide-item>
+          </template>
+        </q-card>
       </q-tab-panel>
       <q-tab-panel name="Friends" class="q-pt-sm q-pl-none q-pr-none">
-        <q-list bordered class="q-mb-sm">
-          <q-slide-item
+        <q-card flat bordered class="q-mb-sm">
+          <q-card-section class="row justify-center">
+            <q-btn
+              icon="person"
+              label="Add Friend"
+              color="primary"
+              aria-label="Add a new friend"
+              @click="startReceiving"
+            />
+          </q-card-section>
+
+          <template
             v-for="(id, index) in store.userLedgerFriends"
             :key="index"
-            @left="(event) => removeFriend(event, id, index)"
-            @click="editFriendName(id)"
-            left-color="red"
           >
-            <template v-slot:left>
-              <q-icon name="delete" />
-            </template>
-            <q-item
-              clickable
-              :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'"
+            <q-separator v-if="index > 0" />
+            <q-slide-item
+              @left="(event) => removeFriend(event, id, index)"
+              @click="editFriendName(id)"
+              left-color="red"
             >
-              <q-item-section>
-                <person-item :id="id" :people="store.userLedger.friends" />
-              </q-item-section>
-            </q-item>
-          </q-slide-item>
-        </q-list>
-        <div
-          style="display: flex; justify-content: center; align-items: center"
-        >
-          <q-btn
-            icon="person"
-            label="Add Friend"
-            color="primary"
-            aria-label="Add a new friend"
-            @click="startReceiving"
-          />
-        </div>
+              <template v-slot:left>
+                <q-icon name="delete" />
+              </template>
+              <q-item
+                clickable
+                :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'"
+              >
+                <q-item-section>
+                  <person-item :id="id" :people="store.userLedger.friends" />
+                </q-item-section>
+              </q-item>
+            </q-slide-item>
+          </template>
+        </q-card>
       </q-tab-panel>
     </q-tab-panels>
   </q-page>

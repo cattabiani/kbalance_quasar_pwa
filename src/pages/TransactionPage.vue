@@ -199,10 +199,14 @@
         color="primary"
         aria-label="Enable multiple payers"
       >
-        <q-icon name="group" class="q-mr-xs" />
-        <span>
-          Multiple payers
-        </span>
+        <div
+          class="row items-center q-px-sm q-py-xs"
+          :class="customCredits ? 'bg-primary text-white' : 'bg-grey-3 text-grey-8'"
+          style="border-radius: 16px"
+        >
+          <q-icon name="group" class="q-mr-xs" />
+          <span>Multiple payers</span>
+        </div>
       </q-toggle>
     </q-card-section>
 

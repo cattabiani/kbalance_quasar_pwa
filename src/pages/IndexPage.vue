@@ -110,12 +110,11 @@
       <q-tab-panel name="Sheets" class="q-pt-sm q-pl-none q-pr-none">
         <div class="row items-center justify-end q-mb-sm q-mr-sm">
           <q-toggle
-            :model-value="!!store.userLedger.showArchivedSheets"
+            v-model="showArchived"
             dense
             color="primary"
             label="Show archived"
             aria-label="Show archived sheets"
-            @update:model-value="store.setShowArchivedSheets"
           />
         </div>
 
@@ -248,6 +247,27 @@ const editFriendNameId = ref(null);
 const isEditFriendName = ref(false);
 const newFriendName = ref(null);
 const nUsers = ref(null);
+
+// Optimistic local mirror of userLedger.showArchivedSheets: the toggle
+// should respond instantly on click rather than waiting on the Firestore
+// round-trip, which would otherwise leave it looking unresponsive.
+const showArchived = ref(!!store.userLedger.showArchivedSheets);
+
+watch(
+  () => store.userLedger?.showArchivedSheets,
+  (value) => {
+    showArchived.value = !!value;
+  },
+);
+
+watch(showArchived, async (value) => {
+  try {
+    await store.setShowArchivedSheets(value);
+  } catch (error) {
+    showArchived.value = !value;
+    $q.notify({ message: error.message || error, color: 'negative' });
+  }
+});
 
 const sendVerificationEmail = async () => {
   try {

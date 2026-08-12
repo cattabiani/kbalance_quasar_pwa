@@ -196,7 +196,7 @@
       <q-toggle
         v-model="customCredits"
         dense
-        color="warning"
+        color="primary"
         label="Multiple payers"
         aria-label="Enable multiple payers"
       />

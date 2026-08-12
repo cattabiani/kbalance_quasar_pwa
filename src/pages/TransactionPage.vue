@@ -193,21 +193,16 @@
       </q-card-section>
     </q-card>
     <q-card-section class="row justify-center q-py-none">
-      <q-toggle
-        v-model="customCredits"
+      <q-btn
+        unelevated
         dense
-        color="primary"
-        aria-label="Enable multiple payers"
-      >
-        <div
-          class="row items-center q-px-sm q-py-xs"
-          :class="customCredits ? 'bg-primary text-white' : 'bg-grey-3 text-grey-8'"
-          style="border-radius: 16px"
-        >
-          <q-icon name="group" class="q-mr-xs" />
-          <span>Multiple payers</span>
-        </div>
-      </q-toggle>
+        icon="group"
+        label="Multiple payers"
+        :color="customCredits ? 'primary' : 'grey-4'"
+        :text-color="customCredits ? 'white' : 'grey-8'"
+        @click="customCredits = !customCredits"
+        aria-label="Toggle multiple payers"
+      />
     </q-card-section>
 
     <div class="q-my-sm q-mr-md q-ml-md">

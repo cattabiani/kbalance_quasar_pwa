@@ -108,25 +108,54 @@
     </q-tabs>
     <q-tab-panels v-model="activeTab" animated>
       <q-tab-panel name="Sheets" class="q-pt-sm q-pl-none q-pr-none">
+        <div class="row items-center justify-end q-mb-sm q-mr-sm">
+          <q-toggle
+            v-model="store.showArchivedSheets"
+            dense
+            color="primary"
+            label="Show archived"
+            aria-label="Show archived sheets"
+          />
+        </div>
+
         <q-list bordered class="q-mb-sm">
           <q-slide-item
             v-for="(id, index) in store.userLedgerSheets"
             :key="index"
             @left="(event) => removeSheet(event, id, index)"
+            @right="(event) => toggleArchiveSheet(event, id)"
             @click="editSheet(id)"
             left-color="red"
+            right-color="grey-7"
           >
             <template v-slot:left>
               <q-icon name="delete" />
+            </template>
+            <template v-slot:right>
+              <q-icon
+                :name="
+                  store.userLedger.sheets[id].archived ? 'unarchive' : 'archive'
+                "
+              />
             </template>
             <q-item
               clickable
               :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'"
             >
               <q-item-section>
-                <q-item-label>{{
-                  store.userLedger.sheets[id].name
-                }}</q-item-label>
+                <q-item-label
+                  :class="{
+                    'text-grey-6': store.userLedger.sheets[id].archived,
+                  }"
+                >
+                  {{ store.userLedger.sheets[id].name
+                  }}<q-icon
+                    v-if="store.userLedger.sheets[id].archived"
+                    name="archive"
+                    size="xs"
+                    class="q-ml-xs"
+                  />
+                </q-item-label>
               </q-item-section>
             </q-item>
           </q-slide-item>
@@ -278,6 +307,15 @@ const removeSheet = async ({ reset }, id, index) => {
 const editSheet = async (id) => {
   await store.subscribeCurrentSheet(id);
   router.push({ name: 'SheetPage' });
+};
+
+const toggleArchiveSheet = async ({ reset }, id) => {
+  const archived = !store.userLedger.sheets[id].archived;
+  await store.setSheetArchived(id, archived);
+  $q.notify({
+    message: archived ? 'Sheet archived' : 'Sheet unarchived',
+  });
+  reset();
 };
 
 const editFriendName = (id) => {

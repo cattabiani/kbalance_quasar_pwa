@@ -46,6 +46,7 @@ export const useStore = defineStore('mainStore', {
 
     userLedger: null,
     currentSheet: null,
+    showArchivedSheets: false,
 
     referenceCurrency: null,
     conversionRates: null,
@@ -107,6 +108,7 @@ export const useStore = defineStore('mainStore', {
         return [];
       }
       return Object.entries(this.userLedger.sheets)
+        .filter(([, sheet]) => this.showArchivedSheets || !sheet.archived)
         .sort(([, sheetA], [, sheetB]) => sheetA.timestamp - sheetB.timestamp) // Sort by timestamp
         .map(([id]) => id);
     },
@@ -330,6 +332,23 @@ export const useStore = defineStore('mainStore', {
           });
         },
         newName,
+        batch,
+      );
+    },
+
+    // Archiving is a per-user preference (stored on the user's own ledger
+    // entry for the sheet), not on the shared sheet itself -- one person
+    // archiving a shared sheet shouldn't affect anyone else's view of it.
+    async setSheetArchived(id, archived, batch = null) {
+      return await this.autoBatch(
+        async (id, archived, batch) => {
+          const userLedgerRef = this.getUserLedgerRef();
+          batch.update(userLedgerRef, {
+            [`sheets.${id}.archived`]: archived,
+          });
+        },
+        id,
+        archived,
         batch,
       );
     },
@@ -892,6 +911,7 @@ export const useStore = defineStore('mainStore', {
       'conversionRates',
       'conversionRatesUpdatedAt',
       'conversionRatesAutoUpdateRate',
+      'showArchivedSheets',
     ],
     serializer: {
       serialize: (state) =>

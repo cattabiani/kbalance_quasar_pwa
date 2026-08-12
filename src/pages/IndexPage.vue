@@ -39,7 +39,7 @@
                 <q-icon name="archive" />
               </q-item-section>
               <q-item-section class="text-primary">
-                <div class="text-center">Show<br />Archived</div>
+                <div class="text-center">Show Archived<br />Sheets</div>
               </q-item-section>
               <q-item-section side>
                 <q-toggle

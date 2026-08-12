@@ -192,99 +192,91 @@
         />
       </q-card-section>
     </q-card>
-    <q-card-section class="row justify-center q-py-none">
-      <q-toggle
-        v-model="customCredits"
-        dense
-        color="primary"
-        aria-label="Enable multiple payers"
-      >
-        <div
-          class="row items-center q-px-sm q-py-xs rounded-borders shadow-2"
-          :class="customCredits ? 'bg-primary text-white' : 'bg-grey-4 text-grey-8'"
+    <q-card flat bordered class="q-my-md q-mr-md q-ml-md">
+      <q-card-section class="row justify-center">
+        <q-toggle
+          v-model="customCredits"
+          dense
+          color="primary"
+          aria-label="Enable multiple payers"
         >
-          <q-icon name="group" class="q-mr-xs" />
-          <span>Multiple payers</span>
-        </div>
-      </q-toggle>
-    </q-card-section>
+          <div
+            class="row items-center q-px-sm q-py-xs rounded-borders shadow-2"
+            :class="
+              customCredits ? 'bg-primary text-white' : 'bg-grey-4 text-grey-8'
+            "
+          >
+            <q-icon name="group" class="q-mr-xs" />
+            <span>Multiple payers</span>
+          </div>
+        </q-toggle>
+      </q-card-section>
 
-    <div class="q-my-sm q-mr-md q-ml-md">
-      <div
-        v-for="(id, index) in store.currentSheetPeople"
-        :key="index"
-        v-show="
-          store.currentSheet.people[id].active ||
-          seeInactive ||
-          payerIdx === index ||
-          tr.debts[index] !== 0 ||
-          debtors[index]
-        "
-        class="q-mb-sm"
-      >
-        <q-card flat bordered>
+      <template v-for="(person, i) in visiblePeople" :key="person.index">
+        <q-separator v-if="i > 0" />
+
+        <div>
           <q-card-section
             class="row items-center no-wrap bg-blue-1 q-px-sm q-py-xs"
           >
             <div v-if="!customCredits" class="col-auto q-mr-sm text-center">
-              <div
-                class="text-caption text-grey-8"
-                style="line-height: 1"
-              >
+              <div class="text-caption text-grey-8" style="line-height: 1">
                 Payer
               </div>
-              <q-radio v-model="payerIdx" :val="index" dense />
+              <q-radio v-model="payerIdx" :val="person.index" dense />
             </div>
             <div class="col ellipsis text-body1 text-weight-bold">
-              <person-item :id="id" />
+              <person-item :id="person.id" />
             </div>
             <div class="col-auto text-center">
               <div class="text-caption text-grey-8" style="line-height: 1">
                 Owes
               </div>
-              <q-checkbox v-model="debtors[index]" dense />
+              <q-checkbox v-model="debtors[person.index]" dense />
             </div>
           </q-card-section>
 
           <q-card-section class="row items-end no-wrap q-pt-sm">
             <CurrencyInput
               v-if="customCredits"
-              :model-value="tr.credits[index]"
+              :model-value="tr.credits[person.index]"
               :currency="tr.currency"
               label="Paid"
               class="col-6 q-mr-sm"
-              :align-with-sibling="tr.debts[index] !== 0"
+              :align-with-sibling="tr.debts[person.index] !== 0"
               @update:model-value="
                 (val) => {
                   edited.clear();
-                  Transaction.setCustomCredit(tr, val, index, debtors);
+                  Transaction.setCustomCredit(tr, val, person.index, debtors);
                 }
               "
             />
             <CurrencyInput
-              :model-value="tr.debts[index]"
+              :model-value="tr.debts[person.index]"
               :currency="tr.currency"
               label="Owes"
-              :readonly="!debtors[index]"
+              :readonly="!debtors[person.index]"
               :class="customCredits ? 'col-6' : 'col-12'"
-              :align-with-sibling="customCredits && tr.credits[index] !== 0"
+              :align-with-sibling="
+                customCredits && tr.credits[person.index] !== 0
+              "
               @update:model-value="
                 (val) =>
                   Transaction.setCustomDebt(
                     tr,
                     val,
-                    index,
+                    person.index,
                     debtors,
                     edited,
                     youIdx,
                   )
               "
-              :bg-color="edited.has(index) ? 'green-1' : ''"
+              :bg-color="edited.has(person.index) ? 'green-1' : ''"
             />
           </q-card-section>
-        </q-card>
-      </div>
-    </div>
+        </div>
+      </template>
+    </q-card>
   </q-page>
 </template>
 
@@ -349,6 +341,19 @@ const payerIdx = computed({
 });
 
 const customCredits = ref(payerIdx.value < 0);
+
+const visiblePeople = computed(() =>
+  store.currentSheetPeople
+    .map((id, index) => ({ id, index }))
+    .filter(
+      ({ id, index }) =>
+        store.currentSheet.people[id].active ||
+        seeInactive.value ||
+        payerIdx.value === index ||
+        tr.value.debts[index] !== 0 ||
+        debtors.value[index],
+    ),
+);
 
 const payer = computed({
   get: () => store.personIdx2Id(payerIdx.value) || '',

@@ -28,22 +28,21 @@
       @apply="applySum"
     />
 
-    <CurrencyDisplay
-      v-if="
-        store.referenceCurrency &&
-        props.currency !== store.referenceCurrency &&
-        props.modelValue !== 0
-      "
-      :currency="store.referenceCurrency"
-      :amount="
-        store.convertCurrency(
-          props.modelValue,
-          props.currency,
-          store.referenceCurrency,
-        )
-      "
-      class="text-caption text-left q-mt-xs"
-    />
+    <div class="q-mt-xs" style="min-height: 20px">
+      <CurrencyDisplay
+        v-if="store.referenceCurrency"
+        v-show="props.currency !== store.referenceCurrency && props.modelValue !== 0"
+        :currency="store.referenceCurrency"
+        :amount="
+          store.convertCurrency(
+            props.modelValue,
+            props.currency,
+            store.referenceCurrency,
+          )
+        "
+        class="text-caption text-left"
+      />
+    </div>
   </div>
 </template>
 

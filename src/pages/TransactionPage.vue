@@ -205,7 +205,9 @@
       </div>
       <q-btn
         dense
-        outline
+        unelevated
+        color="warning"
+        text-color="black"
         size="sm"
         icon="swap_horiz"
         :label="customCredits ? 'Multiple payers' : 'Single payer'"
@@ -215,11 +217,10 @@
       />
     </q-card-section>
 
-    <q-list class="q-my-sm q-mr-md q-ml-md">
-      <q-item
+    <div class="q-my-sm q-mr-md q-ml-md">
+      <q-card
         v-for="(id, index) in store.currentSheetPeople"
         :key="index"
-        :class="index % 2 === 0 ? 'bg-grey-1' : 'bg-white'"
         v-show="
           store.currentSheet.people[id].active ||
           seeInactive ||
@@ -227,17 +228,18 @@
           tr.debts[index] !== 0 ||
           debtors[index]
         "
-        class="column q-py-sm"
+        flat
+        bordered
+        class="q-mb-sm"
       >
-        <div
-          class="full-width ellipsis text-body1 text-weight-bold bg-blue-1 q-px-sm q-py-xs"
-          style="border-radius: 4px"
+        <q-card-section
+          class="ellipsis text-body1 text-weight-bold bg-blue-1 q-px-sm q-py-xs"
         >
           <person-item :id="id" />
-        </div>
+        </q-card-section>
 
-        <div class="row items-center no-wrap full-width q-mt-xs">
-          <div :class="customCredits ? 'col-5 q-mr-sm' : 'col-auto q-mr-sm'">
+        <q-card-section class="row items-end no-wrap q-pt-sm">
+          <div :class="customCredits ? 'col-5 q-mr-md' : 'col-auto q-mr-md'">
             <q-radio
               v-if="!customCredits"
               v-model="payerIdx"
@@ -260,7 +262,7 @@
           <q-checkbox
             v-model="debtors[index]"
             dense
-            class="col-auto q-mr-sm"
+            class="col-auto q-mr-md"
           />
           <div class="col">
             <CurrencyInput
@@ -282,9 +284,9 @@
               :bg-color="edited.has(index) ? 'green-1' : ''"
             />
           </div>
-        </div>
-      </q-item>
-    </q-list>
+        </q-card-section>
+      </q-card>
+    </div>
   </q-page>
 </template>
 

@@ -110,11 +110,12 @@
       <q-tab-panel name="Sheets" class="q-pt-sm q-pl-none q-pr-none">
         <div class="row items-center justify-end q-mb-sm q-mr-sm">
           <q-toggle
-            v-model="store.showArchivedSheets"
+            :model-value="!!store.userLedger.showArchivedSheets"
             dense
             color="primary"
             label="Show archived"
             aria-label="Show archived sheets"
+            @update:model-value="store.setShowArchivedSheets"
           />
         </div>
 

@@ -46,7 +46,6 @@ export const useStore = defineStore('mainStore', {
 
     userLedger: null,
     currentSheet: null,
-    showArchivedSheets: false,
 
     referenceCurrency: null,
     conversionRates: null,
@@ -108,7 +107,9 @@ export const useStore = defineStore('mainStore', {
         return [];
       }
       return Object.entries(this.userLedger.sheets)
-        .filter(([, sheet]) => this.showArchivedSheets || !sheet.archived)
+        .filter(
+          ([, sheet]) => this.userLedger.showArchivedSheets || !sheet.archived,
+        )
         .sort(([, sheetA], [, sheetB]) => sheetA.timestamp - sheetB.timestamp) // Sort by timestamp
         .map(([id]) => id);
     },
@@ -349,6 +350,19 @@ export const useStore = defineStore('mainStore', {
         },
         id,
         archived,
+        batch,
+      );
+    },
+
+    async setShowArchivedSheets(value, batch = null) {
+      return await this.autoBatch(
+        async (value, batch) => {
+          const userLedgerRef = this.getUserLedgerRef();
+          batch.update(userLedgerRef, {
+            [`showArchivedSheets`]: value,
+          });
+        },
+        value,
         batch,
       );
     },
@@ -911,7 +925,6 @@ export const useStore = defineStore('mainStore', {
       'conversionRates',
       'conversionRatesUpdatedAt',
       'conversionRatesAutoUpdateRate',
-      'showArchivedSheets',
     ],
     serializer: {
       serialize: (state) =>

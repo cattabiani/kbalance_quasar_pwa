@@ -4,6 +4,7 @@ const UserLedger = {
       name,
       friends: {},
       sheets: {},
+      showArchivedSheets: false,
     };
   },
 };

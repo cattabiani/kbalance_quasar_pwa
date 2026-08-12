@@ -184,10 +184,12 @@
                     }"
                   >
                     <q-icon
-                      v-if="store.userLedger.sheets[id].archived"
                       name="archive"
                       size="xs"
                       class="q-mr-xs"
+                      :class="{
+                        invisible: !store.userLedger.sheets[id].archived,
+                      }"
                     />
                     <q-item-label>
                       {{ store.userLedger.sheets[id].name }}

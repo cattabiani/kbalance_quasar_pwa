@@ -29,7 +29,11 @@
     />
 
     <CurrencyDisplay
-      v-if="store.referenceCurrency && props.currency !== store.referenceCurrency"
+      v-if="
+        store.referenceCurrency &&
+        props.currency !== store.referenceCurrency &&
+        (props.modelValue !== 0 || props.alignWithSibling)
+      "
       :currency="store.referenceCurrency"
       :amount="
         store.convertCurrency(
@@ -39,6 +43,7 @@
         )
       "
       class="text-caption text-left q-mt-xs"
+      :class="{ invisible: props.modelValue === 0 }"
     />
   </div>
 </template>
@@ -68,6 +73,13 @@ const props = defineProps({
     default: ``,
   },
   readonly: {
+    type: Boolean,
+    default: false,
+  },
+  // Reserve space for the conversion caption even when this field's own
+  // value is 0, so it stays aligned with a sibling field that does show
+  // one (e.g. Paid/Owes side by side). Has no effect when both are 0.
+  alignWithSibling: {
     type: Boolean,
     default: false,
   },

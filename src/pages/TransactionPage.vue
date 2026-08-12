@@ -254,6 +254,7 @@
               :currency="tr.currency"
               label="Paid"
               class="col-6 q-mr-sm"
+              :align-with-sibling="tr.debts[index] !== 0"
               @update:model-value="
                 (val) => {
                   edited.clear();
@@ -267,6 +268,7 @@
               label="Owes"
               :readonly="!debtors[index]"
               :class="customCredits ? 'col-6' : 'col-12'"
+              :align-with-sibling="customCredits && tr.credits[index] !== 0"
               @update:model-value="
                 (val) =>
                   Transaction.setCustomDebt(

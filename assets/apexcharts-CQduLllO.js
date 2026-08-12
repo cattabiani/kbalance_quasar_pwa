@@ -1,0 +1,1 @@
+import{x as e}from"./index-KUx7wyV2.js";import{t}from"./vue3-apexcharts-CVuIfIgr.js";var n=e(({app:e})=>{e.component(`apexchart`,t)});export{n as default};

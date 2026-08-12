@@ -29,23 +29,16 @@
     />
 
     <CurrencyDisplay
-      :currency="store.referenceCurrency || props.currency"
+      v-if="store.referenceCurrency && props.currency !== store.referenceCurrency"
+      :currency="store.referenceCurrency"
       :amount="
-        store.referenceCurrency
-          ? store.convertCurrency(
-              props.modelValue,
-              props.currency,
-              store.referenceCurrency,
-            )
-          : props.modelValue
+        store.convertCurrency(
+          props.modelValue,
+          props.currency,
+          store.referenceCurrency,
+        )
       "
       class="text-caption text-left q-mt-xs"
-      :class="{
-        invisible:
-          !store.referenceCurrency ||
-          props.currency === store.referenceCurrency ||
-          props.modelValue === 0,
-      }"
     />
   </div>
 </template>

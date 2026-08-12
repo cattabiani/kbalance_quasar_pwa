@@ -193,18 +193,12 @@
       </q-card-section>
     </q-card>
     <q-card-section class="row justify-center q-py-none">
-      <q-btn-toggle
+      <q-toggle
         v-model="customCredits"
         dense
-        unelevated
-        toggle-color="warning"
-        text-color="grey-8"
-        toggle-text-color="black"
-        :options="[
-          { label: 'Single payer', value: false },
-          { label: 'Multiple payers', value: true },
-        ]"
-        aria-label="Payer mode"
+        color="warning"
+        label="Multiple payers"
+        aria-label="Enable multiple payers"
       />
     </q-card-section>
 

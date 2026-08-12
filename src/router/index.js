@@ -7,7 +7,6 @@ import {
 } from 'vue-router';
 import routes from './routes';
 import { useStore } from 'src/stores/store';
-import { useQuasar } from 'quasar';
 
 export default route(() => {
   const createHistory = process.env.SERVER

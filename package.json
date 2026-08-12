@@ -6,7 +6,7 @@
   "author": "Katta <alessandro.cattabiani@gmail.com>",
   "private": true,
   "scripts": {
-    "lint": "eslint --ext .js,.vue ./",
+    "lint": "eslint ./",
     "format": "prettier --write \"**/*.{js,vue,scss,html,md,json}\" --ignore-path .gitignore",
     "test": "vitest",
     "dev": "quasar dev",
@@ -45,6 +45,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-vue": "^9.33.0",
     "gh-pages": "^6.3.0",
+    "globals": "^17.10.0",
     "jsdom": "^27.3.0",
     "postcss": "^8.4.14",
     "prettier": "^2.8.8",

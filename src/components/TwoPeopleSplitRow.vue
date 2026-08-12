@@ -77,8 +77,4 @@ const topLine = computed(() => {
     : `${props.otherName} is owed the full amount`;
 });
 
-// Bottom line color
-const colorClass = computed(() =>
-  payerIsYou.value ? 'text-green' : 'text-red',
-);
 </script>

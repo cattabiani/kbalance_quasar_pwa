@@ -1,6 +1,3 @@
-import Transaction from './transaction';
-import Utils from '../utils/utils';
-
 const Statistics = {
   getTotalMonths(startTs, endTs) {
     if (!startTs || !endTs) return { totalMonths: 0, monthIndexMap: {} };

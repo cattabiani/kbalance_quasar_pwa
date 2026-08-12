@@ -5,6 +5,9 @@ import Utils from '../../src/utils/utils.js';
 describe('Transaction.make', () => {
   it('make a transaction', () => {
     const tr = Transaction.make(3, 'USD');
+    expect(tr.currency).toBe('USD');
+    expect(tr.credits).toEqual([0, 0, 0]);
+    expect(tr.debts).toEqual([0, 0, 0]);
   });
 });
 describe('Transaction.update', () => {
@@ -658,7 +661,6 @@ describe('Transaction.settle', () => {
 });
 
 describe('Result.convert', () => {
-  const people = ['A', 'B', 'C'];
   it('convert balance', () => {
     // Classic example: 0 owes 10, 1 owes 20, 2 must receive 30
     const tr = Transaction.make(3, 'USD');

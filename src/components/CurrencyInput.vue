@@ -77,7 +77,7 @@ const props = defineProps({
   },
 });
 
-const { inputRef, formattedValue, setValue, setOptions } = useCurrencyInput({
+const { inputRef, formattedValue, setValue } = useCurrencyInput({
   currency: 'XXX',
   currencyDisplay: 'hidden',
   valueScaling: 'precision',

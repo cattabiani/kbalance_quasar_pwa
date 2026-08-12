@@ -58,7 +58,6 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
 import { useStore } from 'src/stores/store.js';
 import { useQuasar } from 'quasar';
 import { ref, computed, watch } from 'vue';
@@ -69,7 +68,6 @@ import Person from 'src/models/person';
 import _ from 'lodash';
 
 const store = useStore();
-const router = useRouter();
 const $q = useQuasar();
 
 const props = defineProps({
@@ -92,13 +90,6 @@ const peopleList = computed(() => {
   return filteredPeople.sort(
     (a, b) => people.value[a].timestamp - people.value[b].timestamp,
   );
-});
-const friends = computed(() => {
-  // Filter the friends who are not in people.value
-  return Object.values(store.userLedger.friends)
-    .filter((value) => !(value.id in people.value)) // Exclude friends already in people.value
-    .sort((a, b) => Person.compare(a, b)) // Sort by Person.compare
-    .map((friend) => friend.id); // Extract only the IDs
 });
 const editPersonName = ref(null);
 const isEditPersonDialog = ref(false);

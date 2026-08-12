@@ -5,7 +5,6 @@ import {
   getDoc,
   onSnapshot,
   deleteField,
-  runTransaction,
 } from 'firebase/firestore';
 // import { db, auth } from "src/firebase/firebase";
 import {
@@ -31,7 +30,6 @@ import UserLedger from 'src/models/userLedger';
 import Transaction from 'src/models/transaction';
 import Results from 'src/models/results';
 import Person from 'src/models/person';
-import Utils from 'src/utils/utils';
 import Config from 'src/models/config';
 import _ from 'lodash';
 
@@ -340,7 +338,7 @@ export const useStore = defineStore('mainStore', {
       if (id === this.user.id) {
         return Person.username(this.user);
       }
-      if (id in this.userLedger.friends) {
+      if (this.userLedger && id in this.userLedger.friends) {
         return Person.username(this.userLedger.friends[id]);
       }
       if (people === null) {
@@ -353,7 +351,7 @@ export const useStore = defineStore('mainStore', {
       if (id === this.user.id) {
         return !!this.user.name;
       }
-      if (id in this.userLedger?.friends) {
+      if (this.userLedger && id in this.userLedger.friends) {
         return !!this.userLedger.friends[id].name;
       }
 
@@ -367,7 +365,7 @@ export const useStore = defineStore('mainStore', {
       if (id === this.user.id) {
         return this.user.email;
       }
-      if (id in this.userLedger?.friends) {
+      if (this.userLedger && id in this.userLedger.friends) {
         return this.userLedger.friends[id].email;
       }
       if (people === null) {

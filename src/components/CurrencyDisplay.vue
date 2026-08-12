@@ -32,10 +32,9 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
 import Utils from 'src/utils/utils';
 
-const props = defineProps({
+defineProps({
   currency: String,
   amount: Number,
   referenceCurrency: { type: String, default: null },

@@ -235,6 +235,9 @@ describe('summary()', () => {
       [7, 0, 5], // total debts
     );
 
+    expect(t1.credits).toEqual(ttot.credits);
+    expect(t1.debts).toEqual(ttot.debts);
+
     const results = {
       perCurrencyBalance: { USD: t1 },
     };

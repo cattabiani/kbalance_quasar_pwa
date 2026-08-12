@@ -1,6 +1,5 @@
 // quasar.config.js
 import { configure } from 'quasar/wrappers';
-import checker from 'vite-plugin-checker';
 
 export default configure(() => ({
   boot: ['apexcharts'],

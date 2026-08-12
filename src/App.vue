@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount } from 'vue';
+import { onBeforeUnmount } from 'vue';
 import { useStore } from 'src/stores/store'; // Import your Pinia store
 
 // Access the store

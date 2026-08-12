@@ -228,45 +228,45 @@
           tr.debts[index] !== 0 ||
           debtors[index]
         "
-        class="row items-end no-wrap q-mb-sm"
+        class="q-mb-sm"
       >
-        <div class="col-auto q-mr-sm" style="width: 84px">
-          <q-radio
-            v-if="!customCredits"
-            v-model="payerIdx"
-            :val="index"
-            dense
-          />
-          <CurrencyInput
-            v-else
-            :model-value="tr.credits[index]"
-            :currency="tr.currency"
-            label="Paid"
-            @update:model-value="
-              (val) => {
-                edited.clear();
-                Transaction.setCustomCredit(tr, val, index, debtors);
-              }
-            "
-          />
-        </div>
-
-        <q-card flat bordered class="col">
+        <q-card flat bordered>
           <q-card-section
             class="row items-center no-wrap bg-blue-1 q-px-sm q-py-xs"
           >
+            <q-radio
+              v-if="!customCredits"
+              v-model="payerIdx"
+              :val="index"
+              dense
+              class="col-auto q-mr-sm"
+            />
             <div class="col ellipsis text-body1 text-weight-bold">
               <person-item :id="id" />
             </div>
             <q-checkbox v-model="debtors[index]" dense class="col-auto" />
           </q-card-section>
 
-          <q-card-section class="q-pt-sm">
+          <q-card-section class="row items-end no-wrap q-pt-sm">
+            <CurrencyInput
+              v-if="customCredits"
+              :model-value="tr.credits[index]"
+              :currency="tr.currency"
+              label="Paid"
+              class="col-6 q-mr-sm"
+              @update:model-value="
+                (val) => {
+                  edited.clear();
+                  Transaction.setCustomCredit(tr, val, index, debtors);
+                }
+              "
+            />
             <CurrencyInput
               :model-value="tr.debts[index]"
               :currency="tr.currency"
               label="Owes"
               :readonly="!debtors[index]"
+              :class="customCredits ? 'col-6' : 'col-12'"
               @update:model-value="
                 (val) =>
                   Transaction.setCustomDebt(

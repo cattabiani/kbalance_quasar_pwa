@@ -91,81 +91,79 @@
   </q-header>
 
   <q-page>
-    <q-card class="q-my-md q-mr-md q-ml-md">
-      <q-card-section class="row no-wrap items-center">
-        <div class="col-6" style="text-overflow: ellipsis; white-space: nowrap">
-          <people-dropdown
-            v-if="store.currentSheet"
-            v-model="selectedPerson"
-            :people="store.currentSheet.people"
-            :sorted-people="store.currentSheetPeople"
-            style="width: 100%"
-          />
-        </div>
+    <div
+      ref="stickyHeaderRef"
+      class="sticky-history-header bg-white"
+      style="position: sticky; top: 0; z-index: 10"
+    >
+      <q-card class="q-my-md q-mr-md q-ml-md">
+        <q-card-section class="row no-wrap items-center">
+          <div
+            class="col-6"
+            style="text-overflow: ellipsis; white-space: nowrap"
+          >
+            <people-dropdown
+              v-if="store.currentSheet"
+              v-model="selectedPerson"
+              :people="store.currentSheet.people"
+              :sorted-people="store.currentSheetPeople"
+              style="width: 100%"
+            />
+          </div>
 
-        <div
-          class="col-6"
-          style="
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            padding-left: 8px;
-          "
-        >
-          <q-input
-            v-model="name"
-            @blur="setSheetName"
-            outlined
-            label="Sheet Name"
-            dense
-            style="width: 100%"
-          />
-        </div>
-      </q-card-section>
-    </q-card>
+          <div
+            class="col-6"
+            style="
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+              padding-left: 8px;
+            "
+          >
+            <q-input
+              v-model="name"
+              @blur="setSheetName"
+              outlined
+              label="Sheet Name"
+              dense
+              style="width: 100%"
+            />
+          </div>
+        </q-card-section>
+      </q-card>
 
-    <!-- TEMP debug harness for verifying the history-cutoff math before
-         wiring it to actual scroll position. Remove once confirmed. -->
-    <q-card class="q-my-md q-mr-md q-ml-md bg-yellow-2">
-      <q-card-section>
-        <div class="text-caption">
-          DEBUG: viewing
-          {{
-            historyCutoff === null
-              ? 'live (current)'
-              : `as of ${Utils.getMonth(historyCutoff, false)} ${Utils.getDay(
-                  historyCutoff,
-                )}, ${Utils.getYear(historyCutoff)}`
-          }}
-        </div>
-        <q-slider
-          v-model="historyCutoffIndex"
-          :min="0"
-          :max="sortedTransactionIds.length"
-          :step="1"
-          label
-          :label-value="historyCutoffIndex === 0 ? 'Live' : historyCutoffIndex"
-        />
-      </q-card-section>
-    </q-card>
-
-    <summary-card :summary="summary" :selectedPerson="selectedPerson" />
-
-    <div class="row justify-center items-center q-pb-md">
-      <q-btn
-        class="bg-primary text-white"
-        icon="note_add"
-        label="Add Entry"
-        @click="addTransaction"
+      <summary-card
+        :summary="summary"
+        :selectedPerson="selectedPerson"
+        :show-detail="isSmallSheet"
+        :cutoff-timestamp="isViewingHistory ? historyCutoff : null"
       />
+
+      <div class="row justify-center items-center q-pb-md">
+        <q-btn
+          class="bg-primary text-white"
+          icon="note_add"
+          label="Add Entry"
+          @click="addTransaction"
+        />
+      </div>
     </div>
+
+    <summary-card
+      v-if="!isSmallSheet"
+      :summary="liveSummary"
+      :selectedPerson="selectedPerson"
+      :show-totals="false"
+    />
 
     <transaction-list
       :transactions="store.currentSheet?.transactions || {}"
       :selectedPerson="selectedPerson"
       :search-string="searchString"
+      :top-offset="stickyHeaderHeight"
       @remove="removeTransaction"
       @edit="editTransaction"
+      @cutoff="handleCutoff"
     />
   </q-page>
 </template>
@@ -183,8 +181,14 @@ import SummaryCard from 'src/components/SummaryCard.vue';
 import TransactionList from 'src/components/TransactionList.vue';
 import Results from 'src/models/results';
 import Transaction from 'src/models/transaction';
-import Utils from 'src/utils/utils';
-import { ref, watch, computed, nextTick } from 'vue';
+import {
+  ref,
+  watch,
+  computed,
+  nextTick,
+  onMounted,
+  onBeforeUnmount,
+} from 'vue';
 
 const store = useStore();
 const router = useRouter();
@@ -198,21 +202,53 @@ const searchString = ref(null);
 const searchActive = ref(false);
 const searchInput = ref(null);
 
-// null = viewing the live/current state. Otherwise, the timestamp of the
-// most-recent transaction still included -- i.e. "as of" this point.
-// TEMP: driven by a debug slider for now (index into the full,
-// unfiltered, newest-first transaction list). Will be replaced by
-// scroll-position detection in TransactionList.
-const historyCutoffIndex = ref(0); // 0 = live
+// The totals card only ever shows for >2 people, so for 2-person sheets the
+// detail card is the only summary content and stays small -- safe to keep
+// it sticky too. For larger sheets the detail card can grow a lot as more
+// currencies/counterparties appear, so it scrolls with the list instead.
+const isSmallSheet = computed(() => store.currentSheetPeople.length <= 2);
+
+// Tracks the sticky header's rendered height so TransactionList knows how
+// far down the "topmost visible transaction" threshold sits -- it changes
+// as the "Viewing as of" caption appears/disappears.
+const stickyHeaderRef = ref(null);
+const stickyHeaderHeight = ref(0);
+let stickyHeaderObserver = null;
+
+onMounted(() => {
+  if (stickyHeaderRef.value) {
+    stickyHeaderObserver = new ResizeObserver(([entry]) => {
+      stickyHeaderHeight.value = entry.contentRect.height;
+    });
+    stickyHeaderObserver.observe(stickyHeaderRef.value);
+  }
+});
+
+onBeforeUnmount(() => {
+  stickyHeaderObserver?.disconnect();
+});
+
+// The timestamp of the topmost transaction currently visible in
+// TransactionList -- i.e. "as of" this point. Reported by TransactionList's
+// scroll tracking. null until it reports at least once.
+const historyCutoff = ref(null);
+
+const handleCutoff = ({ timestamp }) => {
+  historyCutoff.value = timestamp;
+};
 
 const sortedTransactionIds = computed(() =>
   Transaction.getTransactionList(store.currentSheet?.transactions || {}),
 );
 
-const historyCutoff = computed(() => {
-  if (historyCutoffIndex.value <= 0) return null;
-  const id = sortedTransactionIds.value[historyCutoffIndex.value - 1];
-  return id ? store.currentSheet.transactions[id].timestamp : null;
+// The cutoff is only worth surfacing to the user once it excludes at least
+// the newest transaction -- otherwise we're still looking at "live".
+const isViewingHistory = computed(() => {
+  if (historyCutoff.value === null || !store.currentSheet?.transactions)
+    return false;
+  const newestId = sortedTransactionIds.value[0];
+  if (!newestId) return false;
+  return historyCutoff.value < store.currentSheet.transactions[newestId].timestamp;
 });
 
 // Historical results always fold over the *full* transaction set up to
@@ -234,6 +270,14 @@ const historicalResults = computed(() => {
 
 const summary = computed(() => {
   return Results.summary(historicalResults.value, selectedPersonIdx.value);
+});
+
+// Always the current, live balance -- used by the non-sticky detail card so
+// its size never changes purely because the user scrolled past it while
+// looking at history further down. Only the sticky card above reacts to
+// historyCutoff.
+const liveSummary = computed(() => {
+  return Results.summary(store.currentSheetResults, selectedPersonIdx.value);
 });
 
 const removeTransaction = async (reset, id) => {

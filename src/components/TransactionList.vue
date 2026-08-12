@@ -10,114 +10,126 @@
         >
           {{ getDividerLabel(index) }}
         </q-item>
-        <q-slide-item
-          clickable
-          :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'"
-          @click="editTransaction(id)"
-          @left="(event) => removeTransaction(event, id)"
-          left-color="red"
-          read-only
-        >
-          <template v-slot:left v-if="!disableRemove">
-            <q-icon name="delete" />
-          </template>
-          <q-item>
-            <q-card flat bordered class="q-ml-sm q-mr-sm q-pl-sm q-pr-sm">
-              <q-card-section
-                class="column q-pa-none flex justify-center items-center"
-              >
-                <div>{{ Utils.getMonth(transactions[id].timestamp) }}</div>
-                <div>{{ Utils.getDay(transactions[id].timestamp) }}</div>
-              </q-card-section>
-            </q-card>
+        <div :ref="(el) => setItemRef(id, el)" :data-tr-id="id">
+          <q-slide-item
+            clickable
+            :class="index % 2 === 0 ? 'bg-grey-3' : 'bg-white'"
+            @click="editTransaction(id)"
+            @left="(event) => removeTransaction(event, id)"
+            left-color="red"
+            read-only
+          >
+            <template v-slot:left v-if="!disableRemove">
+              <q-icon name="delete" />
+            </template>
+            <q-item>
+              <q-card flat bordered class="q-ml-sm q-mr-sm q-pl-sm q-pr-sm">
+                <q-card-section
+                  class="column q-pa-none flex justify-center items-center"
+                >
+                  <div>{{ Utils.getMonth(transactions[id].timestamp) }}</div>
+                  <div>{{ Utils.getDay(transactions[id].timestamp) }}</div>
+                </q-card-section>
+              </q-card>
 
-            <q-item-section>
-              <q-item-label
-                :class="{ 'text-grey': store.pendingTransactionIds.has(id) }"
-              >
-                {{ transactions[id].name || 'New Transaction' }}
-              </q-item-label>
-              <q-item-label caption>
-                {{ payerLabel(transactions[id]) }}
-                <CurrencyDisplay
-                  :currency="transactions[id].currency"
-                  :amount="Transaction.credit(transactions[id])"
-                  :reference-currency="store.referenceCurrency"
-                  :converted-amount="
-                    store.convertCurrency(
-                      Transaction.credit(transactions[id]),
-                      transactions[id].currency,
-                      store.referenceCurrency,
-                    )
-                  "
-                  inline-conversion
-                />
-              </q-item-label>
-            </q-item-section>
+              <q-item-section>
+                <q-item-label
+                  :class="{ 'text-grey': store.pendingTransactionIds.has(id) }"
+                >
+                  {{ transactions[id].name || 'New Transaction' }}
+                </q-item-label>
+                <q-item-label caption>
+                  {{ payerLabel(transactions[id]) }}
+                  <CurrencyDisplay
+                    :currency="transactions[id].currency"
+                    :amount="Transaction.credit(transactions[id])"
+                    :reference-currency="store.referenceCurrency"
+                    :converted-amount="
+                      store.convertCurrency(
+                        Transaction.credit(transactions[id]),
+                        transactions[id].currency,
+                        store.referenceCurrency,
+                      )
+                    "
+                    inline-conversion
+                  />
+                </q-item-label>
+              </q-item-section>
 
-            <q-item-section side>
-              <q-item-label
-                caption
-                v-if="
-                  Transaction.position(transactions[id], selectedPersonIdx) > 0
-                "
-                style="color: green"
-              >
-                {{ store.getName(selectedPerson) }} lent
-              </q-item-label>
-              <q-item-label
-                caption
-                v-if="
-                  Transaction.position(transactions[id], selectedPersonIdx) < 0
-                "
-                style="color: red"
-              >
-                {{ store.getName(selectedPerson) }} borrowed
-              </q-item-label>
-              <q-item-label
-                v-if="
-                  Transaction.position(transactions[id], selectedPersonIdx) ===
-                  0
-                "
-              >
-                {{
-                  selectedPersonIdx !== Transaction.payerIdx(transactions[id])
-                    ? 'Not Involved'
-                    : 'Personal'
-                }}
-              </q-item-label>
-              <q-item-label v-else>
-                <CurrencyDisplay
-                  :currency="transactions[id].currency"
-                  :amount="
-                    Math.abs(
-                      Transaction.position(transactions[id], selectedPersonIdx),
-                    )
-                  "
-                  :color="
-                    Transaction.position(transactions[id], selectedPersonIdx) >=
+              <q-item-section side>
+                <q-item-label
+                  caption
+                  v-if="
+                    Transaction.position(transactions[id], selectedPersonIdx) >
                     0
-                      ? 'green'
-                      : 'red'
                   "
-                  :reference-currency="store.referenceCurrency"
-                  :converted-amount="
-                    store.convertCurrency(
+                  style="color: green"
+                >
+                  {{ store.getName(selectedPerson) }} lent
+                </q-item-label>
+                <q-item-label
+                  caption
+                  v-if="
+                    Transaction.position(transactions[id], selectedPersonIdx) <
+                    0
+                  "
+                  style="color: red"
+                >
+                  {{ store.getName(selectedPerson) }} borrowed
+                </q-item-label>
+                <q-item-label
+                  v-if="
+                    Transaction.position(
+                      transactions[id],
+                      selectedPersonIdx,
+                    ) === 0
+                  "
+                >
+                  {{
+                    selectedPersonIdx !==
+                    Transaction.payerIdx(transactions[id])
+                      ? 'Not Involved'
+                      : 'Personal'
+                  }}
+                </q-item-label>
+                <q-item-label v-else>
+                  <CurrencyDisplay
+                    :currency="transactions[id].currency"
+                    :amount="
                       Math.abs(
                         Transaction.position(
                           transactions[id],
                           selectedPersonIdx,
                         ),
-                      ),
-                      transactions[id].currency,
-                      store.referenceCurrency,
-                    )
-                  "
-                />
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </q-slide-item>
+                      )
+                    "
+                    :color="
+                      Transaction.position(
+                        transactions[id],
+                        selectedPersonIdx,
+                      ) >= 0
+                        ? 'green'
+                        : 'red'
+                    "
+                    :reference-currency="store.referenceCurrency"
+                    :converted-amount="
+                      store.convertCurrency(
+                        Math.abs(
+                          Transaction.position(
+                            transactions[id],
+                            selectedPersonIdx,
+                          ),
+                        ),
+                        transactions[id].currency,
+                        store.referenceCurrency,
+                      )
+                    "
+                  />
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-slide-item>
+        </div>
       </template>
     </q-infinite-scroll>
   </div>
@@ -128,7 +140,7 @@ import Utils from 'src/utils/utils';
 import Transaction from 'src/models/transaction';
 import { useStore } from 'src/stores/store';
 import CurrencyDisplay from 'src/components/CurrencyDisplay.vue';
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
 
 const store = useStore();
 const props = defineProps({
@@ -151,6 +163,12 @@ const props = defineProps({
   searchString: {
     type: String,
     default: null,
+  },
+  // Height (px) of the sticky header sitting above this list -- the
+  // "topmost visible" transaction must clear this, not just y=0.
+  topOffset: {
+    type: Number,
+    default: 0,
   },
 });
 
@@ -202,7 +220,7 @@ const selectedPersonIdx = computed(() =>
   store.personId2Idx(props.selectedPerson),
 );
 
-const emit = defineEmits(['edit', 'remove']);
+const emit = defineEmits(['edit', 'remove', 'cutoff']);
 
 const editTransaction = (id) => {
   if (props.disableEdit) return;
@@ -238,6 +256,81 @@ watch(transactionList, () => {
   currentIndex.value = 0;
   loadMore(0, () => {});
 });
+
+// Tracks which transaction is topmost in the viewport, so the parent can
+// treat it as the "as of" cutoff for historical balances: the first
+// transaction (in newest-first order) that's still more than half visible
+// below the sticky header. Testing the row's midpoint (rather than its top
+// or bottom edge) avoids flipping on the very first covered pixel (too
+// twitchy) while still switching promptly rather than waiting for the row
+// to be entirely gone (feels laggy).
+const itemRefs = new Map();
+const setItemRef = (id, el) => {
+  if (el) itemRefs.set(id, el);
+  else itemRefs.delete(id);
+};
+
+const topmostVisibleId = ref(null);
+
+const recomputeTopmostVisibleId = () => {
+  for (const id of visibleTransactions.value) {
+    const el = itemRefs.get(id);
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const midpoint = (rect.top + rect.bottom) / 2;
+      if (midpoint >= props.topOffset) {
+        topmostVisibleId.value = id;
+        return;
+      }
+    }
+  }
+  topmostVisibleId.value =
+    visibleTransactions.value[visibleTransactions.value.length - 1] ?? null;
+};
+
+let scrollScheduled = false;
+const onScroll = () => {
+  if (scrollScheduled) return;
+  scrollScheduled = true;
+  requestAnimationFrame(() => {
+    scrollScheduled = false;
+    recomputeTopmostVisibleId();
+  });
+};
+
+onMounted(() => {
+  window.addEventListener('scroll', onScroll, { passive: true });
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onScroll);
+});
+
+watch(
+  topmostVisibleId,
+  (id) => {
+    emit('cutoff', {
+      id,
+      timestamp: id ? (props.transactions[id]?.timestamp ?? null) : null,
+    });
+  },
+  { immediate: true },
+);
+
+// Deliberately NOT watching topOffset: the sticky header's height depends
+// on the summary, which depends on the cutoff, which depends on this
+// computation -- reacting to every resize closes that loop and makes the
+// cutoff jitter as the header grows/shrinks mid-scroll. Only actual scroll
+// events (and newly-loaded items) should trigger a recompute; a stale
+// topOffset briefly during a resize is a minor, harmless lag.
+watch(
+  () => visibleTransactions.value.length,
+  async () => {
+    await nextTick();
+    recomputeTopmostVisibleId();
+  },
+  { flush: 'post' },
+);
 
 const payerLabel = (tr) => {
   const payers = Transaction.payerIdxs(tr, store.currentSheetPeople.length);

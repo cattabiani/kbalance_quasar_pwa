@@ -2,89 +2,149 @@
   <div>
     <q-card
       v-if="
+        props.showTotals &&
         (positiveTotals.length || negativeTotals.length) &&
         store.currentSheetPeople.length > 2
       "
       class="q-my-md q-mr-md q-ml-md"
     >
-      <div class="q-pa-md">
-        <div v-if="negativeTotals.length">
-          {{ store.getName(props.selectedPerson) }} owes
-          <template
-            v-for="([currency, amount], index) in negativeTotals"
-            :key="currency"
-          >
-            <CurrencyDisplay
-              :currency="currency"
-              :amount="-amount"
-              color="red"
-              :converted-amount="
-                store.convertCurrency(
-                  -amount,
-                  currency,
-                  store.referenceCurrency,
-                )
-              "
-              :reference-currency="store.referenceCurrency"
-            />
-            <span v-if="index < negativeTotals.length - 1"> + </span>
-          </template>
+      <div class="row no-wrap items-stretch">
+        <div v-if="props.cutoffTimestamp" class="cutoff-badge bg-secondary text-white">
+          <div class="text-caption">
+            {{ Utils.getMonth(props.cutoffTimestamp) }}
+          </div>
+          <div class="text-caption">
+            {{ Utils.getDay(props.cutoffTimestamp) }}
+          </div>
         </div>
+        <div class="q-pa-md col" style="min-width: 0">
+          <div v-if="negativeTotals.length" class="row no-wrap items-center">
+            <span
+              class="ellipsis q-mr-xs"
+              style="min-width: 0; flex-shrink: 1"
+            >
+              {{ store.getName(props.selectedPerson) }} owes
+            </span>
+            <span class="row no-wrap items-center" style="flex-shrink: 0">
+              <template
+                v-for="([currency, amount], index) in negativeTotals"
+                :key="currency"
+              >
+                <CurrencyDisplay
+                  :currency="currency"
+                  :amount="-amount"
+                  color="red"
+                  :converted-amount="
+                    store.convertCurrency(
+                      -amount,
+                      currency,
+                      store.referenceCurrency,
+                    )
+                  "
+                  :reference-currency="store.referenceCurrency"
+                />
+                <span v-if="index < negativeTotals.length - 1"
+                  >&nbsp;+&nbsp;</span
+                >
+              </template>
+            </span>
+          </div>
 
-        <div v-if="positiveTotals.length">
-          {{ store.getName(props.selectedPerson) }} is owed
-          <template
-            v-for="([currency, amount], index) in positiveTotals"
-            :key="currency"
-          >
-            <CurrencyDisplay
-              :currency="currency"
-              :amount="amount"
-              color="green"
-              :converted-amount="
-                store.convertCurrency(amount, currency, store.referenceCurrency)
-              "
-              :reference-currency="store.referenceCurrency"
-            />
-            <span v-if="index < positiveTotals.length - 1"> + </span>
-          </template>
+          <div v-if="positiveTotals.length" class="row no-wrap items-center">
+            <span
+              class="ellipsis q-mr-xs"
+              style="min-width: 0; flex-shrink: 1"
+            >
+              {{ store.getName(props.selectedPerson) }} is owed
+            </span>
+            <span class="row no-wrap items-center" style="flex-shrink: 0">
+              <template
+                v-for="([currency, amount], index) in positiveTotals"
+                :key="currency"
+              >
+                <CurrencyDisplay
+                  :currency="currency"
+                  :amount="amount"
+                  color="green"
+                  :converted-amount="
+                    store.convertCurrency(
+                      amount,
+                      currency,
+                      store.referenceCurrency,
+                    )
+                  "
+                  :reference-currency="store.referenceCurrency"
+                />
+                <span v-if="index < positiveTotals.length - 1"
+                  >&nbsp;+&nbsp;</span
+                >
+              </template>
+            </span>
+          </div>
         </div>
       </div>
     </q-card>
 
     <q-card
-      v-if="!props.summary || Object.keys(props.summary).length === 0"
+      v-if="
+        props.showDetail &&
+        (!props.summary || Object.keys(props.summary).length === 0)
+      "
       class="q-my-md q-mr-md q-ml-md"
     >
-      <div class="q-pa-md">
-        <div>All Settled!</div>
+      <div class="row no-wrap items-stretch">
+        <div v-if="props.cutoffTimestamp" class="cutoff-badge bg-secondary text-white">
+          <div class="text-caption">
+            {{ Utils.getMonth(props.cutoffTimestamp) }}
+          </div>
+          <div class="text-caption">
+            {{ Utils.getDay(props.cutoffTimestamp) }}
+          </div>
+        </div>
+        <div class="q-pa-md col">
+          <div>All Settled!</div>
+        </div>
       </div>
     </q-card>
 
-    <q-card v-if="summaryItems.length" class="q-my-md q-mr-md q-ml-md">
-      <div class="q-pa-md">
-        <div v-for="item in summaryItems" :key="item.id">
-          <span>
-            {{ store.getName(store.personIdx2Id(item.debtorIdx)) }}
-          </span>
-          <span> owes </span>
-          <span>
-            {{ store.getName(store.personIdx2Id(item.creditorIdx)) }}
-            &nbsp;
-          </span>
-          <CurrencyDisplay
-            :currency="item.currency"
-            :amount="item.amount"
-            :color="item.creditorIdx === selectedPersonIdx ? 'green' : 'red'"
-            :converted-amount="
-              store.convertCurrency(
-                Math.abs(item.amount),
-                item.currency,
-                store.referenceCurrency,
-              )
-            "
-            :reference-currency="store.referenceCurrency"
-          />
+    <q-card
+      v-if="props.showDetail && summaryItems.length"
+      class="q-my-md q-mr-md q-ml-md"
+    >
+      <div class="row no-wrap items-stretch">
+        <div v-if="props.cutoffTimestamp" class="cutoff-badge bg-secondary text-white">
+          <div class="text-caption">
+            {{ Utils.getMonth(props.cutoffTimestamp) }}
+          </div>
+          <div class="text-caption">
+            {{ Utils.getDay(props.cutoffTimestamp) }}
+          </div>
+        </div>
+        <div class="q-pa-md col" style="min-width: 0">
+          <div
+            v-for="item in summaryItems"
+            :key="item.id"
+            class="row no-wrap items-center"
+          >
+            <span class="ellipsis q-mr-xs" style="min-width: 0; flex-shrink: 1">
+              {{ store.getName(store.personIdx2Id(item.debtorIdx)) }} owes
+              {{ store.getName(store.personIdx2Id(item.creditorIdx)) }}
+            </span>
+            <CurrencyDisplay
+              style="flex-shrink: 0"
+              :currency="item.currency"
+              :amount="item.amount"
+              :color="item.creditorIdx === selectedPersonIdx ? 'green' : 'red'"
+              :converted-amount="
+                store.convertCurrency(
+                  Math.abs(item.amount),
+                  item.currency,
+                  store.referenceCurrency,
+                )
+              "
+              :reference-currency="store.referenceCurrency"
+            />
+          </div>
         </div>
       </div>
     </q-card>
@@ -94,6 +154,7 @@
 <script setup>
 import { useStore } from 'src/stores/store';
 import CurrencyDisplay from 'src/components/CurrencyDisplay.vue';
+import Utils from 'src/utils/utils';
 
 import { computed } from 'vue';
 
@@ -107,6 +168,20 @@ const props = defineProps({
   selectedPerson: {
     type: [String],
     required: true,
+  },
+  showTotals: {
+    type: Boolean,
+    default: true,
+  },
+  showDetail: {
+    type: Boolean,
+    default: true,
+  },
+  // When set, shows a small month/day badge spanning the full card height
+  // on the left, indicating the historical cutoff this summary reflects.
+  cutoffTimestamp: {
+    type: Number,
+    default: null,
   },
 });
 
@@ -146,3 +221,13 @@ const negativeTotals = computed(() => {
     .map(([currency, data]) => [currency, data.total]); // [[currency, amount], ...]
 });
 </script>
+
+<style scoped>
+.cutoff-badge {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-width: 44px;
+}
+</style>

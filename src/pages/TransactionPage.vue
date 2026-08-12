@@ -199,12 +199,8 @@
         color="primary"
         aria-label="Enable multiple payers"
       >
-        <q-icon
-          name="group"
-          :color="customCredits ? 'primary' : 'grey-6'"
-          class="q-mr-xs"
-        />
-        <span :class="customCredits ? 'text-primary' : 'text-grey-6'">
+        <q-icon name="group" class="q-mr-xs" />
+        <span>
           Multiple payers
         </span>
       </q-toggle>

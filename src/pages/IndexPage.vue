@@ -17,15 +17,20 @@
                 <q-icon name="qr_code" />
               </q-item-section>
               <q-item-section class="text-primary">
-                <div class="text-center">Share<br />Settings</div>
+                Share Settings
               </q-item-section>
             </q-item>
-            <q-item clickable v-ripple @click="goToConversionRatesSettings">
+            <q-item
+              clickable
+              v-ripple
+              class="bg-grey-2"
+              @click="goToConversionRatesSettings"
+            >
               <q-item-section avatar class="text-primary">
                 <q-icon name="qcurrency_exchange" />
               </q-item-section>
               <q-item-section class="text-primary">
-                <div class="text-center">Conversions<br />Rates</div>
+                Conversion Rates
               </q-item-section>
             </q-item>
             <q-item clickable v-ripple @click="showAbout = true">
@@ -34,12 +39,22 @@
               </q-item-section>
               <q-item-section class="text-primary">About</q-item-section>
             </q-item>
-            <q-item clickable v-ripple @click="showArchived = !showArchived">
-              <q-item-section avatar class="text-primary">
+            <q-item
+              clickable
+              v-ripple
+              class="bg-grey-2"
+              @click="showArchived = !showArchived"
+            >
+              <q-item-section
+                avatar
+                :class="showArchived ? 'text-primary' : 'text-grey-6'"
+              >
                 <q-icon name="archive" />
               </q-item-section>
-              <q-item-section class="text-primary">
-                <div class="text-center">Show Archived<br />Sheets</div>
+              <q-item-section
+                :class="showArchived ? 'text-primary' : 'text-grey-6'"
+              >
+                Show Archived Sheets
               </q-item-section>
               <q-item-section side>
                 <q-toggle

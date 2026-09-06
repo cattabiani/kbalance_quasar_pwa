@@ -189,10 +189,27 @@ const selectedPersonIdx = computed(() =>
   store.personId2Idx(props.selectedPerson),
 );
 
-const summaryItems = computed(() => {
-  if (!props.summary) return [];
+// Display order for every currency-keyed list in this card: the user's
+// preferred (reference) currency first when it is set and actually present,
+// then the rest alphabetically. Results.summary already drops currencies
+// whose total is zero, so everything reaching here has a real balance.
+const compareCurrencies = (a, b) => {
+  const preferred = store.referenceCurrency;
+  if (preferred) {
+    if (a === preferred) return -1;
+    if (b === preferred) return 1;
+  }
+  return a.localeCompare(b);
+};
 
-  const ans = Object.entries(props.summary).flatMap(([currency, data]) => {
+const sortedSummaryEntries = computed(() =>
+  Object.entries(props.summary || {}).sort(([a], [b]) =>
+    compareCurrencies(a, b),
+  ),
+);
+
+const summaryItems = computed(() => {
+  return sortedSummaryEntries.value.flatMap(([currency, data]) => {
     const list = data.transactions;
 
     if (!Array.isArray(list)) return [];
@@ -205,18 +222,16 @@ const summaryItems = computed(() => {
       debtorIdx: tx.debtorIdx,
     }));
   });
-
-  return ans;
 });
 
 const positiveTotals = computed(() => {
-  return Object.entries(props.summary)
+  return sortedSummaryEntries.value
     .filter(([_, data]) => data.total > 0)
     .map(([currency, data]) => [currency, data.total]); // [[currency, amount], ...]
 });
 
 const negativeTotals = computed(() => {
-  return Object.entries(props.summary)
+  return sortedSummaryEntries.value
     .filter(([_, data]) => data.total < 0)
     .map(([currency, data]) => [currency, data.total]); // [[currency, amount], ...]
 });

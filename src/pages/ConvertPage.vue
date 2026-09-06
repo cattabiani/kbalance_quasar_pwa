@@ -289,7 +289,7 @@ const summary = computed(() => {
 //   return Results.getSummary(results.value, selectedPersonIdx.value);
 // });
 
-const saveAndGoBack = async () => {
+const saveAndGoBack = () => {
   const newTransactions = convertionTransactions.value;
   if (!newTransactions || Object.keys(newTransactions).length === 0) {
     $q.notify({
@@ -298,15 +298,19 @@ const saveAndGoBack = async () => {
     });
     return;
   }
-  try {
-    await store.addTransactions(newTransactions);
-    goBack();
-  } catch (error) {
+
+  // Deliberately not awaited -- see the same pattern in TransactionPage.
+  // Firestore queues the writes into its local cache synchronously, so the
+  // snapshot listener already reports them; batch.commit() only resolves on
+  // server acknowledgement, and blocking navigation on that round trip is
+  // what made saving feel slow (and never resolves at all while offline).
+  store.addTransactions(newTransactions).catch((error) => {
     $q.notify({
       message: error.message || error,
       color: 'negative',
     });
-    return;
-  }
+  });
+
+  goBack();
 };
 </script>

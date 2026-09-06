@@ -127,7 +127,7 @@ const goBack = () => {
   router.go(-1);
 };
 
-const saveAndGoBack = async () => {
+const saveAndGoBack = () => {
   const tr = settleTr.value;
   if (!tr || Transaction.isEmpty(tr)) {
     $q.notify({
@@ -136,15 +136,19 @@ const saveAndGoBack = async () => {
     });
     return;
   }
-  try {
-    await store.addTransactions({ [tr.id]: tr });
-    goBack();
-  } catch (error) {
+
+  // Deliberately not awaited -- see the same pattern in TransactionPage.
+  // Firestore queues the writes into its local cache synchronously, so the
+  // snapshot listener already reports them; batch.commit() only resolves on
+  // server acknowledgement, and blocking navigation on that round trip is
+  // what made saving feel slow (and never resolves at all while offline).
+  store.addTransactions({ [tr.id]: tr }).catch((error) => {
     $q.notify({
       message: error.message || error,
       color: 'negative',
     });
-    return;
-  }
+  });
+
+  goBack();
 };
 </script>

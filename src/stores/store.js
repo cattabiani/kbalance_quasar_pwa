@@ -161,9 +161,13 @@ export const useStore = defineStore('mainStore', {
       if (!navigator.onLine) {
         this.pendingTransactionIds.add(transaction.id);
       }
+      // No need to delete first: an edited transaction keeps its id, so the
+      // update below overwrites it in place. Deleting `this.transactionId`
+      // here was also wrong for every batched caller (addTransactions,
+      // repairSheet), which would queue that same unrelated delete once per
+      // transaction it wrote.
       return await this.autoBatch(
         async (transaction, batch) => {
-          await this.removeTransaction(this.transactionId, batch);
           const sheetRef = this.getSheetRef(this.currentSheet.id);
           batch.update(sheetRef, {
             [`transactions.${transaction.id}`]: transaction,

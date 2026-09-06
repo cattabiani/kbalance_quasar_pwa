@@ -251,10 +251,20 @@ const isFinished = computed(
   () => currentIndex.value >= transactionList.value.length,
 );
 
-watch(transactionList, () => {
+watch(transactionList, async () => {
   visibleTransactions.value = [];
   currentIndex.value = 0;
   loadMore(0, () => {});
+
+  // The cutoff must be recomputed here, not just by the length watcher
+  // below: refilling the first page usually lands on the same length it
+  // started at (20 -> 0 -> 20 inside a single flush), so that watcher sees
+  // no change and never fires. Without this, a transaction arriving from
+  // anywhere -- our own save, another device, a delete -- leaves the cutoff
+  // pinned to a row that is no longer topmost, and the parent's totals go
+  // on excluding the very transaction that just arrived.
+  await nextTick();
+  recomputeTopmostVisibleId();
 });
 
 // Tracks which transaction is topmost in the viewport, so the parent can

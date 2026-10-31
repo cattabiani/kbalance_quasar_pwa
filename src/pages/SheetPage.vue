@@ -283,7 +283,7 @@ const liveSummary = computed(() => {
 const removeTransaction = async (reset, id) => {
   try {
     const message = `Are you sure you want to remove ${
-      store.currentSheet.transactions[id] || '(New Transaction)'
+      store.currentSheet.transactions[id]?.name || '(New Transaction)'
     }?`;
 
     $q.notify({

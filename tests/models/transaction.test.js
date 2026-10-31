@@ -36,6 +36,19 @@ describe('Transaction.update', () => {
   });
 });
 
+describe('Transaction.name', () => {
+  it('Returns the name when set', () => {
+    const tr = Transaction.make(2, 'USD');
+    tr.name = 'Dinner';
+    expect(Transaction.name(tr)).toBe('Dinner');
+  });
+
+  it('Falls back for unnamed or missing transactions', () => {
+    expect(Transaction.name(Transaction.make(2, 'USD'))).toBe('New Transaction');
+    expect(Transaction.name(undefined)).toBe('New Transaction');
+  });
+});
+
 describe('Transaction.credit', () => {
   it('The total credit is the sum', () => {
     const tr = Transaction.make(3, 'USD');

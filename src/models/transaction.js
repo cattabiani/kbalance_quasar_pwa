@@ -53,6 +53,10 @@ const Transaction = {
     delete tr.payer;
   },
 
+  name(tr) {
+    return tr?.name || 'New Transaction';
+  },
+
   credit(tr) {
     this.update(tr);
     return tr.credits.reduce((sum, v) => sum + v, 0);

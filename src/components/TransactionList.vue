@@ -36,7 +36,7 @@
                 <q-item-label
                   :class="{ 'text-grey': store.pendingTransactionIds.has(id) }"
                 >
-                  {{ transactions[id].name || 'New Transaction' }}
+                  {{ Transaction.name(transactions[id]) }}
                 </q-item-label>
                 <q-item-label caption>
                   {{ payerLabel(transactions[id]) }}
@@ -187,7 +187,7 @@ const transactionList = computed(() => {
     const tr = props.transactions[id];
     if (isNum) return Transaction.searchString(tr).includes(search);
 
-    return tr.name.toLowerCase().includes(search);
+    return Transaction.name(tr).toLowerCase().includes(search);
   });
 });
 

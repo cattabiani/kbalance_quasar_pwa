@@ -624,8 +624,11 @@ export const useStore = defineStore('mainStore', {
         await this.subscribeUserLedger();
       }
 
-      if (this.currentSheetId) {
+      if (this.currentSheetId && this.userLedger) {
+        // restore the sheet that was open when the app was closed
         await this.subscribeCurrentSheet(this.currentSheetId);
+      } else {
+        this.clearCurrentSheet();
       }
 
       // update conversion rates if necessary
@@ -694,6 +697,7 @@ export const useStore = defineStore('mainStore', {
 
     async logout() {
       this.clearUserLedger();
+      this.clearCurrentSheet();
       if (auth?.currentUser) {
         await auth?.signOut();
       }
@@ -796,22 +800,27 @@ export const useStore = defineStore('mainStore', {
       let returnPromise = true;
       await new Promise((resolve) => {
         const sheetRef = this.getSheetRef(id);
-        this.unsubscribeCurrentSheet = onSnapshot(sheetRef, async (doc) => {
-          if (doc.exists()) {
-            const data = doc.data();
-            this.currentSheet = data;
-          }
-
-          await this.updateFriends();
-
+        const done = () => {
           if (returnPromise) {
             returnPromise = false;
             resolve();
           }
-        });
+        };
+        this.unsubscribeCurrentSheet = onSnapshot(
+          sheetRef,
+          async (doc) => {
+            if (doc.exists()) {
+              this.currentSheet = doc.data();
+              await this.updateFriends();
+            }
+            done();
+          },
+          // e.g. no access anymore: behave as if there is no sheet
+          done,
+        );
       });
 
-      this.currentSheetId = this.currentSheet.id || null;
+      this.currentSheetId = this.currentSheet?.id || null;
     },
 
     async updateFriends(batch = null) {

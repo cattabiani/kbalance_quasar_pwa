@@ -361,7 +361,12 @@ const repairSheet = async () => {
 const goBack = () => {
   try {
     store.clearCurrentSheet();
-    router.go(-1);
+    // When the sheet was restored on app start there is no page behind it
+    if (window.history.state?.back) {
+      router.go(-1);
+    } else {
+      router.replace({ name: 'IndexPage' });
+    }
   } catch (error) {
     $q.notify({
       message: error.message || error,

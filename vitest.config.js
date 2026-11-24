@@ -7,6 +7,8 @@ export default defineConfig({
   resolve: {
     alias: {
       src: resolve(__dirname, 'src'),
+      pages: resolve(__dirname, 'src/pages'),
+      layouts: resolve(__dirname, 'src/layouts'),
     },
   },
   test: {

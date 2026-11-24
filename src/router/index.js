@@ -7,6 +7,7 @@ import {
 } from 'vue-router';
 import routes from './routes';
 import { useStore } from 'src/stores/store';
+import { resolveNavigation } from './guards';
 
 export default route(() => {
   const createHistory = process.env.SERVER
@@ -25,30 +26,14 @@ export default route(() => {
   let isInit = true;
 
   // Protect routes with an auth check
-  Router.beforeEach(async (to, from, next) => {
+  Router.beforeEach(async (to) => {
+    const isInitialNavigation = isInit;
     if (isInit) {
       await store.init();
       isInit = false;
     }
 
-    if (
-      to.matched.some((record) => record.meta.requiresFirebase) &&
-      !store.firebaseReady
-    ) {
-      next({ name: 'SettingsPage' });
-    } else if (
-      to.matched.some((record) => record.meta.requiresAuth) &&
-      !store.isReady()
-    ) {
-      next({ name: 'LoginPage' });
-    } else if (
-      to.matched.some((record) => record.meta.requiresSheet) &&
-      !store.isSheet
-    ) {
-      next({ name: 'IndexPage' });
-    } else {
-      next();
-    }
+    return resolveNavigation(to, store, isInitialNavigation) ?? true;
   });
 
   return Router;

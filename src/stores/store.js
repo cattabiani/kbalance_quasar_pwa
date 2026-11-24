@@ -696,8 +696,9 @@ export const useStore = defineStore('mainStore', {
     },
 
     async logout() {
+      // keep currentSheetId: logout() also runs on every app start (via
+      // initFirebase -> clearFirebase) and the sheet must survive that
       this.clearUserLedger();
-      this.clearCurrentSheet();
       if (auth?.currentUser) {
         await auth?.signOut();
       }
@@ -705,6 +706,7 @@ export const useStore = defineStore('mainStore', {
 
     async login(username, password) {
       this.logout();
+      this.clearCurrentSheet(); // don't reopen a sheet of a previous account
       if (app === null) {
         await this.initFirebase();
       }
@@ -715,6 +717,7 @@ export const useStore = defineStore('mainStore', {
 
     async register(email, password) {
       await this.logout();
+      this.clearCurrentSheet();
 
       if (!this.isFirebaseReady) {
         await this.initFirebase();

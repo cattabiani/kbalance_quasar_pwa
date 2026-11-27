@@ -19,13 +19,13 @@ service cloud.firestore {
     }
 
     // Admin: full access to everything, including list queries and
-    // subcollections. For the planned admin page (#41).
+    // subcollections. Used by the admin page (#/admin).
     match /{path=**} {
       allow read, write: if isAdmin();
     }
 
-    // App-wide settings for the planned version gate (#42). Everyone signed
-    // in reads, only the admin writes (via the rule above).
+    // App-wide settings: minSchemaVersion for the version gate. Everyone
+    // signed in reads, only the admin writes (via the rule above).
     match /config/app {
       allow read: if isSignedIn();
     }

@@ -180,3 +180,37 @@ export function compareRestore(backupDocs, liveDocs) {
     return { path, status, name: labels[path] };
   });
 }
+
+// Checks a new config/app.minSchemaVersion before saving it (#42).
+// Returns { errors, warnings }: errors block saving.
+export function checkMinimum(docs, minimum) {
+  const errors = [];
+  const warnings = [];
+  for (const [collection, min] of Object.entries(minimum)) {
+    if (!isVersioned(collection)) {
+      errors.push(`${collection} is not versioned.`);
+      continue;
+    }
+    if (!Number.isInteger(min) || min < 0) {
+      errors.push(`${collection}: the minimum must be a whole number ≥ 0.`);
+      continue;
+    }
+    if (min > currentVersion(collection)) {
+      errors.push(
+        `${collection}: ${min} is newer than this app (v${currentVersion(
+          collection,
+        )}); ` + 'it would lock you out too.',
+      );
+    }
+    const below = Object.entries(docs).filter(
+      ([path, data]) =>
+        collectionOf(path) === collection && (data.schemaVersion ?? 0) < min,
+    ).length;
+    if (below) {
+      warnings.push(
+        `${collection}: ${below} document(s) are below v${min}. Migrate first.`,
+      );
+    }
+  }
+  return { errors, warnings };
+}

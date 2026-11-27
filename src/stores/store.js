@@ -28,7 +28,12 @@ import {
 import Sheet from 'src/models/sheet';
 import UserLedger from 'src/models/userLedger';
 import Transaction from 'src/models/transaction';
-import { upgrade } from 'src/models/schema';
+import {
+  upgrade,
+  currentVersion,
+  isVersioned,
+  isNewerThanBuild,
+} from 'src/models/schema';
 import Results from 'src/models/results';
 import Person from 'src/models/person';
 import Config from 'src/models/config';
@@ -95,13 +100,28 @@ export const useStore = defineStore('mainStore', {
     config: Config.make(),
     pendingTransactionIds: new Set(),
 
+    // version gate (#42): config/app.minSchemaVersion, and whether data
+    // written by a newer build was seen
+    minSchemaVersion: null,
+    newerDataSeen: false,
+
     // listeners
     unsubscribeUserLedger: null,
+    unsubscribeAppConfig: null,
     unsubscribeCurrentSheet: null,
     onlineHandler: null,
   }),
 
   getters: {
+    // This build is too old for the data: it must reload before writing.
+    isOutdated() {
+      if (this.newerDataSeen) return true;
+      return Object.entries(this.minSchemaVersion ?? {}).some(
+        ([collection, min]) =>
+          isVersioned(collection) && currentVersion(collection) < min,
+      );
+    },
+
     isSheet() {
       return this.currentSheet !== null;
     },
@@ -806,10 +826,27 @@ export const useStore = defineStore('mainStore', {
       this.unsubscribeUserLedger?.();
       this.unsubscribeUserLedger = null;
       this.userLedger = null;
+      this.unsubscribeAppConfig?.();
+      this.unsubscribeAppConfig = null;
+      this.minSchemaVersion = null;
+    },
+
+    // Data written by a newer build: this one must not touch it (#42).
+    noteVersion(collection, data) {
+      if (isNewerThanBuild(collection, data)) this.newerDataSeen = true;
     },
 
     async subscribeUserLedger() {
       this.clearUserLedger();
+
+      // version gate (#42); a missing config/app means no minimum
+      this.unsubscribeAppConfig = onSnapshot(
+        doc(db, 'config', 'app'),
+        (snapshot) => {
+          this.minSchemaVersion = snapshot.data()?.minSchemaVersion ?? null;
+        },
+        (e) => console.error('Cannot read config/app', e),
+      );
 
       let returnPromise = true;
       await new Promise((resolve) => {
@@ -817,6 +854,7 @@ export const useStore = defineStore('mainStore', {
         this.unsubscribeUserLedger = onSnapshot(userLedgerRef, (doc) => {
           if (doc.exists()) {
             this.userLedger = readDoc('users', doc);
+            this.noteVersion('users', this.userLedger);
           }
           if (returnPromise) {
             returnPromise = false;
@@ -850,6 +888,7 @@ export const useStore = defineStore('mainStore', {
           async (doc) => {
             if (doc.exists()) {
               this.currentSheet = readDoc('sheets', doc);
+              this.noteVersion('sheets', this.currentSheet);
               await this.updateFriends();
             }
             done();
@@ -904,6 +943,9 @@ export const useStore = defineStore('mainStore', {
 
     // utils
     async autoBatch(fn, ...args) {
+      if (this.isOutdated) {
+        throw new Error('This version of kBalance is outdated: reload it.');
+      }
       const isStandalone = !args[args.length - 1];
       if (isStandalone) {
         args[args.length - 1] = writeBatch(db);

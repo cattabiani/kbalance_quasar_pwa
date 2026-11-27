@@ -194,6 +194,58 @@
           </q-card-actions>
         </q-card>
 
+        <!-- Version gate -->
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Version gate</div>
+            <p>
+              The oldest app version allowed to use the data. Raise it after a
+              migration that old app versions can't handle: they then show
+              "Update needed" and must reload. Only raise it once your own
+              devices run the new version.
+            </p>
+            <div class="row q-gutter-md items-center">
+              <q-input
+                v-for="(value, collection) in gateEdit"
+                :key="collection"
+                v-model.number="gateEdit[collection]"
+                type="number"
+                min="0"
+                outlined
+                dense
+                style="width: 150px"
+                :label="collection"
+                :hint="`this app: v${buildVersion[collection]}`"
+              />
+            </div>
+            <div
+              v-if="gateCheck.errors.length || gateCheck.warnings.length"
+              class="q-mt-md"
+            >
+              <div v-for="e in gateCheck.errors" :key="e" class="text-negative">
+                {{ e }}
+              </div>
+              <div
+                v-for="w in gateCheck.warnings"
+                :key="w"
+                class="text-warning"
+              >
+                {{ w }}
+              </div>
+            </div>
+          </q-card-section>
+          <q-card-actions>
+            <q-btn
+              color="primary"
+              icon="save"
+              label="Save minimum"
+              :loading="busy === 'gate'"
+              :disable="!!busy || !gateChanged || !!gateCheck.errors.length"
+              @click="saveGate"
+            />
+          </q-card-actions>
+        </q-card>
+
         <!-- Restore -->
         <q-card>
           <q-card-section>
@@ -282,10 +334,12 @@ defineOptions({ name: 'AdminPage' });
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { exportFile, useQuasar } from 'quasar';
+import { currentVersion, VERSIONED_COLLECTIONS } from 'src/models/schema';
 import _ from 'lodash';
 import { useStore } from 'src/stores/store';
 import {
   backupFileName,
+  checkMinimum,
   compareRestore,
   makeBackup,
   parseBackup,
@@ -303,6 +357,26 @@ const projectId = computed(() => store.config.projectId);
 const busy = ref(null); // name of the running action, or null
 const error = ref('');
 const status = ref(null);
+const liveDocs = ref({}); // last full read
+
+// version gate: config/app.minSchemaVersion, edited per versioned collection
+const buildVersion = Object.fromEntries(
+  VERSIONED_COLLECTIONS.map((c) => [c, currentVersion(c)]),
+);
+const configApp = ref({});
+const savedMinimum = computed(() =>
+  Object.fromEntries(
+    VERSIONED_COLLECTIONS.map((c) => [
+      c,
+      configApp.value.minSchemaVersion?.[c] ?? 0,
+    ]),
+  ),
+);
+const gateEdit = ref({});
+const gateChanged = computed(
+  () => !_.isEqual(gateEdit.value, savedMinimum.value),
+);
+const gateCheck = computed(() => checkMinimum(liveDocs.value, gateEdit.value));
 // Nothing is shown until the first read succeeds; non-admins (whom the rules
 // deny) get the regular not-found page, without hints.
 const isAdmin = computed(() => status.value !== null);
@@ -373,10 +447,29 @@ function downloadBackup(prefix, docs) {
 async function fetchAllWithStatus() {
   const docs = await fetchAll();
   status.value = versionStatus(docs);
+  liveDocs.value = docs;
+  configApp.value = docs['config/app'] ?? {};
+  gateEdit.value = { ...savedMinimum.value };
   return docs;
 }
 
 const refresh = () => run('status', fetchAllWithStatus);
+
+const saveGate = () => {
+  const lines = [
+    `Set the minimum to ${JSON.stringify(gateEdit.value)}?`,
+    'App versions below it are locked out until they reload.',
+    ...gateCheck.value.warnings,
+  ];
+  if (!window.confirm(lines.join('\n\n'))) return;
+  return run('gate', async () => {
+    await writeDocs({
+      'config/app': { ...configApp.value, minSchemaVersion: gateEdit.value },
+    });
+    $q.notify({ type: 'positive', message: 'Minimum saved.' });
+    await fetchAllWithStatus();
+  });
+};
 
 const backup = () =>
   run('backup', async () => {

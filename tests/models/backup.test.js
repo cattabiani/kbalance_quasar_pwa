@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   nonJsonPaths,
   backupFileName,
+  checkMinimum,
   compareRestore,
   docLabels,
   makeBackup,
@@ -191,5 +192,36 @@ describe('docLabels', () => {
       'users/bob': 'Bob', // a name from a friend list beats an email
       'users/ghost': '', // unknown: the page shows the path
     });
+  });
+});
+
+describe('checkMinimum', () => {
+  const current = currentVersion('sheets');
+
+  it('accepts the current version when everything is migrated', () => {
+    const migrated = {
+      'sheets/a': { schemaVersion: current },
+      'users/u': { schemaVersion: currentVersion('users') },
+    };
+    expect(checkMinimum(migrated, { sheets: current })).toEqual({
+      errors: [],
+      warnings: [],
+    });
+  });
+
+  it('warns about documents not migrated yet', () => {
+    const { errors, warnings } = checkMinimum(docs(), { sheets: current });
+    expect(errors).toEqual([]);
+    expect(warnings).toEqual([
+      `sheets: 1 document(s) are below v${current}. Migrate first.`,
+    ]);
+  });
+
+  it.each([
+    ['newer than this app', { sheets: current + 1 }, 'lock you out'],
+    ['not a whole number', { sheets: 1.5 }, 'whole number'],
+    ['an unversioned collection', { config: 1 }, 'not versioned'],
+  ])('refuses a minimum %s', (_, minimum, message) => {
+    expect(checkMinimum(docs(), minimum).errors[0]).toContain(message);
   });
 });

@@ -2,9 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { Notify } from 'quasar';
 import { useStore } from 'src/stores/store'; // vi.mock calls are hoisted above this
+import { currentVersion } from 'src/models/schema';
 
 // Fake Firebase: one logged-in user, a ledger and one sheet doc.
-const fake = vi.hoisted(() => ({ currentUser: null, docs: {} }));
+const fake = vi.hoisted(() => ({ currentUser: null, docs: {}, writes: [] }));
 
 vi.mock('firebase/app', () => ({
   initializeApp: () => ({}),
@@ -57,7 +58,12 @@ vi.mock('firebase/firestore', () => ({
   setDoc: async () => {},
   getDoc: async () => ({}),
   deleteField: () => null,
-  writeBatch: () => ({ update() {}, set() {}, commit: async () => {} }),
+  writeBatch: () => ({
+    update: (ref, data) => fake.writes.push({ path: ref, data }),
+    set: (ref, data) => fake.writes.push({ path: ref, data }),
+    delete: () => {},
+    commit: async () => {},
+  }),
 }));
 
 vi.mock('quasar', () => ({ Notify: { create: vi.fn() } }));
@@ -179,5 +185,60 @@ describe('old data repaired on read is notified once per sheet per session', () 
     // another sheet: its own notification
     await store.subscribeCurrentSheet('broken-2');
     expect(Notify.create).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('version gate (#42)', () => {
+  const sheet = (schemaVersion) => ({
+    id: SHEET_ID,
+    name: 'Trip',
+    schemaVersion,
+    users: { me: 'owner' },
+    people: {},
+    transactions: {},
+  });
+
+  beforeEach(() => {
+    fake.currentUser = { uid: 'me' };
+    fake.writes = [];
+    fake.docs = {
+      'users/me': { friends: {}, sheets: {} },
+      [`sheets/${SHEET_ID}`]: sheet(currentVersion('sheets')),
+    };
+  });
+
+  it.each([
+    ['without config/app', undefined],
+    [
+      'at the minimum',
+      { minSchemaVersion: { sheets: currentVersion('sheets') } },
+    ],
+  ])('is not outdated %s', async (_, configApp) => {
+    fake.docs['config/app'] = configApp;
+    const store = reopenApp();
+    await store.init();
+    expect(store.isOutdated).toBe(false);
+  });
+
+  it('blocks writes when the minimum is above this build', async () => {
+    fake.docs['config/app'] = {
+      minSchemaVersion: { sheets: currentVersion('sheets') + 1 },
+    };
+    const store = reopenApp();
+    await store.init();
+
+    expect(store.isOutdated).toBe(true);
+    await expect(store.addTransaction({ id: 't1' })).rejects.toThrow(
+      'outdated',
+    );
+    expect(fake.writes).toEqual([]);
+  });
+
+  it('blocks writes after reading data from a newer build', async () => {
+    fake.docs[`sheets/${SHEET_ID}`] = sheet(currentVersion('sheets') + 1);
+    const store = reopenApp();
+    await store.init();
+
+    expect(store.isOutdated).toBe(true);
   });
 });

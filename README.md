@@ -58,7 +58,17 @@ The app has a maintenance page that is not linked anywhere: open `<app URL>/#/ad
 - **Migrate:** after an update that changes the data format, rewrites stored documents to the new format. Dry run first, then apply; apply requires a backup from the same visit.
 - **Restore:** puts documents back from a backup file, all or only the ones you tick. It downloads the current version of those documents first, so a restore can be undone the same way.
 
+- **Version gate:** the oldest app version allowed to use the data. App versions below it show "Update needed" and must reload before they can write.
+
 Routine after a data format change: **backup → dry run → apply**. If something looks wrong afterwards: **restore** the affected sheets from the backup.
+
+For a format change that older app versions can't handle (they would misread or break the new data):
+
+1. Deploy the new version and wait until your own devices run it.
+2. Backup → dry run → apply.
+3. In **Version gate**, raise `sheets` (and/or `users`) to the new version.
+
+An old app that was offline the whole time doesn't see the gate: its offline edits still sync in the old format. A migration that cares must fold such leftovers into the new format on read.
 
 ## 🚀 Testing Locally and Deployment
 

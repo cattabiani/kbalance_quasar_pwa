@@ -132,6 +132,19 @@
         </q-card-section>
       </q-card>
 
+      <q-banner
+        v-if="store.currentSheetIsNearlyFull"
+        dense
+        rounded
+        class="bg-orange-2 text-orange-10 q-mx-md"
+      >
+        <template v-slot:avatar>
+          <q-icon name="warning" />
+        </template>
+        This sheet is almost full: start a new sheet soon. A full sheet can't
+        take new entries.
+      </q-banner>
+
       <summary-card
         :summary="summary"
         :selectedPerson="selectedPerson"
@@ -201,6 +214,7 @@ const selectedPersonIdx = computed(() =>
 const searchString = ref(null);
 const searchActive = ref(false);
 const searchInput = ref(null);
+
 
 // The totals card only ever shows for >2 people, so for 2-person sheets the
 // detail card is the only summary content and stays small -- safe to keep

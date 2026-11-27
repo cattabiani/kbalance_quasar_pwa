@@ -176,6 +176,10 @@ export const useStore = defineStore('mainStore', {
         .map(([id]) => id); // Extract the keys (IDs)
     },
 
+    currentSheetIsNearlyFull() {
+      return !!this.currentSheet && Sheet.isNearlyFull(this.currentSheet);
+    },
+
     currentSheetResults() {
       if (
         !this.currentSheet ||

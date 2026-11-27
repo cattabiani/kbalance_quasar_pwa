@@ -54,6 +54,10 @@ function firstPerson(sheet) {
   return first?.name || 'the first person';
 }
 
+export function isVersioned(collection) {
+  return collection in STEPS;
+}
+
 export function currentVersion(collection) {
   const steps = STEPS[collection];
   if (!steps) throw new Error(`Unknown collection: ${collection}`);

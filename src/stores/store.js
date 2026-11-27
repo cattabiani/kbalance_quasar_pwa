@@ -28,7 +28,7 @@ import {
 import Sheet from 'src/models/sheet';
 import UserLedger from 'src/models/userLedger';
 import Transaction from 'src/models/transaction';
-import { upgrade } from 'src/models/schema';
+import { upgrade, isNewerThanBuild } from 'src/models/schema';
 import Results from 'src/models/results';
 import Person from 'src/models/person';
 import Config from 'src/models/config';
@@ -59,6 +59,9 @@ function readDoc(collection, snapshot) {
   } catch (e) {
     console.error(`Cannot upgrade ${path}`, e);
   }
+
+  // written by a newer build: this one must not touch the data
+  if (isNewerThanBuild(collection, data)) useStore().isOutdated = true;
 
   repairs.forEach((msg) => console.warn(`${path}: ${msg}`));
   if (repairs.length && !notifiedRepairs.has(path)) {
@@ -94,6 +97,10 @@ export const useStore = defineStore('mainStore', {
     authReady: false,
     config: Config.make(),
     pendingTransactionIds: new Set(),
+
+    // version gate (#42): data written by a newer build was read, so this
+    // build is too old for it and must reload before writing
+    isOutdated: false,
 
     // listeners
     unsubscribeUserLedger: null,
@@ -806,6 +813,7 @@ export const useStore = defineStore('mainStore', {
       this.unsubscribeUserLedger?.();
       this.unsubscribeUserLedger = null;
       this.userLedger = null;
+      this.isOutdated = false;
     },
 
     async subscribeUserLedger() {
@@ -863,6 +871,7 @@ export const useStore = defineStore('mainStore', {
     },
 
     async updateFriends(batch = null) {
+      if (this.isOutdated) return; // runs on every snapshot: must not throw
       // Get IDs that are in `currentUsers` but not in `existingFriends`
       const newFriendIds = Object.keys(this.currentSheet.users).filter((id) => {
         return !(id in this.userLedger.friends) && id !== auth.currentUser.uid;
@@ -904,6 +913,9 @@ export const useStore = defineStore('mainStore', {
 
     // utils
     async autoBatch(fn, ...args) {
+      if (this.isOutdated) {
+        throw new Error('This version of kBalance is outdated: reload it.');
+      }
       const isStandalone = !args[args.length - 1];
       if (isStandalone) {
         args[args.length - 1] = writeBatch(db);

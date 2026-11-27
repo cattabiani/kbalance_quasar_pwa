@@ -54,6 +54,12 @@ function firstPerson(sheet) {
   return first?.name || 'the first person';
 }
 
+// True if `doc` was written by a newer build than this one: this build
+// can't be trusted to read or write it.
+export function isNewerThanBuild(collection, doc) {
+  return (doc?.schemaVersion ?? 0) > currentVersion(collection);
+}
+
 export function isVersioned(collection) {
   return collection in STEPS;
 }

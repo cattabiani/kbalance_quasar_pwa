@@ -60,6 +60,13 @@ The app has a maintenance page that is not linked anywhere: open `<app URL>/#/ad
 
 Routine after a data format change: **backup → dry run → apply**. If something looks wrong afterwards: **restore** the affected sheets from the backup.
 
+For a format change that older app versions can't handle (they would misread or break the new data):
+
+1. Deploy the new version and wait until your own devices run it.
+2. Backup → dry run → apply.
+
+Migrated documents carry the new `schemaVersion`. An older app that reads one shows "Update needed" and refuses to write until it reloads. An old app that was offline the whole time can't know: its offline edits still sync in the old format, so a migration that cares must fold such leftovers into the new format on read.
+
 ## 🚀 Testing Locally and Deployment
 
 To test your application locally, you can use the Quasar development server. Run the following command:

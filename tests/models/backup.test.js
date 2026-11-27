@@ -118,11 +118,18 @@ describe('planMigration', () => {
     expect(plan).toEqual([
       {
         path: 'sheets/old',
+        name: 'Old trip',
         from: 0,
         to: currentVersion('sheets'),
         repairs: ['"Dinner": payer unknown, 10 EUR assigned to Anna'],
       },
-      { path: 'users/me', from: 0, to: currentVersion('users'), repairs: [] },
+      {
+        path: 'users/me',
+        name: 'me',
+        from: 0,
+        to: currentVersion('users'),
+        repairs: [],
+      },
     ]);
     expect(input).toEqual(docs()); // dry run: input untouched
   });

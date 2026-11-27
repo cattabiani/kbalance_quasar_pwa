@@ -118,36 +118,72 @@
           <q-card-section>
             <div class="text-h6">2. Migrate</div>
             <p>
-              Upgrades every stored document to the current version. The dry run
-              only lists what would change, including data the upgrade has to
-              repair; nothing is written until you apply it.
+              Upgrades stored documents to the current version. The dry run only
+              lists what would change, including data the upgrade has to repair;
+              nothing is written until you apply it. Everything is ticked;
+              untick to migrate only some documents (e.g. one sheet to try it
+              out).
             </p>
             <template v-if="plan">
               <p v-if="!plan.length" class="text-positive q-mb-none">
                 <q-icon name="check" /> Everything is current. Nothing to do.
               </p>
-              <q-list v-else bordered separator dense>
-                <q-item v-for="p in plan" :key="p.path">
-                  <q-item-section>
-                    <q-item-label v-if="p.error" class="text-negative">
-                      {{ p.path }}: v{{ p.from }}, cannot upgrade ({{
-                        p.error
-                      }}); it will be skipped
-                    </q-item-label>
-                    <q-item-label v-else>
-                      {{ p.path }}: v{{ p.from }} → v{{ p.to }}
-                    </q-item-label>
-                    <q-item-label
-                      v-for="(r, i) in p.repairs"
-                      :key="i"
-                      caption
-                      class="text-warning"
-                    >
-                      repair: {{ r }}
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
-              </q-list>
+              <template v-else>
+                <div class="q-mb-sm">
+                  <q-btn
+                    flat
+                    dense
+                    size="sm"
+                    label="Select all"
+                    @click="selectAllToMigrate"
+                  />
+                  <q-btn
+                    flat
+                    dense
+                    size="sm"
+                    label="Select none"
+                    @click="migrateSelected = []"
+                  />
+                </div>
+                <q-list bordered separator dense class="scroll-list">
+                  <q-item v-for="p in plan" :key="p.path" tag="label">
+                    <q-item-section side>
+                      <q-checkbox
+                        v-model="migrateSelected"
+                        :val="p.path"
+                        :disable="!!p.error"
+                      />
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label>{{ p.name || p.path }}</q-item-label>
+                      <q-item-label caption>{{ p.path }}</q-item-label>
+                      <q-item-label
+                        v-if="p.error"
+                        caption
+                        class="text-negative"
+                      >
+                        cannot upgrade ({{ p.error }}); it will be skipped
+                      </q-item-label>
+                      <q-item-label
+                        v-for="(r, i) in p.repairs"
+                        :key="i"
+                        caption
+                        class="text-warning"
+                      >
+                        repair: {{ r }}
+                      </q-item-label>
+                    </q-item-section>
+                    <q-item-section side>
+                      <q-badge
+                        :color="p.error ? 'negative' : 'primary'"
+                        :label="
+                          p.error ? `v${p.from}` : `v${p.from} → v${p.to}`
+                        "
+                      />
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+              </template>
             </template>
           </q-card-section>
           <q-card-actions>
@@ -162,11 +198,9 @@
             <q-btn
               color="primary"
               icon="upgrade"
-              :label="
-                toMigrate.length ? `Apply (${toMigrate.length})` : 'Apply'
-              "
+              :label="`Apply (${migrateSelected.length})`"
               :loading="busy === 'migrate'"
-              :disable="!!busy || !backupDone || !toMigrate.length"
+              :disable="!!busy || !backupDone || !migrateSelected.length"
               @click="migrate"
             />
             <span v-if="!backupDone" class="q-ml-md text-grey">
@@ -227,7 +261,7 @@
                   @click="selected = []"
                 />
               </div>
-              <q-list bordered separator dense class="restore-list">
+              <q-list bordered separator dense class="scroll-list">
                 <q-item v-for="row in restoreRows" :key="row.path" tag="label">
                   <q-item-section side>
                     <q-checkbox v-model="selected" :val="row.path" />
@@ -294,7 +328,10 @@ const status = ref(null);
 const isAdmin = computed(() => status.value !== null);
 const backupDone = ref(false);
 const plan = ref(null);
-const toMigrate = computed(() => (plan.value ?? []).filter((p) => !p.error));
+const migrateSelected = ref([]);
+const selectAllToMigrate = () => {
+  migrateSelected.value = plan.value.filter((p) => !p.error).map((p) => p.path);
+};
 
 const restoreFile = ref(null);
 const restoreBackup = ref(null);
@@ -352,18 +389,19 @@ const backup = () =>
 const dryRun = () =>
   run('plan', async () => {
     plan.value = planMigration(await fetchAllWithStatus());
+    selectAllToMigrate();
   });
 
 const migrate = () => {
-  const n = toMigrate.value.length;
+  const n = migrateSelected.value.length;
   if (!window.confirm(`Rewrite ${n} document(s) to the current version?`)) {
     return;
   }
   return run('migrate', async () => {
-    const paths = toMigrate.value.map((p) => p.path);
-    const { rewritten, failed } = await migrateDocs(paths);
+    const { rewritten, failed } = await migrateDocs(migrateSelected.value);
     $q.notify({ message: `Migrated ${rewritten} document(s).` });
     plan.value = null;
+    migrateSelected.value = [];
     await fetchAllWithStatus();
     if (failed.length) {
       const list = failed.map((f) => `${f.path} (${f.error})`).join(', ');
@@ -428,7 +466,7 @@ onMounted(refresh);
   max-width: 720px;
   margin: 0 auto;
 }
-.restore-list {
+.scroll-list {
   max-height: 50vh;
   overflow-y: auto;
 }

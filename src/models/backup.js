@@ -120,18 +120,21 @@ export function upgradeCopy(path, data) {
 }
 
 // Dry run: which documents the migration would rewrite, and the repairs it
-// would make: [{ path, from, to, repairs }]. A document whose upgrade throws
-// gets { path, from, error } instead and is skipped by the migration.
+// would make: [{ path, name, from, to, repairs }]. A document whose upgrade throws
+// gets { path, name, from, error } instead and is skipped by the migration.
 export function planMigration(docs) {
   return Object.entries(docs)
     .filter(([path]) => isVersioned(collectionOf(path)))
     .map(([path, data]) => {
       const from = data.schemaVersion ?? 0;
+      const name = data.name;
       try {
         const { after, repairs, changed } = upgradeCopy(path, data);
-        return changed && { path, from, to: after.schemaVersion, repairs };
+        return (
+          changed && { path, name, from, to: after.schemaVersion, repairs }
+        );
       } catch (e) {
-        return { path, from, error: e.message };
+        return { path, name, from, error: e.message };
       }
     })
     .filter(Boolean);

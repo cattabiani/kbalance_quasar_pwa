@@ -197,6 +197,7 @@ import Transaction from 'src/models/transaction';
 import Sheet from 'src/models/sheet';
 import {
   ref,
+  toRaw,
   watch,
   computed,
   nextTick,
@@ -216,8 +217,10 @@ const searchString = ref(null);
 const searchActive = ref(false);
 const searchInput = ref(null);
 
+// Every snapshot replaces store.currentSheet, so depending on it is enough:
+// toRaw() keeps the serialization from tracking every nested field.
 const isNearlyFull = computed(
-  () => !!store.currentSheet && Sheet.isNearlyFull(store.currentSheet),
+  () => !!store.currentSheet && Sheet.isNearlyFull(toRaw(store.currentSheet)),
 );
 
 // The totals card only ever shows for >2 people, so for 2-person sheets the

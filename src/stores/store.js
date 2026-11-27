@@ -45,7 +45,9 @@ let db = null;
 function readDoc(collection, snapshot) {
   const data = snapshot.data();
   try {
-    return upgrade(collection, data);
+    return upgrade(collection, data, (msg) =>
+      console.warn(`${collection}/${snapshot.id}: ${msg}`),
+    );
   } catch (e) {
     console.error(`Cannot upgrade ${collection}/${snapshot.id}`, e);
     return data;

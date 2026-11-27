@@ -44,6 +44,21 @@ describe('upgrade: sheets', () => {
     expect(sheet.transactions.modern).toEqual(sheetV0().transactions.modern);
   });
 
+  it.each([
+    ['missing', undefined],
+    ['out of range', 5],
+  ])('v0 with %s payer credits person 0 and warns', (_, payer) => {
+    const sheet = sheetV0();
+    sheet.transactions.legacy.payer = payer;
+    const warnings = [];
+
+    upgrade('sheets', sheet, (msg) => warnings.push(msg));
+
+    expect(sheet.transactions.legacy.credits).toEqual([50, 0, 0]);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('transaction legacy');
+  });
+
   it('v0 without transactions upgrades', () => {
     const { transactions: _, ...noTransactions } = sheetV0();
     expect(upgrade('sheets', noTransactions).schemaVersion).toBe(

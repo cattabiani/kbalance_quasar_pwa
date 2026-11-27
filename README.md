@@ -51,7 +51,7 @@ The rules live in [`firestore.rules`](firestore.rules). They are not deployed by
 
 ## 🧰 Admin Page: Backup, Migrate, Restore
 
-The app has a maintenance page that is not linked anywhere: open `<app URL>/#/admin` (e.g. [cattabiani.github.io/kbalance_quasar_pwa/#/admin](https://cattabiani.github.io/kbalance_quasar_pwa/#/admin)) while logged in. It only works for the account whose UID is in `firestore.rules` as admin (see above); for anyone else it shows how to become admin.
+The app has a maintenance page that is not linked anywhere: open `<app URL>/#/admin` (e.g. [cattabiani.github.io/kbalance_quasar_pwa/#/admin](https://cattabiani.github.io/kbalance_quasar_pwa/#/admin)) after logging in. It only works for the account whose UID is in `firestore.rules` as admin (see above); everyone else, logged out included, gets the regular "not found" page.
 
 - **Status:** how many documents are on each data format version.
 - **Backup:** downloads all data as one JSON file. It contains every user's data: keep it private.

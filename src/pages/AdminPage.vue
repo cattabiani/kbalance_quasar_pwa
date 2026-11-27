@@ -14,33 +14,29 @@
 
   <q-page padding>
     <div class="admin-column q-gutter-y-md">
-      <q-card>
-        <q-card-section>
-          <div class="text-h6">Database maintenance</div>
-          <p class="q-mb-none">
-            Back up, migrate and restore the Firestore data of project
-            <strong>{{ projectId }}</strong
-            >. Everything here reads straight from the server and needs a
-            connection. The usual routine: <strong>1.</strong> download a
-            backup, <strong>2.</strong> run the migration dry run,
-            <strong>3.</strong> apply it. <strong>Restore</strong> is the undo
-            button if something went wrong.
-          </p>
-        </q-card-section>
-      </q-card>
-
-      <q-banner v-if="notAdmin" class="bg-negative text-white" rounded>
-        Your account is not the admin of this project. To become admin, put your
-        UID (<code>{{ uid }}</code
-        >) in place of <code>ADMIN_UID</code> in
-        <code>firestore.rules</code> and publish the rules (see README,
-        "Firestore Security Rules").
-      </q-banner>
       <q-banner v-if="error" class="bg-negative text-white" rounded>
         {{ error }}
       </q-banner>
+      <div v-if="!isAdmin && !error" class="flex flex-center q-pa-xl">
+        <q-spinner size="lg" />
+      </div>
 
-      <template v-if="!notAdmin">
+      <template v-if="isAdmin">
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Database maintenance</div>
+            <p class="q-mb-none">
+              Back up, migrate and restore the Firestore data of project
+              <strong>{{ projectId }}</strong
+              >. Everything here reads straight from the server and needs a
+              connection. The usual routine: <strong>1.</strong> download a
+              backup, <strong>2.</strong> run the migration dry run,
+              <strong>3.</strong> apply it. <strong>Restore</strong> is the undo
+              button if something went wrong.
+            </p>
+          </q-card-section>
+        </q-card>
+
         <!-- Status -->
         <q-card>
           <q-card-section>
@@ -278,11 +274,12 @@ const router = useRouter();
 const store = useStore();
 
 const projectId = computed(() => store.config.projectId);
-const uid = computed(() => store.user?.id);
 
 const busy = ref(null); // name of the running action, or null
 const error = ref('');
-const notAdmin = ref(false);
+// Nothing is shown until the first read succeeds; non-admins (whom the rules
+// deny) get the regular not-found page, without hints.
+const isAdmin = ref(false);
 
 const status = ref(null);
 const backupDone = ref(false);
@@ -302,7 +299,7 @@ async function run(name, fn) {
     await fn();
   } catch (e) {
     if (e.code === 'permission-denied') {
-      notAdmin.value = true;
+      router.replace('/not-found');
     } else {
       error.value = e.message;
     }
@@ -325,6 +322,7 @@ function download(content, filename) {
 const refresh = () =>
   run('status', async () => {
     status.value = versionStatus(await fetchAll());
+    isAdmin.value = true;
   });
 
 const backup = () =>

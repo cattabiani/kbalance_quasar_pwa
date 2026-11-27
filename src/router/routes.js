@@ -100,10 +100,12 @@ const routes = [
       },
       {
         // Database maintenance (#41). Not linked from the app; see README.
+        // No requiresAuth: anyone but the admin (logged out included) gets
+        // the not-found page, so the route doesn't reveal itself.
         path: '/admin',
         name: 'AdminPage',
         component: () => import('pages/AdminPage.vue'),
-        meta: { requiresAuth: true, requiresFirebase: true },
+        meta: { requiresFirebase: true },
       },
       {
         path: '/landing',

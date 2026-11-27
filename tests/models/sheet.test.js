@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { v4 as uuidv4 } from 'uuid';
 import Sheet from '../../src/models/sheet.js';
 import Transaction from '../../src/models/transaction.js';
+import Person from '../../src/models/person.js';
 
 const MAX_DOC_BYTES = 1024 * 1024;
 
@@ -18,24 +18,30 @@ function bytes(value) {
     0,
   );
 }
+const NAME_EXTRA = 16; // added to a document name's segments
+const DOC_EXTRA = 32; // per document
 const docBytes = (sheet) =>
-  strBytes('sheets') + strBytes(sheet.id) + 16 + bytes(sheet) + 32;
+  strBytes('sheets') +
+  strBytes(sheet.id) +
+  NAME_EXTRA +
+  bytes(sheet) +
+  DOC_EXTRA;
 
 // A sheet with `nPeople` people, grown one transaction at a time until
 // isNearlyFull() says so.
 function growUntilNearlyFull(nPeople) {
   const people = Object.fromEntries(
-    Array.from({ length: nPeople }, (_, i) => [
-      uuidv4(),
-      { name: `Persön ${i}`, email: `p${i}@example.com`, timestamp: i },
-    ]),
+    Array.from({ length: nPeople }, (_, i) => {
+      const p = Person.make('', `Persön ${i}`, `p${i}@example.com`, i + 1);
+      return [p.id, p];
+    }),
   );
   const sheet = Sheet.make('Trip', people, {});
   while (!Sheet.isNearlyFull(sheet)) {
     for (let i = 0; i < 100; i++) {
       const tr = Transaction.make(nPeople, 'EUR');
       tr.name = 'Dinner at the café';
-      tr.credits[0] = 4250; // most splits: one payer, small debts
+      tr.credits[0] = 4250;
       tr.debts[1] = 2125;
       tr.debts[2 % nPeople] += 2125;
       sheet.transactions[tr.id] = tr;

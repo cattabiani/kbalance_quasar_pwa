@@ -133,13 +133,13 @@
       </q-card>
 
       <q-banner
-        v-if="isNearlyFull"
+        v-if="store.currentSheetIsNearlyFull"
         dense
         rounded
-        class="bg-amber-2 text-black q-mx-md"
+        class="bg-orange-2 text-orange-10 q-mx-md"
       >
         <template v-slot:avatar>
-          <q-icon name="warning" color="amber-9" />
+          <q-icon name="warning" />
         </template>
         This sheet is almost full: start a new sheet soon. A full sheet can't
         take new entries.
@@ -194,10 +194,8 @@ import SummaryCard from 'src/components/SummaryCard.vue';
 import TransactionList from 'src/components/TransactionList.vue';
 import Results from 'src/models/results';
 import Transaction from 'src/models/transaction';
-import Sheet from 'src/models/sheet';
 import {
   ref,
-  toRaw,
   watch,
   computed,
   nextTick,
@@ -217,11 +215,6 @@ const searchString = ref(null);
 const searchActive = ref(false);
 const searchInput = ref(null);
 
-// Every snapshot replaces store.currentSheet, so depending on it is enough:
-// toRaw() keeps the serialization from tracking every nested field.
-const isNearlyFull = computed(
-  () => !!store.currentSheet && Sheet.isNearlyFull(toRaw(store.currentSheet)),
-);
 
 // The totals card only ever shows for >2 people, so for 2-person sheets the
 // detail card is the only summary content and stays small -- safe to keep

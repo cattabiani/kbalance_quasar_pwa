@@ -3,6 +3,7 @@ import {
   nonJsonPaths,
   backupFileName,
   compareRestore,
+  docLabels,
   makeBackup,
   parseBackup,
   planMigration,
@@ -164,5 +165,31 @@ describe('compareRestore', () => {
       { path: 'users/me', status: 'deleted', name: 'me' },
       { path: 'config/app', status: 'same', name: '' },
     ]);
+  });
+});
+
+describe('docLabels', () => {
+  it('labels nameless ledgers with the name or email others know them by', () => {
+    const labels = docLabels({
+      'sheets/s': {
+        name: 'Trip',
+        people: {
+          anon: { id: 'anon', name: '', email: 'anon@x.org' },
+          bob: { id: 'bob', name: '', email: 'bob@x.org' },
+        },
+      },
+      'users/me': { name: 'Me', friends: { bob: { id: 'bob', name: 'Bob' } } },
+      'users/anon': { name: '' },
+      'users/bob': { name: '' },
+      'users/ghost': { name: '' },
+    });
+
+    expect(labels).toEqual({
+      'sheets/s': 'Trip',
+      'users/me': 'Me', // own name wins
+      'users/anon': 'anon@x.org', // no name anywhere: email
+      'users/bob': 'Bob', // a name from a friend list beats an email
+      'users/ghost': '', // unknown: the page shows the path
+    });
   });
 });

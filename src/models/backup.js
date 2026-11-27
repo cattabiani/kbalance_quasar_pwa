@@ -119,15 +119,42 @@ export function upgradeCopy(path, data) {
   return { after, repairs, changed: !_.isEqual(after, data) };
 }
 
+// Human-readable label per document: { path: label }. Sheets use their name.
+// A user ledger uses its own name or, if empty, how others know that user:
+// the name or email under its UID in sheets' `people` and ledgers' `friends`.
+export function docLabels(docs) {
+  const known = {}; // uid -> { name, email } as seen elsewhere
+  const learn = (uid, person) => {
+    if (!person) return;
+    known[uid] ??= {};
+    known[uid].name ||= person.name;
+    known[uid].email ||= person.email;
+  };
+  for (const [path, data] of Object.entries(docs)) {
+    const collection = collectionOf(path);
+    const others = { sheets: data.people, users: data.friends }[collection];
+    Object.entries(others ?? {}).forEach(([uid, p]) => learn(uid, p));
+  }
+
+  const labels = {};
+  for (const [path, data] of Object.entries(docs)) {
+    const id = path.split('/').pop();
+    const other = collectionOf(path) === 'users' ? known[id] ?? {} : {};
+    labels[path] = data.name || other.name || other.email || '';
+  }
+  return labels;
+}
+
 // Dry run: which documents the migration would rewrite, and the repairs it
 // would make: [{ path, name, from, to, repairs }]. A document whose upgrade throws
 // gets { path, name, from, error } instead and is skipped by the migration.
 export function planMigration(docs) {
+  const labels = docLabels(docs);
   return Object.entries(docs)
     .filter(([path]) => isVersioned(collectionOf(path)))
     .map(([path, data]) => {
       const from = data.schemaVersion ?? 0;
-      const name = data.name;
+      const name = labels[path];
       try {
         const { after, repairs, changed } = upgradeCopy(path, data);
         return (
@@ -144,11 +171,12 @@ export function planMigration(docs) {
 // 'same' | 'changed' (live differs) | 'deleted' (no longer live).
 // Live documents not in the backup are not listed: restore never deletes.
 export function compareRestore(backupDocs, liveDocs) {
+  const labels = docLabels({ ...liveDocs, ...backupDocs });
   return Object.entries(backupDocs).map(([path, data]) => {
     let status = 'deleted';
     if (path in liveDocs) {
       status = _.isEqual(liveDocs[path], data) ? 'same' : 'changed';
     }
-    return { path, status, name: data.name ?? '' };
+    return { path, status, name: labels[path] };
   });
 }

@@ -132,6 +132,19 @@
         </q-card-section>
       </q-card>
 
+      <q-banner
+        v-if="fullness >= SHEET_FULL_WARNING"
+        dense
+        rounded
+        class="bg-amber-2 text-black q-mx-md"
+      >
+        <template v-slot:avatar>
+          <q-icon name="warning" color="amber-9" />
+        </template>
+        This sheet is {{ Math.floor(fullness * 100) }}% full: start a new sheet
+        soon. A full sheet can't take new entries.
+      </q-banner>
+
       <summary-card
         :summary="summary"
         :selectedPerson="selectedPerson"
@@ -181,6 +194,7 @@ import SummaryCard from 'src/components/SummaryCard.vue';
 import TransactionList from 'src/components/TransactionList.vue';
 import Results from 'src/models/results';
 import Transaction from 'src/models/transaction';
+import Sheet from 'src/models/sheet';
 import {
   ref,
   watch,
@@ -201,6 +215,12 @@ const selectedPersonIdx = computed(() =>
 const searchString = ref(null);
 const searchActive = ref(false);
 const searchInput = ref(null);
+
+// A sheet is one Firestore document (max 1 MiB): warn well before it fills.
+const SHEET_FULL_WARNING = 0.9;
+const fullness = computed(() =>
+  store.currentSheet ? Sheet.fullness(store.currentSheet) : 0,
+);
 
 // The totals card only ever shows for >2 people, so for 2-person sheets the
 // detail card is the only summary content and stays small -- safe to keep

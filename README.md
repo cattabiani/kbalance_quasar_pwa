@@ -39,60 +39,15 @@ Visit [GitHub Pages](https://cattabiani.github.io/kbalance_quasar_pwa/) to use o
 
 ## 🔐 Firestore Security Rules
 
-Add the following Firestore security rules to secure your database:
+The rules live in [`firestore.rules`](firestore.rules). They are not deployed by the app: publish them yourself whenever the file changes.
 
-```firebase
-rules_version = '2';
+1. Replace `ADMIN_UID` with your own UID (Firebase console → **Authentication** → **Users** → "User UID"). This makes you the admin of your project. If you leave the placeholder, nobody is admin and the app works normally.
+2. Publish, either:
+   - paste the file in Firebase console → **Firestore Database** → **Rules** → **Publish**, or
+   - run `npx firebase-tools deploy --only firestore:rules` (needs `firebase login` and a `firebase.json` pointing at `firestore.rules`).
+3. Test before publishing with the console's **Rules Playground**. If something breaks, the console keeps the history of published rules: roll back from there.
 
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Match the sheets collection
-    match /sheets/{docId} {
-
-      // Allow the authenticated user to create a document
-      allow create: if request.auth != null;
-
-      // Allow read if the user is present in the users dictionary of the document
-      allow read: if request.auth != null && resource.data.users[request.auth.uid] != null;
-
-      // Allow write if the user is the owner in the users dictionary
-      allow write: if request.auth != null && resource.data.users[request.auth.uid] == "owner";
-    }
-
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-
-
-    function isAddingOneKeyToSheetsMap() {
-      // Get the keys that have changed in the 'sheets' map
-      let changedKeys = request.resource.data.diff(resource.data).changedKeys();
-      let addedKeys = request.resource.data.diff(resource.data).addedKeys();
-      let removedKeys = request.resource.data.diff(resource.data).removedKeys();
-
-      let changedSheetsKeys = request.resource.data.sheets.diff(resource.data.sheets).changedKeys();
-      let addedSheetsKeys = request.resource.data.sheets.diff(resource.data.sheets).addedKeys();
-      let removedSheetsKeys = request.resource.data.sheets.diff(resource.data.sheets).removedKeys();
-      let newSheetKey = request.resource.data.sheets.keys().removeAll(resource.data.sheets.keys())[0];
-
-      return addedKeys.size() == 0 &&
-             removedKeys.size() == 0 &&
-             changedKeys.hasOnly(["sheets"]) &&
-             changedSheetsKeys.size() == 0 &&
-             removedSheetsKeys.size() == 0 &&
-             addedSheetsKeys.size() == 1 &&
-             // workaround to pick up the only value added and check that it is a string
-             request.resource.data.sheets[newSheetKey] is map &&
-             request.resource.data.sheets[newSheetKey].name is string &&
-             request.resource.data.sheets[newSheetKey].timestamp is int
-    }
-
-    match /users/{docId} {
-      allow update: if request.auth != null && isAddingOneKeyToSheetsMap();
-    }
-  }
-}
-```
+**Trust model:** everyone in a sheet can edit it, remove other members, or delete it. Share sheets only with people you trust with that sheet.
 
 ## 🚀 Testing Locally and Deployment
 

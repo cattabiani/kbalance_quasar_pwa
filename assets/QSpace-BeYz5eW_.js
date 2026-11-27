@@ -1,1 +1,0 @@
-import{y as e}from"./runtime-core.esm-bundler-DK8hFx14.js";import{_t as t}from"./index-MTHrTJ7a.js";var n=t({name:`QSpace`,setup(){let t=e(`div`,{class:`q-space`});return()=>t}});export{n as t};

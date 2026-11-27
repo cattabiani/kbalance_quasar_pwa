@@ -1,0 +1,1 @@
+import{s as e,y as t}from"./runtime-core.esm-bundler-DK8hFx14.js";import{_ as n,_t as r,k as i,v as a}from"./index-to-1tQTV.js";var o=r({name:`QCardActions`,props:{...a,vertical:Boolean},setup(r,{slots:a}){let o=n(r),s=e(()=>`q-card__actions ${o.value} q-card__actions--${r.vertical?`vert column`:`horiz row`}`);return()=>t(`div`,{class:s.value},i(a.default))}});export{o as t};

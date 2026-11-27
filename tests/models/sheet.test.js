@@ -27,7 +27,7 @@ const docBytes = (sheet) =>
   bytes(sheet) +
   DOC_EXTRA;
 
-// A sheet with `nPeople` people, grown one transaction at a time until
+// A sheet with `nPeople` people, grown 100 transactions at a time until
 // isNearlyFull() says so.
 function growUntilNearlyFull(nPeople) {
   const people = Object.fromEntries(
@@ -55,11 +55,10 @@ describe('Sheet.isNearlyFull', () => {
     expect(Sheet.isNearlyFull(Sheet.make('Trip', {}, {}))).toBe(false);
   });
 
-  // the warning must come before Firestore's limit, with room to spare,
-  // even when most numbers are zeros (the JSON estimate's worst case)
+  // the estimate must be close to Firestore's real size: warn at ~80%
   it.each([2, 4, 8, 12])('warns before the limit with %i people', (n) => {
     const size = docBytes(growUntilNearlyFull(n));
-    expect(size).toBeLessThan(0.95 * MAX_DOC_BYTES);
-    expect(size).toBeGreaterThan(0.5 * MAX_DOC_BYTES);
+    expect(size).toBeLessThan(0.9 * MAX_DOC_BYTES);
+    expect(size).toBeGreaterThan(0.7 * MAX_DOC_BYTES);
   });
 });

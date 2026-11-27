@@ -34,7 +34,6 @@ import Person from 'src/models/person';
 import Config from 'src/models/config';
 import _ from 'lodash';
 import { Notify } from 'quasar';
-import { toRaw } from 'vue';
 
 // keep these not-reactive and out of the store!
 let app = null;
@@ -177,10 +176,8 @@ export const useStore = defineStore('mainStore', {
         .map(([id]) => id); // Extract the keys (IDs)
     },
 
-    // Every snapshot replaces currentSheet, so depending on it is enough:
-    // toRaw() keeps the serialization from tracking every nested field.
     currentSheetIsNearlyFull() {
-      return !!this.currentSheet && Sheet.isNearlyFull(toRaw(this.currentSheet));
+      return !!this.currentSheet && Sheet.isNearlyFull(this.currentSheet);
     },
 
     currentSheetResults() {

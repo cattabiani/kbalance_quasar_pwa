@@ -38,15 +38,17 @@ const reloading = ref(false);
 async function reloadToUpdate() {
   reloading.value = true;
   try {
+    // Listen before update(): the new worker may take over during it.
+    const controllerChanged = new Promise((resolve) => {
+      navigator.serviceWorker?.addEventListener('controllerchange', resolve, {
+        once: true,
+      });
+      setTimeout(resolve, 10000); // don't hang: reload anyway
+    });
     const registration = await navigator.serviceWorker?.getRegistration();
     await registration?.update();
     if (registration?.installing || registration?.waiting) {
-      await new Promise((resolve) => {
-        navigator.serviceWorker.addEventListener('controllerchange', resolve, {
-          once: true,
-        });
-        setTimeout(resolve, 10000); // don't hang: reload anyway
-      });
+      await controllerChanged;
     }
   } catch (e) {
     console.error('Service worker update failed', e);

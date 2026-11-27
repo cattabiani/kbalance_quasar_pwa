@@ -65,6 +65,9 @@ function readDoc(collection, snapshot) {
     console.error(`Cannot upgrade ${path}`, e);
   }
 
+  // written by a newer build: this one must not touch the data
+  if (isNewerThanBuild(collection, data)) useStore().newerDataSeen = true;
+
   repairs.forEach((msg) => console.warn(`${path}: ${msg}`));
   if (repairs.length && !notifiedRepairs.has(path)) {
     notifiedRepairs.add(path);
@@ -829,32 +832,34 @@ export const useStore = defineStore('mainStore', {
       this.unsubscribeAppConfig?.();
       this.unsubscribeAppConfig = null;
       this.minSchemaVersion = null;
-    },
-
-    // Data written by a newer build: this one must not touch it (#42).
-    noteVersion(collection, data) {
-      if (isNewerThanBuild(collection, data)) this.newerDataSeen = true;
+      this.newerDataSeen = false;
     },
 
     async subscribeUserLedger() {
       this.clearUserLedger();
 
-      // version gate (#42); a missing config/app means no minimum
-      this.unsubscribeAppConfig = onSnapshot(
-        doc(db, 'config', 'app'),
-        (snapshot) => {
-          this.minSchemaVersion = snapshot.data()?.minSchemaVersion ?? null;
-        },
-        (e) => console.error('Cannot read config/app', e),
-      );
+      // version gate: a missing config/app means no minimum. Waited
+      // for like the ledger, so no write slips through before it is known.
+      const configLoaded = new Promise((resolve) => {
+        this.unsubscribeAppConfig = onSnapshot(
+          doc(db, 'config', 'app'),
+          (snapshot) => {
+            this.minSchemaVersion = snapshot.data()?.minSchemaVersion ?? null;
+            resolve();
+          },
+          (e) => {
+            console.error('Cannot read config/app', e);
+            resolve();
+          },
+        );
+      });
 
       let returnPromise = true;
-      await new Promise((resolve) => {
+      const ledgerLoaded = new Promise((resolve) => {
         const userLedgerRef = this.getUserLedgerRef();
         this.unsubscribeUserLedger = onSnapshot(userLedgerRef, (doc) => {
           if (doc.exists()) {
             this.userLedger = readDoc('users', doc);
-            this.noteVersion('users', this.userLedger);
           }
           if (returnPromise) {
             returnPromise = false;
@@ -862,6 +867,7 @@ export const useStore = defineStore('mainStore', {
           }
         });
       });
+      await Promise.all([configLoaded, ledgerLoaded]);
     },
 
     clearCurrentSheet() {
@@ -888,7 +894,6 @@ export const useStore = defineStore('mainStore', {
           async (doc) => {
             if (doc.exists()) {
               this.currentSheet = readDoc('sheets', doc);
-              this.noteVersion('sheets', this.currentSheet);
               await this.updateFriends();
             }
             done();
@@ -902,6 +907,7 @@ export const useStore = defineStore('mainStore', {
     },
 
     async updateFriends(batch = null) {
+      if (this.isOutdated) return; // runs on every snapshot: must not throw
       // Get IDs that are in `currentUsers` but not in `existingFriends`
       const newFriendIds = Object.keys(this.currentSheet.users).filter((id) => {
         return !(id in this.userLedger.friends) && id !== auth.currentUser.uid;

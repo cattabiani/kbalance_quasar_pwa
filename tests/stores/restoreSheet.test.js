@@ -61,7 +61,6 @@ vi.mock('firebase/firestore', () => ({
   writeBatch: () => ({
     update: (ref, data) => fake.writes.push({ path: ref, data }),
     set: (ref, data) => fake.writes.push({ path: ref, data }),
-    delete: () => {},
     commit: async () => {},
   }),
 }));
@@ -234,11 +233,26 @@ describe('version gate (#42)', () => {
     expect(fake.writes).toEqual([]);
   });
 
-  it('blocks writes after reading data from a newer build', async () => {
-    fake.docs[`sheets/${SHEET_ID}`] = sheet(currentVersion('sheets') + 1);
+  it('is outdated after reading a newer sheet, and still opens it', async () => {
+    // a member not yet in the ledger's friends: opening normally adds them
+    fake.docs[`sheets/${SHEET_ID}`] = {
+      ...sheet(currentVersion('sheets') + 1),
+      users: { me: 'owner', bob: 'owner' },
+    };
     const store = reopenApp();
     await store.init();
 
     expect(store.isOutdated).toBe(true);
+    expect(store.isSheet).toBe(true);
+    expect(fake.writes).toEqual([]); // no friends added
+  });
+
+  it('forgets newer data on logout', async () => {
+    fake.docs[`sheets/${SHEET_ID}`] = sheet(currentVersion('sheets') + 1);
+    const store = reopenApp();
+    await store.init();
+    store.clearAll();
+
+    expect(store.isOutdated).toBe(false);
   });
 });

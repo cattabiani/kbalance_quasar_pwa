@@ -41,6 +41,9 @@ let auth = null;
 let db = null;
 // keep these not-reactive and out of the store!
 
+// For the admin page (src/admin/adminDb.js), which bypasses the store.
+export const getDb = () => db;
+
 // Documents whose repairs were already shown this session. Until a document
 // is migrated (#41) the upgrade repeats on every snapshot: notify only once.
 const notifiedRepairs = new Set();

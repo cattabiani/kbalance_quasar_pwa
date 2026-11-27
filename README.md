@@ -49,6 +49,17 @@ The rules live in [`firestore.rules`](firestore.rules). They are not deployed by
 
 **Trust model:** everyone in a sheet can edit it, remove other members, or delete it. Share sheets only with people you trust with that sheet.
 
+## 🧰 Admin Page: Backup, Migrate, Restore
+
+The app has a maintenance page that is not linked anywhere: open `<app URL>/#/admin` (e.g. [cattabiani.github.io/kbalance_quasar_pwa/#/admin](https://cattabiani.github.io/kbalance_quasar_pwa/#/admin)) while logged in. It only works for the account whose UID is in `firestore.rules` as admin (see above); for anyone else it shows how to become admin.
+
+- **Status:** how many documents are on each data format version.
+- **Backup:** downloads all data as one JSON file. It contains every user's data: keep it private.
+- **Migrate:** after an update that changes the data format, rewrites stored documents to the new format. Dry run first, then apply; apply requires a backup from the same visit.
+- **Restore:** puts documents back from a backup file, all or only the ones you tick. It downloads the current version of those documents first, so a restore can be undone the same way.
+
+Routine after a data format change: **backup → dry run → apply**. If something looks wrong afterwards: **restore** the affected sheets from the backup.
+
 ## 🚀 Testing Locally and Deployment
 
 To test your application locally, you can use the Quasar development server. Run the following command:

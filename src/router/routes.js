@@ -99,6 +99,13 @@ const routes = [
         component: () => import('pages/SettingsPage.vue'),
       },
       {
+        // Database maintenance (#41). Not linked from the app; see README.
+        path: '/admin',
+        name: 'AdminPage',
+        component: () => import('pages/AdminPage.vue'),
+        meta: { requiresAuth: true, requiresFirebase: true },
+      },
+      {
         path: '/landing',
         name: 'LandingPage',
         component: () => import('pages/LandingPage.vue'),

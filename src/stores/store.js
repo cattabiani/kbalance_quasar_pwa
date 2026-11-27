@@ -33,6 +33,7 @@ import Results from 'src/models/results';
 import Person from 'src/models/person';
 import Config from 'src/models/config';
 import _ from 'lodash';
+import { Notify } from 'quasar';
 
 // keep these not-reactive and out of the store!
 let app = null;
@@ -40,18 +41,36 @@ let auth = null;
 let db = null;
 // keep these not-reactive and out of the store!
 
+// Documents whose repairs were already shown this session. Until a document
+// is migrated (#41) the upgrade repeats on every snapshot: notify only once.
+const notifiedRepairs = new Set();
+
 // Snapshot data upgraded to the current schema (#39). A failing upgrade step
 // must not block loading: log it and keep the (possibly partly upgraded) data.
 function readDoc(collection, snapshot) {
+  const path = `${collection}/${snapshot.id}`;
   const data = snapshot.data();
+  const repairs = [];
   try {
-    return upgrade(collection, data, (msg) =>
-      console.warn(`${collection}/${snapshot.id}: ${msg}`),
-    );
+    upgrade(collection, data, (msg) => repairs.push(msg));
   } catch (e) {
-    console.error(`Cannot upgrade ${collection}/${snapshot.id}`, e);
-    return data;
+    console.error(`Cannot upgrade ${path}`, e);
   }
+
+  repairs.forEach((msg) => console.warn(`${path}: ${msg}`));
+  if (repairs.length && !notifiedRepairs.has(path)) {
+    notifiedRepairs.add(path);
+    Notify.create({
+      message: `Old data in "${data.name ?? snapshot.id}" was repaired`,
+      caption: repairs.join(' · '),
+      color: 'warning',
+      textColor: 'black',
+      multiLine: true,
+      timeout: 0,
+      actions: [{ label: 'OK', color: 'black' }],
+    });
+  }
+  return data;
 }
 
 export const useStore = defineStore('mainStore', {

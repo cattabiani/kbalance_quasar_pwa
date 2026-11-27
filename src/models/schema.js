@@ -23,12 +23,12 @@ const STEPS = {
         const credits = tr.debts.map(() => 0);
         let payer = tr.payer;
         if (!Number.isInteger(payer) || payer < 0 || payer >= credits.length) {
-          const { id, name = '', amount } = tr;
-          warn(
-            `transaction ${id} ("${name}"): invalid payer ${payer}, ` +
-              `amount ${amount} assigned to person 0`,
-          );
           payer = 0;
+          const what = `${tr.amount} ${tr.currency ?? ''}`.trim();
+          warn(
+            `"${tr.name || tr.id}": payer unknown, ` +
+              `${what} assigned to ${firstPerson(sheet)}`,
+          );
         }
         credits[payer] = tr.amount ?? 0;
         tr.credits = credits;
@@ -45,6 +45,14 @@ const STEPS = {
     () => {},
   ],
 };
+
+// Name of the person at index 0 (people are ordered by when they were added).
+function firstPerson(sheet) {
+  const [first] = Object.values(sheet.people ?? {}).sort(
+    (a, b) => a.timestamp - b.timestamp,
+  );
+  return first?.name || 'the first person';
+}
 
 export function currentVersion(collection) {
   const steps = STEPS[collection];

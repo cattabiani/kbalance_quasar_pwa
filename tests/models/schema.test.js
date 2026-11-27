@@ -10,12 +10,16 @@ const sheetV0 = () => ({
   id: 's1',
   name: 'Trip',
   users: { a: 'owner', b: 'owner' },
-  people: {},
+  people: {
+    a: { id: 'a', name: 'Anna', timestamp: 2 },
+    b: { id: 'b', name: 'Bob', timestamp: 1 }, // added first: index 0
+  },
   timestamp: 1,
   transactions: {
     // single payer + amount, debts as objects
     legacy: {
       id: 'legacy',
+      name: 'Dinner',
       currency: 'EUR',
       amount: 50,
       payer: 1,
@@ -37,6 +41,7 @@ describe('upgrade: sheets', () => {
     expect(sheet.schemaVersion).toBe(currentVersion('sheets'));
     expect(sheet.transactions.legacy).toEqual({
       id: 'legacy',
+      name: 'Dinner',
       currency: 'EUR',
       credits: [0, 50, 0],
       debts: [20, 30, 0],
@@ -55,8 +60,9 @@ describe('upgrade: sheets', () => {
     upgrade('sheets', sheet, (msg) => warnings.push(msg));
 
     expect(sheet.transactions.legacy.credits).toEqual([50, 0, 0]);
-    expect(warnings).toHaveLength(1);
-    expect(warnings[0]).toContain('transaction legacy');
+    expect(warnings).toEqual([
+      '"Dinner": payer unknown, 50 EUR assigned to Bob',
+    ]);
   });
 
   it('v0 without transactions upgrades', () => {

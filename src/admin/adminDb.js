@@ -18,40 +18,44 @@ import { COLLECTIONS, upgradeCopy } from 'src/models/backup';
 
 const BATCH_LIMIT = 500; // Firestore's maximum writes per batch
 
-function requireOnline() {
+function onlineDb() {
   if (!navigator.onLine) throw new Error('You are offline.');
+  return getDb();
 }
 
 // All documents of all backed-up collections: { 'collection/id': data }.
+// Top-level collections only: a subcollection (#38's sheets/pages) needs
+// collectionGroup() here.
 export async function fetchAll() {
-  requireOnline();
-  const db = getDb();
+  const db = onlineDb();
+  const snapshots = await Promise.all(
+    COLLECTIONS.map((name) => getDocsFromServer(collection(db, name))),
+  );
   const docs = {};
-  for (const name of COLLECTIONS) {
-    const snapshot = await getDocsFromServer(collection(db, name));
+  snapshots.forEach((snapshot, i) =>
     snapshot.forEach((d) => {
-      docs[`${name}/${d.id}`] = d.data();
-    });
-  }
+      docs[`${COLLECTIONS[i]}/${d.id}`] = d.data();
+    }),
+  );
   return docs;
 }
 
 // The live version of the given documents; missing ones are left out.
 export async function fetchDocs(paths) {
-  requireOnline();
-  const db = getDb();
+  const db = onlineDb();
+  const snapshots = await Promise.all(
+    paths.map((path) => getDocFromServer(doc(db, path))),
+  );
   const docs = {};
-  for (const path of paths) {
-    const snapshot = await getDocFromServer(doc(db, path));
-    if (snapshot.exists()) docs[path] = snapshot.data();
-  }
+  snapshots.forEach((snapshot, i) => {
+    if (snapshot.exists()) docs[paths[i]] = snapshot.data();
+  });
   return docs;
 }
 
 // Overwrites each document with the given data (full replace, no merge).
 export async function writeDocs(docs) {
-  requireOnline();
-  const db = getDb();
+  const db = onlineDb();
   for (const chunk of _.chunk(Object.entries(docs), BATCH_LIMIT)) {
     const batch = writeBatch(db);
     chunk.forEach(([path, data]) => batch.set(doc(db, path), data));
@@ -63,9 +67,10 @@ export async function writeDocs(docs) {
 // document: it re-reads the live version, so concurrent edits by users
 // are upgraded too, never overwritten. A document that fails is skipped;
 // returns { rewritten, failed: [{ path, error }] }.
+// Single-document steps only: a step that writes several documents (#38)
+// needs this to execute a write plan instead of one set().
 export async function migrateDocs(paths) {
-  requireOnline();
-  const db = getDb();
+  const db = onlineDb();
   let rewritten = 0;
   const failed = [];
   for (const path of paths) {

@@ -74,6 +74,11 @@ describe('backup files', () => {
       'Unexpected document path',
     ],
     [
+      'an unknown subcollection',
+      '{"format":"kbalance-backup","formatVersion":1,"docs":{"sheets/x/pages/y":{}}}',
+      'Unexpected document path',
+    ],
+    [
       'an empty id',
       '{"format":"kbalance-backup","formatVersion":1,"docs":{"sheets/":{}}}',
       'Unexpected document path',
@@ -120,6 +125,11 @@ describe('planMigration', () => {
       { path: 'users/me', from: 0, to: currentVersion('users'), repairs: [] },
     ]);
     expect(input).toEqual(docs()); // dry run: input untouched
+  });
+
+  it('never runs the sheet upgrade on a subcollection document', () => {
+    const page = { 'sheets/old/pages/2024': legacySheet() };
+    expect(planMigration(page)).toEqual([]);
   });
 
   it('reports a document whose upgrade fails instead of failing the plan', () => {

@@ -11,7 +11,14 @@ export const COLLECTIONS = ['sheets', 'users', 'config'];
 const FORMAT = 'kbalance-backup';
 const FORMAT_VERSION = 1;
 
-export const collectionOf = (path) => path.split('/')[0];
+// Collection key of a document path: its collection segments, so a
+// subcollection document (sheets/x/pages/y → 'sheets/pages') is never taken
+// for a document of its parent collection. null for a malformed path.
+function collectionOf(path) {
+  const segments = path.split('/');
+  if (segments.length % 2 || segments.some((s) => !s)) return null;
+  return segments.filter((segment, i) => i % 2 === 0).join('/');
+}
 
 // Paths inside `value` that JSON can't round-trip (e.g. a Firestore
 // Timestamp, NaN): a backup must restore exactly what was read.
@@ -25,18 +32,13 @@ export function nonJsonPaths(value, where = '') {
   if (Array.isArray(value)) {
     return value.flatMap((v, i) => nonJsonPaths(v, `${where}[${i}]`));
   }
-  if (isPlainObject(value)) {
+  if (_.isPlainObject(value)) {
     return Object.entries(value).flatMap(([k, v]) =>
       nonJsonPaths(v, where ? `${where}.${k}` : k),
     );
   }
   return [where];
 }
-
-const isPlainObject = (value) =>
-  typeof value === 'object' &&
-  value !== null &&
-  [Object.prototype, null].includes(Object.getPrototypeOf(value));
 
 // Throws listing every value that can't be backed up, so they can all be
 // fixed (e.g. in the Firestore console) in one go.
@@ -79,11 +81,10 @@ export function parseBackup(text) {
     throw new Error('Backup has no documents.');
   }
   for (const [path, data] of Object.entries(backup.docs)) {
-    const [collection, id, ...rest] = path.split('/');
-    if (!COLLECTIONS.includes(collection) || !id || rest.length) {
+    if (!COLLECTIONS.includes(collectionOf(path))) {
       throw new Error(`Unexpected document path in backup: ${path}`);
     }
-    if (!isPlainObject(data)) {
+    if (!_.isPlainObject(data)) {
       throw new Error(`Document ${path} in backup is not an object.`);
     }
   }
@@ -109,6 +110,7 @@ export function versionStatus(docs) {
 }
 
 // Upgrades a deep copy of `data`; returns { after, repairs, changed }.
+// Single-document steps only (see adminDb.migrateDocs).
 export function upgradeCopy(path, data) {
   const repairs = [];
   const after = upgrade(collectionOf(path), _.cloneDeep(data), (msg) =>

@@ -267,7 +267,7 @@ defineOptions({ name: 'AdminPage' });
 
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useQuasar } from 'quasar';
+import { exportFile, useQuasar } from 'quasar';
 import _ from 'lodash';
 import { useStore } from 'src/stores/store';
 import {
@@ -288,11 +288,10 @@ const projectId = computed(() => store.config.projectId);
 
 const busy = ref(null); // name of the running action, or null
 const error = ref('');
+const status = ref(null);
 // Nothing is shown until the first read succeeds; non-admins (whom the rules
 // deny) get the regular not-found page, without hints.
-const isAdmin = ref(false);
-
-const status = ref(null);
+const isAdmin = computed(() => status.value !== null);
 const backupDone = ref(false);
 const plan = ref(null);
 const toMigrate = computed(() => (plan.value ?? []).filter((p) => !p.error));
@@ -320,35 +319,39 @@ async function run(name, fn) {
   }
 }
 
-function download(content, filename) {
-  const blob = new Blob([JSON.stringify(content, null, 1)], {
-    type: 'application/json',
-  });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-  // revoking right away can cancel the download in some browsers
-  setTimeout(() => URL.revokeObjectURL(a.href), 60_000);
+// Downloads `docs` as a backup file; returns its name. Throws if the browser
+// refused the download, so nothing is written without its backup.
+function downloadBackup(prefix, docs) {
+  const now = new Date();
+  const name = backupFileName(prefix, projectId.value, now);
+  const content = JSON.stringify(
+    makeBackup(docs, projectId.value, now),
+    null,
+    1,
+  );
+  const result = exportFile(name, content, 'application/json');
+  if (result !== true) throw new Error(`Download failed: ${result.message}`);
+  return name;
 }
 
-const refresh = () =>
-  run('status', async () => {
-    status.value = versionStatus(await fetchAll());
-    isAdmin.value = true;
-  });
+// Reads everything and refreshes the status from it.
+async function fetchAllWithStatus() {
+  const docs = await fetchAll();
+  status.value = versionStatus(docs);
+  return docs;
+}
+
+const refresh = () => run('status', fetchAllWithStatus);
 
 const backup = () =>
   run('backup', async () => {
-    const now = new Date();
-    const content = makeBackup(await fetchAll(), projectId.value, now);
-    download(content, backupFileName('kbalance-backup', projectId.value, now));
+    downloadBackup('kbalance-backup', await fetchAllWithStatus());
     backupDone.value = true;
   });
 
 const dryRun = () =>
   run('plan', async () => {
-    plan.value = planMigration(await fetchAll());
+    plan.value = planMigration(await fetchAllWithStatus());
   });
 
 const migrate = () => {
@@ -361,7 +364,7 @@ const migrate = () => {
     const { rewritten, failed } = await migrateDocs(paths);
     $q.notify({ message: `Migrated ${rewritten} document(s).` });
     plan.value = null;
-    status.value = versionStatus(await fetchAll());
+    await fetchAllWithStatus();
     if (failed.length) {
       const list = failed.map((f) => `${f.path} (${f.error})`).join(', ');
       throw new Error(`Not migrated: ${list}`);
@@ -371,9 +374,8 @@ const migrate = () => {
 
 // Re-reads everything and updates both the restore list and the status.
 const compareWithLive = async () => {
-  const live = await fetchAll();
+  const live = await fetchAllWithStatus();
   restoreRows.value = compareRestore(restoreBackup.value.docs, live);
-  status.value = versionStatus(live);
 };
 
 const loadRestoreFile = (file) => {
@@ -403,14 +405,10 @@ const restore = () => {
 
   return run('restore', async () => {
     // undo file first: if it can't be made, nothing is written
-    const now = new Date();
-    const before = makeBackup(await fetchDocs(paths), projectId.value, now);
-    const undoFile = backupFileName(
+    const undoFile = downloadBackup(
       'kbalance-before-restore',
-      projectId.value,
-      now,
+      await fetchDocs(paths),
     );
-    download(before, undoFile);
     if (!window.confirm(`Was ${undoFile} saved? OK writes the restore.`)) {
       return;
     }

@@ -1,16 +1,15 @@
 // Versioned document formats (#39).
 //
-// Every Firestore document carries an integer `schemaVersion`; a document
-// without one is v0. Each collection has its own list of upgrade steps:
-// STEPS[collection][n] upgrades a document from version n to n + 1, in place.
-// The current version of a collection is the number of its steps.
+// A document without `schemaVersion` is v0. STEPS[collection][n] upgrades a
+// document from version n to n + 1, in place; the current version is the
+// number of steps. The store runs upgrade() on every read.
 //
-// upgrade() runs on every read (the store's snapshot handlers), so the rest of
-// the app only ever sees current documents. The planned admin page (#41) runs
-// the same function to migrate stored documents eagerly.
+// Steps must tolerate parts already in the newer shape: the app writes
+// current-shape fields (e.g. `transactions.<id>`) without bumping the stored
+// `schemaVersion`.
 //
-// Steps are pure (no Firebase) and tested with fixtures in
-// tests/models/schema.test.js. Add a step and a fixture together.
+// Steps are pure (no Firebase). Add a step and a fixture in
+// tests/models/schema.test.js together.
 
 const STEPS = {
   sheets: [
@@ -43,18 +42,14 @@ export function currentVersion(collection) {
   return steps.length;
 }
 
-// Returns `doc` itself when it is already current (or newer than this build:
-// the version gate, #42, deals with that), otherwise an upgraded copy. Never
-// mutates `doc`.
+// Upgrades `doc` in place to the current version and returns it. Clone first
+// if you need the original. A document newer than this build is left alone
+// (the version gate, #42, deals with that).
 export function upgrade(collection, doc) {
   const current = currentVersion(collection);
-  const from = doc.schemaVersion ?? 0;
-  if (from >= current) return doc;
-
-  const ans = structuredClone(doc);
-  for (let v = from; v < current; v++) {
-    STEPS[collection][v](ans);
-    ans.schemaVersion = v + 1;
+  for (let v = doc.schemaVersion ?? 0; v < current; v++) {
+    STEPS[collection][v](doc);
+    doc.schemaVersion = v + 1;
   }
-  return ans;
+  return doc;
 }

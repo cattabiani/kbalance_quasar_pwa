@@ -40,6 +40,18 @@ let auth = null;
 let db = null;
 // keep these not-reactive and out of the store!
 
+// Snapshot data upgraded to the current schema (#39). A failing upgrade step
+// must not block loading: log it and keep the (possibly partly upgraded) data.
+function readDoc(collection, snapshot) {
+  const data = snapshot.data();
+  try {
+    return upgrade(collection, data);
+  } catch (e) {
+    console.error(`Cannot upgrade ${collection}/${snapshot.id}`, e);
+    return data;
+  }
+}
+
 export const useStore = defineStore('mainStore', {
   state: () => ({
     transactionId: null,
@@ -500,10 +512,10 @@ export const useStore = defineStore('mainStore', {
     async nUsers(id) {
       const sheetRef = this.getSheetRef(id);
       const doc = await getDoc(sheetRef);
-      if (!doc.exists) {
+      if (!doc.exists()) {
         throw new Error(`Document ${id} does not exist!`);
       }
-      return Object.keys(doc.data().users).length;
+      return Object.keys(readDoc('sheets', doc).users).length;
     },
 
     async addSheet(newSheet, batch = null) {
@@ -780,7 +792,7 @@ export const useStore = defineStore('mainStore', {
         const userLedgerRef = this.getUserLedgerRef();
         this.unsubscribeUserLedger = onSnapshot(userLedgerRef, (doc) => {
           if (doc.exists()) {
-            this.userLedger = upgrade('users', doc.data());
+            this.userLedger = readDoc('users', doc);
           }
           if (returnPromise) {
             returnPromise = false;
@@ -813,7 +825,7 @@ export const useStore = defineStore('mainStore', {
           sheetRef,
           async (doc) => {
             if (doc.exists()) {
-              this.currentSheet = upgrade('sheets', doc.data());
+              this.currentSheet = readDoc('sheets', doc);
               await this.updateFriends();
             }
             done();

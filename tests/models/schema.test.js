@@ -51,15 +51,16 @@ describe('upgrade: sheets', () => {
     );
   });
 
-  it('does not mutate the input', () => {
+  it('upgrades in place and returns the same object', () => {
     const input = sheetV0();
-    upgrade('sheets', input);
-    expect(input).toEqual(sheetV0());
+    expect(upgrade('sheets', input)).toBe(input);
+    expect(input.schemaVersion).toBe(currentVersion('sheets'));
   });
 
-  it('returns a current document unchanged (same object)', () => {
+  it('leaves a current document unchanged', () => {
     const current = upgrade('sheets', sheetV0());
-    expect(upgrade('sheets', current)).toBe(current);
+    const copy = structuredClone(current);
+    expect(upgrade('sheets', current)).toEqual(copy);
   });
 
   it('leaves a document newer than this build alone', () => {
@@ -67,7 +68,8 @@ describe('upgrade: sheets', () => {
       ...sheetV0(),
       schemaVersion: currentVersion('sheets') + 1,
     };
-    expect(upgrade('sheets', future)).toBe(future);
+    const copy = structuredClone(future);
+    expect(upgrade('sheets', future)).toEqual(copy);
   });
 });
 

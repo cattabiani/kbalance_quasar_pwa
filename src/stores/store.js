@@ -28,6 +28,7 @@ import {
 import Sheet from 'src/models/sheet';
 import UserLedger from 'src/models/userLedger';
 import Transaction from 'src/models/transaction';
+import { upgrade } from 'src/models/schema';
 import Results from 'src/models/results';
 import Person from 'src/models/person';
 import Config from 'src/models/config';
@@ -313,7 +314,6 @@ export const useStore = defineStore('mainStore', {
       if (this.currentSheet && id in this.currentSheet.transactions) {
         const ans = _.cloneDeep(this.currentSheet.transactions[id]);
         Transaction.updatePeople(ans, this.currentSheetPeople.length);
-        Transaction.update(ans);
         return ans;
       }
 
@@ -780,7 +780,7 @@ export const useStore = defineStore('mainStore', {
         const userLedgerRef = this.getUserLedgerRef();
         this.unsubscribeUserLedger = onSnapshot(userLedgerRef, (doc) => {
           if (doc.exists()) {
-            this.userLedger = doc.data();
+            this.userLedger = upgrade('users', doc.data());
           }
           if (returnPromise) {
             returnPromise = false;
@@ -813,7 +813,7 @@ export const useStore = defineStore('mainStore', {
           sheetRef,
           async (doc) => {
             if (doc.exists()) {
-              this.currentSheet = doc.data();
+              this.currentSheet = upgrade('sheets', doc.data());
               await this.updateFriends();
             }
             done();

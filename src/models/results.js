@@ -17,7 +17,6 @@ const Results = {
 
   applyTransaction(results, tr, nPeople, multi = 1) {
     Transaction.updatePeople(tr, nPeople);
-    Transaction.update(tr);
     if (!(tr.currency in results.perCurrencyBalance)) {
       results.perCurrencyBalance[tr.currency] = Transaction.make(
         tr.credits.length,

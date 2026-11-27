@@ -285,7 +285,6 @@ const stats = computed(() => {
   const filtered = store.currentSheetTransactions
     .filter((id) => {
       const tr = store.currentSheet.transactions[id];
-      Transaction.update(tr);
       const name = (tr.name || '').toLowerCase();
 
       // 1. Exclude
@@ -303,7 +302,6 @@ const stats = computed(() => {
     })
     .map((id) => {
       const tr = store.currentSheet.transactions[id];
-      Transaction.update(tr);
       const trCurrency = tr.currency;
 
       // skip if currencies do not match and no conversion

@@ -24,12 +24,6 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
-    // App-wide settings: minSchemaVersion for the version gate. Everyone
-    // signed in reads, only the admin writes (via the rule above).
-    match /config/app {
-      allow read: if isSignedIn();
-    }
-
     // Sheets. Every member is "owner": members trust each other with the
     // whole sheet (edit, remove members, delete).
     match /sheets/{sheetId} {

@@ -28,12 +28,7 @@ import {
 import Sheet from 'src/models/sheet';
 import UserLedger from 'src/models/userLedger';
 import Transaction from 'src/models/transaction';
-import {
-  upgrade,
-  currentVersion,
-  isVersioned,
-  isNewerThanBuild,
-} from 'src/models/schema';
+import { upgrade, isNewerThanBuild } from 'src/models/schema';
 import Results from 'src/models/results';
 import Person from 'src/models/person';
 import Config from 'src/models/config';
@@ -66,7 +61,7 @@ function readDoc(collection, snapshot) {
   }
 
   // written by a newer build: this one must not touch the data
-  if (isNewerThanBuild(collection, data)) useStore().newerDataSeen = true;
+  if (isNewerThanBuild(collection, data)) useStore().isOutdated = true;
 
   repairs.forEach((msg) => console.warn(`${path}: ${msg}`));
   if (repairs.length && !notifiedRepairs.has(path)) {
@@ -103,28 +98,17 @@ export const useStore = defineStore('mainStore', {
     config: Config.make(),
     pendingTransactionIds: new Set(),
 
-    // version gate (#42): config/app.minSchemaVersion, and whether data
-    // written by a newer build was seen
-    minSchemaVersion: null,
-    newerDataSeen: false,
+    // version gate (#42): data written by a newer build was read, so this
+    // build is too old for it and must reload before writing
+    isOutdated: false,
 
     // listeners
     unsubscribeUserLedger: null,
-    unsubscribeAppConfig: null,
     unsubscribeCurrentSheet: null,
     onlineHandler: null,
   }),
 
   getters: {
-    // This build is too old for the data: it must reload before writing.
-    isOutdated() {
-      if (this.newerDataSeen) return true;
-      return Object.entries(this.minSchemaVersion ?? {}).some(
-        ([collection, min]) =>
-          isVersioned(collection) && currentVersion(collection) < min,
-      );
-    },
-
     isSheet() {
       return this.currentSheet !== null;
     },
@@ -829,33 +813,14 @@ export const useStore = defineStore('mainStore', {
       this.unsubscribeUserLedger?.();
       this.unsubscribeUserLedger = null;
       this.userLedger = null;
-      this.unsubscribeAppConfig?.();
-      this.unsubscribeAppConfig = null;
-      this.minSchemaVersion = null;
-      this.newerDataSeen = false;
+      this.isOutdated = false;
     },
 
     async subscribeUserLedger() {
       this.clearUserLedger();
 
-      // version gate: a missing config/app means no minimum. Waited
-      // for like the ledger, so no write slips through before it is known.
-      const configLoaded = new Promise((resolve) => {
-        this.unsubscribeAppConfig = onSnapshot(
-          doc(db, 'config', 'app'),
-          (snapshot) => {
-            this.minSchemaVersion = snapshot.data()?.minSchemaVersion ?? null;
-            resolve();
-          },
-          (e) => {
-            console.error('Cannot read config/app', e);
-            resolve();
-          },
-        );
-      });
-
       let returnPromise = true;
-      const ledgerLoaded = new Promise((resolve) => {
+      await new Promise((resolve) => {
         const userLedgerRef = this.getUserLedgerRef();
         this.unsubscribeUserLedger = onSnapshot(userLedgerRef, (doc) => {
           if (doc.exists()) {
@@ -867,7 +832,6 @@ export const useStore = defineStore('mainStore', {
           }
         });
       });
-      await Promise.all([configLoaded, ledgerLoaded]);
     },
 
     clearCurrentSheet() {

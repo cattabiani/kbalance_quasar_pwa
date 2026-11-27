@@ -206,23 +206,14 @@ describe('version gate (#42)', () => {
     };
   });
 
-  it.each([
-    ['without config/app', undefined],
-    [
-      'at the minimum',
-      { minSchemaVersion: { sheets: currentVersion('sheets') } },
-    ],
-  ])('is not outdated %s', async (_, configApp) => {
-    fake.docs['config/app'] = configApp;
+  it('is not outdated with data at its own version', async () => {
     const store = reopenApp();
     await store.init();
     expect(store.isOutdated).toBe(false);
   });
 
-  it('blocks writes when the minimum is above this build', async () => {
-    fake.docs['config/app'] = {
-      minSchemaVersion: { sheets: currentVersion('sheets') + 1 },
-    };
+  it('blocks writes after reading a newer sheet', async () => {
+    fake.docs[`sheets/${SHEET_ID}`] = sheet(currentVersion('sheets') + 1);
     const store = reopenApp();
     await store.init();
 

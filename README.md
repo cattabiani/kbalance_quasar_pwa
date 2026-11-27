@@ -64,9 +64,8 @@ For a format change that older app versions can't handle (they would misread or 
 
 1. Deploy the new version and wait until your own devices run it.
 2. Backup → dry run → apply.
-3. Raise the version gate: in the Firestore console, set `config/app` → `minSchemaVersion` (a map, e.g. `sheets: 2`) to the new version. App versions below it show "Update needed" and must reload before they can write. Never set it above the deployed version: that locks everyone out, you included.
 
-An old app that was offline the whole time doesn't see the gate: its offline edits still sync in the old format. A migration that cares must fold such leftovers into the new format on read.
+Migrated documents carry the new `schemaVersion`. An older app that reads one shows "Update needed" and refuses to write until it reloads. An old app that was offline the whole time can't know: its offline edits still sync in the old format, so a migration that cares must fold such leftovers into the new format on read.
 
 ## 🚀 Testing Locally and Deployment
 

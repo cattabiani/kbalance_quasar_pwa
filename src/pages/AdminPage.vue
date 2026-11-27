@@ -129,22 +129,7 @@
                 <q-icon name="check" /> Everything is current. Nothing to do.
               </p>
               <template v-else>
-                <div class="q-mb-sm">
-                  <q-btn
-                    flat
-                    dense
-                    size="sm"
-                    label="Select all"
-                    @click="selectAllToMigrate"
-                  />
-                  <q-btn
-                    flat
-                    dense
-                    size="sm"
-                    label="Select none"
-                    @click="migrateSelected = []"
-                  />
-                </div>
+                <q-checkbox v-model="allMigrate" label="All" dense />
                 <q-list bordered separator dense class="scroll-list">
                   <q-item v-for="p in plan" :key="p.path" tag="label">
                     <q-item-section side>
@@ -245,20 +230,15 @@
               </span>
             </p>
             <template v-if="restoreRows">
-              <div class="q-mb-sm">
+              <div class="row items-center">
+                <q-checkbox v-model="allRestore" label="All" dense />
                 <q-btn
                   flat
                   dense
                   size="sm"
-                  label="Select changed and deleted"
+                  class="q-ml-md"
+                  label="Changed and deleted only"
                   @click="selectDiffering"
-                />
-                <q-btn
-                  flat
-                  dense
-                  size="sm"
-                  label="Select none"
-                  @click="selected = []"
                 />
               </div>
               <q-list bordered separator dense class="scroll-list">
@@ -329,15 +309,33 @@ const isAdmin = computed(() => status.value !== null);
 const backupDone = ref(false);
 const plan = ref(null);
 const migrateSelected = ref([]);
-const selectAllToMigrate = () => {
-  migrateSelected.value = plan.value.filter((p) => !p.error).map((p) => p.path);
-};
+const migratable = () =>
+  (plan.value ?? []).filter((p) => !p.error).map((p) => p.path);
+const allMigrate = allToggle(migrateSelected, migratable);
 
 const restoreFile = ref(null);
 const restoreBackup = ref(null);
 const restoreRows = ref(null);
 const selected = ref([]);
+const allRestore = allToggle(selected, () =>
+  (restoreRows.value ?? []).map((row) => row.path),
+);
 const statusColor = { same: 'grey', changed: 'warning', deleted: 'negative' };
+
+// Tri-state "All" checkbox for a list: true = all ticked, false = none,
+// null = some. Ticking it selects all of `items()`, unticking clears.
+function allToggle(selected, items) {
+  return computed({
+    get: () => {
+      const n = selected.value.length;
+      if (n === 0) return false;
+      return n === items().length ? true : null;
+    },
+    set: (value) => {
+      selected.value = value ? items() : [];
+    },
+  });
+}
 
 // Runs an action with a busy indicator; turns errors into the banner.
 async function run(name, fn) {
@@ -389,7 +387,7 @@ const backup = () =>
 const dryRun = () =>
   run('plan', async () => {
     plan.value = planMigration(await fetchAllWithStatus());
-    selectAllToMigrate();
+    migrateSelected.value = migratable(); // start with everything ticked
   });
 
 const migrate = () => {

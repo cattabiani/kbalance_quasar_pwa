@@ -61,22 +61,28 @@ export async function writeDocs(docs) {
 
 // Upgrades each document to the current schema. One transaction per
 // document: it re-reads the live version, so concurrent edits by users
-// are upgraded too, never overwritten. Returns the number rewritten.
+// are upgraded too, never overwritten. A document that fails is skipped;
+// returns { rewritten, failed: [{ path, error }] }.
 export async function migrateDocs(paths) {
   requireOnline();
   const db = getDb();
   let rewritten = 0;
+  const failed = [];
   for (const path of paths) {
     const ref = doc(db, path);
-    // The callback may run several times (retries): count via its result.
-    const wrote = await runTransaction(db, async (transaction) => {
-      const snapshot = await transaction.get(ref);
-      if (!snapshot.exists()) return false;
-      const { after, changed } = upgradeCopy(path, snapshot.data());
-      if (changed) transaction.set(ref, after);
-      return changed;
-    });
-    if (wrote) rewritten++;
+    try {
+      // The callback may run several times (retries): count via its result.
+      const wrote = await runTransaction(db, async (transaction) => {
+        const snapshot = await transaction.get(ref);
+        if (!snapshot.exists()) return false;
+        const { after, changed } = upgradeCopy(path, snapshot.data());
+        if (changed) transaction.set(ref, after);
+        return changed;
+      });
+      if (wrote) rewritten++;
+    } catch (e) {
+      failed.push({ path, error: e.message });
+    }
   }
-  return rewritten;
+  return { rewritten, failed };
 }

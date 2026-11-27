@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  assertPlainJson,
+  nonJsonPaths,
   backupFileName,
   compareRestore,
   makeBackup,
@@ -33,19 +33,17 @@ const docs = () => ({
   'config/app': { minSchemaVersion: { sheets: 1 } },
 });
 
-describe('assertPlainJson', () => {
+describe('nonJsonPaths', () => {
   it('accepts plain JSON values', () => {
-    expect(() =>
-      assertPlainJson({ a: [1, 'x', true, null, { b: 2.5 }] }),
-    ).not.toThrow();
+    expect(nonJsonPaths({ a: [1, 'x', true, null, { b: 2.5 }] })).toEqual([]);
   });
 
-  it.each([
-    ['a class instance', { t: new Date() }, 't'],
-    ['undefined', { a: [1, undefined] }, 'a[1]'],
-    ['NaN', { n: NaN }, 'n'],
-  ])('rejects %s and says where', (_, value, where) => {
-    expect(() => assertPlainJson(value)).toThrow(`at ${where}`);
+  it('lists every value JSON cannot round-trip', () => {
+    expect(nonJsonPaths({ t: new Date(), a: [1, undefined], n: NaN })).toEqual([
+      't',
+      'a[1]',
+      'n',
+    ]);
   });
 });
 
@@ -57,10 +55,9 @@ describe('backup files', () => {
     expect(parsed.createdAt).toBe('2026-11-27T10:00:00.000Z');
   });
 
-  it('refuses to back up non-JSON data', () => {
-    expect(() => makeBackup({ 'sheets/x': { t: new Date() } }, 'p')).toThrow(
-      'sheets/x.t',
-    );
+  it('refuses to back up non-JSON data, listing all of it', () => {
+    const bad = { 'sheets/x': { t: new Date() }, 'sheets/y': { n: NaN } };
+    expect(() => makeBackup(bad, 'p')).toThrow('sheets/x.t, sheets/y.n');
   });
 
   it.each([
@@ -75,6 +72,16 @@ describe('backup files', () => {
       'an unknown path',
       '{"format":"kbalance-backup","formatVersion":1,"docs":{"evil/x":{}}}',
       'Unexpected document path',
+    ],
+    [
+      'an empty id',
+      '{"format":"kbalance-backup","formatVersion":1,"docs":{"sheets/":{}}}',
+      'Unexpected document path',
+    ],
+    [
+      'a document that is not an object',
+      '{"format":"kbalance-backup","formatVersion":1,"docs":{"sheets/x":null}}',
+      'not an object',
     ],
   ])('parseBackup rejects %s', (_, text, message) => {
     expect(() => parseBackup(text)).toThrow(message);
@@ -113,6 +120,17 @@ describe('planMigration', () => {
       { path: 'users/me', from: 0, to: currentVersion('users'), repairs: [] },
     ]);
     expect(input).toEqual(docs()); // dry run: input untouched
+  });
+
+  it('reports a document whose upgrade fails instead of failing the plan', () => {
+    const input = docs();
+    delete input['sheets/old'].transactions.t1.debts; // breaks the v0 step
+
+    const plan = planMigration(input);
+
+    expect(plan[0]).toMatchObject({ path: 'sheets/old', from: 0 });
+    expect(plan[0].error).toBeTruthy();
+    expect(plan[1].path).toBe('users/me'); // the rest is still planned
   });
 });
 

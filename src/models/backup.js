@@ -13,29 +13,40 @@ const FORMAT_VERSION = 1;
 
 export const collectionOf = (path) => path.split('/')[0];
 
-// Throws if `value` holds anything JSON can't round-trip (e.g. a Firestore
-// Timestamp): a backup must restore exactly what was read.
-export function assertPlainJson(value, where = '') {
-  if (value === null || ['string', 'boolean'].includes(typeof value)) return;
-  if (typeof value === 'number') {
-    if (Number.isFinite(value)) return;
-  } else if (Array.isArray(value)) {
-    value.forEach((v, i) => assertPlainJson(v, `${where}[${i}]`));
-    return;
-  } else if (
-    typeof value === 'object' &&
-    [Object.prototype, null].includes(Object.getPrototypeOf(value))
-  ) {
-    Object.entries(value).forEach(([k, v]) =>
-      assertPlainJson(v, where ? `${where}.${k}` : k),
-    );
-    return;
+// Paths inside `value` that JSON can't round-trip (e.g. a Firestore
+// Timestamp, NaN): a backup must restore exactly what was read.
+export function nonJsonPaths(value, where = '') {
+  if (value === null || ['string', 'boolean'].includes(typeof value)) {
+    return [];
   }
-  throw new Error(`Not plain JSON at ${where}: ${String(value)}`);
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? [] : [where];
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap((v, i) => nonJsonPaths(v, `${where}[${i}]`));
+  }
+  if (isPlainObject(value)) {
+    return Object.entries(value).flatMap(([k, v]) =>
+      nonJsonPaths(v, where ? `${where}.${k}` : k),
+    );
+  }
+  return [where];
 }
 
+const isPlainObject = (value) =>
+  typeof value === 'object' &&
+  value !== null &&
+  [Object.prototype, null].includes(Object.getPrototypeOf(value));
+
+// Throws listing every value that can't be backed up, so they can all be
+// fixed (e.g. in the Firestore console) in one go.
 export function makeBackup(docs, projectId, createdAt = new Date()) {
-  Object.entries(docs).forEach(([path, data]) => assertPlainJson(data, path));
+  const bad = Object.entries(docs).flatMap(([path, data]) =>
+    nonJsonPaths(data, path),
+  );
+  if (bad.length) {
+    throw new Error(`Values that can't be backed up: ${bad.join(', ')}`);
+  }
   return {
     format: FORMAT,
     formatVersion: FORMAT_VERSION,
@@ -67,12 +78,13 @@ export function parseBackup(text) {
   if (!backup.docs || typeof backup.docs !== 'object') {
     throw new Error('Backup has no documents.');
   }
-  for (const path of Object.keys(backup.docs)) {
-    if (
-      path.split('/').length !== 2 ||
-      !COLLECTIONS.includes(collectionOf(path))
-    ) {
+  for (const [path, data] of Object.entries(backup.docs)) {
+    const [collection, id, ...rest] = path.split('/');
+    if (!COLLECTIONS.includes(collection) || !id || rest.length) {
       throw new Error(`Unexpected document path in backup: ${path}`);
+    }
+    if (!isPlainObject(data)) {
+      throw new Error(`Document ${path} in backup is not an object.`);
     }
   }
   return backup;
@@ -106,20 +118,19 @@ export function upgradeCopy(path, data) {
 }
 
 // Dry run: which documents the migration would rewrite, and the repairs it
-// would make. [{ path, from, to, repairs }]
+// would make: [{ path, from, to, repairs }]. A document whose upgrade throws
+// gets { path, from, error } instead and is skipped by the migration.
 export function planMigration(docs) {
   return Object.entries(docs)
     .filter(([path]) => isVersioned(collectionOf(path)))
     .map(([path, data]) => {
-      const { after, repairs, changed } = upgradeCopy(path, data);
-      return (
-        changed && {
-          path,
-          from: data.schemaVersion ?? 0,
-          to: after.schemaVersion,
-          repairs,
-        }
-      );
+      const from = data.schemaVersion ?? 0;
+      try {
+        const { after, repairs, changed } = upgradeCopy(path, data);
+        return changed && { path, from, to: after.schemaVersion, repairs };
+      } catch (e) {
+        return { path, from, error: e.message };
+      }
     })
     .filter(Boolean);
 }

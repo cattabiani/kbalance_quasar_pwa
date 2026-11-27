@@ -16,6 +16,9 @@
     <div class="admin-column q-gutter-y-md">
       <q-banner v-if="error" class="bg-negative text-white" rounded>
         {{ error }}
+        <template v-if="!isAdmin" #action>
+          <q-btn flat label="Retry" @click="refresh" />
+        </template>
       </q-banner>
       <div v-if="!isAdmin && !error" class="flex flex-center q-pa-xl">
         <q-spinner size="lg" />
@@ -126,7 +129,12 @@
               <q-list v-else bordered separator dense>
                 <q-item v-for="p in plan" :key="p.path">
                   <q-item-section>
-                    <q-item-label>
+                    <q-item-label v-if="p.error" class="text-negative">
+                      {{ p.path }}: v{{ p.from }}, cannot upgrade ({{
+                        p.error
+                      }}); it will be skipped
+                    </q-item-label>
+                    <q-item-label v-else>
                       {{ p.path }}: v{{ p.from }} → v{{ p.to }}
                     </q-item-label>
                     <q-item-label
@@ -154,9 +162,11 @@
             <q-btn
               color="primary"
               icon="upgrade"
-              :label="plan?.length ? `Apply (${plan.length})` : 'Apply'"
+              :label="
+                toMigrate.length ? `Apply (${toMigrate.length})` : 'Apply'
+              "
               :loading="busy === 'migrate'"
-              :disable="!!busy || !backupDone || !plan?.length"
+              :disable="!!busy || !backupDone || !toMigrate.length"
               @click="migrate"
             />
             <span v-if="!backupDone" class="q-ml-md text-grey">
@@ -174,8 +184,9 @@
               file, then tick what to restore: everything, or only the broken
               sheets (other sheets keep the edits made since the backup). Before
               writing, the current version of the ticked documents is
-              downloaded, so a restore can be undone with the same tool.
-              Documents created after the backup are never deleted.
+              downloaded, so a restore can be undone with the same tool, except
+              that documents it re-creates (marked "deleted") stay. Documents
+              created after the backup are never deleted.
             </p>
             <q-file
               v-model="restoreFile"
@@ -284,6 +295,7 @@ const isAdmin = ref(false);
 const status = ref(null);
 const backupDone = ref(false);
 const plan = ref(null);
+const toMigrate = computed(() => (plan.value ?? []).filter((p) => !p.error));
 
 const restoreFile = ref(null);
 const restoreBackup = ref(null);
@@ -298,7 +310,7 @@ async function run(name, fn) {
   try {
     await fn();
   } catch (e) {
-    if (e.code === 'permission-denied') {
+    if (e.code === 'permission-denied' && !isAdmin.value) {
       router.replace('/not-found');
     } else {
       error.value = e.message;
@@ -316,7 +328,8 @@ function download(content, filename) {
   a.href = URL.createObjectURL(blob);
   a.download = filename;
   a.click();
-  URL.revokeObjectURL(a.href);
+  // revoking right away can cancel the download in some browsers
+  setTimeout(() => URL.revokeObjectURL(a.href), 60_000);
 }
 
 const refresh = () =>
@@ -339,15 +352,20 @@ const dryRun = () =>
   });
 
 const migrate = () => {
-  const n = plan.value.length;
+  const n = toMigrate.value.length;
   if (!window.confirm(`Rewrite ${n} document(s) to the current version?`)) {
     return;
   }
   return run('migrate', async () => {
-    const rewritten = await migrateDocs(plan.value.map((p) => p.path));
+    const paths = toMigrate.value.map((p) => p.path);
+    const { rewritten, failed } = await migrateDocs(paths);
     $q.notify({ message: `Migrated ${rewritten} document(s).` });
     plan.value = null;
     status.value = versionStatus(await fetchAll());
+    if (failed.length) {
+      const list = failed.map((f) => `${f.path} (${f.error})`).join(', ');
+      throw new Error(`Not migrated: ${list}`);
+    }
   });
 };
 
@@ -387,10 +405,15 @@ const restore = () => {
     // undo file first: if it can't be made, nothing is written
     const now = new Date();
     const before = makeBackup(await fetchDocs(paths), projectId.value, now);
-    download(
-      before,
-      backupFileName('kbalance-before-restore', projectId.value, now),
+    const undoFile = backupFileName(
+      'kbalance-before-restore',
+      projectId.value,
+      now,
     );
+    download(before, undoFile);
+    if (!window.confirm(`Was ${undoFile} saved? OK writes the restore.`)) {
+      return;
+    }
 
     await writeDocs(_.pick(restoreBackup.value.docs, paths));
     $q.notify({ message: `Restored ${paths.length} document(s).` });

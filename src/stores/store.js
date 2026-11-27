@@ -28,16 +28,50 @@ import {
 import Sheet from 'src/models/sheet';
 import UserLedger from 'src/models/userLedger';
 import Transaction from 'src/models/transaction';
+import { upgrade } from 'src/models/schema';
 import Results from 'src/models/results';
 import Person from 'src/models/person';
 import Config from 'src/models/config';
 import _ from 'lodash';
+import { Notify } from 'quasar';
 
 // keep these not-reactive and out of the store!
 let app = null;
 let auth = null;
 let db = null;
 // keep these not-reactive and out of the store!
+
+// Documents whose repairs were already shown this session. Until a document
+// is migrated (#41) the upgrade repeats on every snapshot: notify only once.
+const notifiedRepairs = new Set();
+
+// Snapshot data upgraded to the current schema (#39). A failing upgrade step
+// must not block loading: log it and keep the (possibly partly upgraded) data.
+function readDoc(collection, snapshot) {
+  const path = `${collection}/${snapshot.id}`;
+  const data = snapshot.data();
+  const repairs = [];
+  try {
+    upgrade(collection, data, (msg) => repairs.push(msg));
+  } catch (e) {
+    console.error(`Cannot upgrade ${path}`, e);
+  }
+
+  repairs.forEach((msg) => console.warn(`${path}: ${msg}`));
+  if (repairs.length && !notifiedRepairs.has(path)) {
+    notifiedRepairs.add(path);
+    Notify.create({
+      message: `Old data in "${data.name ?? snapshot.id}" was repaired`,
+      caption: repairs.join(' · '),
+      color: 'warning',
+      textColor: 'black',
+      multiLine: true,
+      timeout: 0,
+      actions: [{ label: 'OK', color: 'black' }],
+    });
+  }
+  return data;
+}
 
 export const useStore = defineStore('mainStore', {
   state: () => ({
@@ -313,7 +347,6 @@ export const useStore = defineStore('mainStore', {
       if (this.currentSheet && id in this.currentSheet.transactions) {
         const ans = _.cloneDeep(this.currentSheet.transactions[id]);
         Transaction.updatePeople(ans, this.currentSheetPeople.length);
-        Transaction.update(ans);
         return ans;
       }
 
@@ -500,10 +533,10 @@ export const useStore = defineStore('mainStore', {
     async nUsers(id) {
       const sheetRef = this.getSheetRef(id);
       const doc = await getDoc(sheetRef);
-      if (!doc.exists) {
+      if (!doc.exists()) {
         throw new Error(`Document ${id} does not exist!`);
       }
-      return Object.keys(doc.data().users).length;
+      return Object.keys(readDoc('sheets', doc).users).length;
     },
 
     async addSheet(newSheet, batch = null) {
@@ -780,7 +813,7 @@ export const useStore = defineStore('mainStore', {
         const userLedgerRef = this.getUserLedgerRef();
         this.unsubscribeUserLedger = onSnapshot(userLedgerRef, (doc) => {
           if (doc.exists()) {
-            this.userLedger = doc.data();
+            this.userLedger = readDoc('users', doc);
           }
           if (returnPromise) {
             returnPromise = false;
@@ -813,7 +846,7 @@ export const useStore = defineStore('mainStore', {
           sheetRef,
           async (doc) => {
             if (doc.exists()) {
-              this.currentSheet = doc.data();
+              this.currentSheet = readDoc('sheets', doc);
               await this.updateFriends();
             }
             done();

@@ -10,32 +10,6 @@ describe('Transaction.make', () => {
     expect(tr.debts).toEqual([0, 0, 0]);
   });
 });
-describe('Transaction.update', () => {
-  it('create old version and convert', () => {
-    const old = {
-      amount: 50,
-      payer: 1,
-      debts: [
-        { isDebtor: true, owedAmount: 20 },
-        { isDebtor: true, owedAmount: 30 },
-        { isDebtor: false, owedAmount: 0 },
-      ],
-    };
-
-    Transaction.update(old);
-
-    // NEW fields
-    expect(old.credits).toEqual([0, 50, 0]);
-
-    // debts → ints
-    expect(old.debts).toEqual([20, 30, 0]);
-
-    // old fields removed
-    expect(old.credit).toBeUndefined();
-    expect(old.payer).toBeUndefined();
-  });
-});
-
 describe('Transaction.name', () => {
   it('Returns the name when set', () => {
     const tr = Transaction.make(2, 'USD');

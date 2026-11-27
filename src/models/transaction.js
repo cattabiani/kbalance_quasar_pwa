@@ -34,36 +34,15 @@ const Transaction = {
     return { name, id, credits, currency, debts, timestamp };
   },
 
-  update(tr) {
-    // update to latest format
-    if (!('amount' in tr)) return tr;
-
-    const n = tr.debts.length;
-
-    const credits = Array.from({ length: n }, () => 0);
-    credits[tr.payer] = tr.amount ?? 0;
-
-    tr.credits = credits;
-
-    if (tr.debts.some((d) => d && typeof d === 'object' && 'owedAmount' in d)) {
-      tr.debts = tr.debts.map((d) => d.owedAmount ?? 0);
-    }
-
-    delete tr.amount;
-    delete tr.payer;
-  },
-
   name(tr) {
     return tr?.name || 'New Transaction';
   },
 
   credit(tr) {
-    this.update(tr);
     return tr.credits.reduce((sum, v) => sum + v, 0);
   },
 
   debt(tr) {
-    this.update(tr);
     return tr.debts.reduce((sum, v) => sum + v, 0);
   },
 
@@ -81,7 +60,6 @@ const Transaction = {
   },
 
   debtors(tr) {
-    this.update(tr);
     const credit = this.credit(tr);
 
     if (credit === 0) {
@@ -92,7 +70,6 @@ const Transaction = {
   },
 
   payerIdx(tr, defaultIdx) {
-    this.update(tr);
     const credit = this.credit(tr);
     if (!tr.credits.length || credit === 0) return defaultIdx;
 
@@ -106,7 +83,6 @@ const Transaction = {
 
   payerIdxs(tr, nPeople) {
     this.updatePeople(tr, nPeople);
-    this.update(tr);
     return tr.credits
       .map((credit, idx) => ({ credit, idx }))
       .filter((e) => e.credit !== 0)
@@ -115,12 +91,10 @@ const Transaction = {
   },
 
   position(tr, idx) {
-    this.update(tr);
     return tr.credits[idx] - tr.debts[idx];
   },
 
   split(tr, debtors, exclude = new Set()) {
-    this.update(tr);
     // 1. zero-out non-debtors
     for (let i = 0; i < tr.debts.length; i++) {
       if (!debtors[i]) tr.debts[i] = 0;
@@ -163,7 +137,6 @@ const Transaction = {
   },
 
   setCredit(tr, value, payerIdx, debtors, exclude = new Set()) {
-    this.update(tr);
     // 1. reset + set payer credit
     for (let i = 0; i < tr.credits.length; i++) {
       tr.credits[i] = i === payerIdx ? value : 0;
@@ -174,7 +147,6 @@ const Transaction = {
   },
 
   setCustomCredit(tr, value, payerIdx, debtors) {
-    this.update(tr);
     tr.credits[payerIdx] = value;
     this.split(tr, debtors);
   },
@@ -238,7 +210,6 @@ const Transaction = {
   },
 
   check(tr) {
-    this.update(tr);
     const credit = this.credit(tr);
     const debt = this.debt(tr);
     if (debt !== credit) {
@@ -267,7 +238,6 @@ const Transaction = {
   },
 
   toCsvLine(tr) {
-    this.update(tr);
     const dateStr = new Intl.DateTimeFormat('en-GB').format(
       new Date(tr.timestamp),
     );
@@ -284,8 +254,6 @@ const Transaction = {
   },
 
   state(tr) {
-    this.update(tr);
-
     if (tr.debts.length !== 2) {
       return -1;
     }
@@ -438,7 +406,6 @@ const Transaction = {
   },
 
   convertAll(tr, conversionRate, newCurrency) {
-    this.update(tr);
     const settleTr = Transaction.make(tr.debts.length, tr.currency);
     settleTr.debts = [...tr.credits];
     settleTr.credits = [...tr.debts];

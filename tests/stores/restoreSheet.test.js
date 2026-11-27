@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
+import { Notify } from 'quasar';
 import { useStore } from 'src/stores/store'; // vi.mock calls are hoisted above this
 
 // Fake Firebase: one logged-in user, a ledger and one sheet doc.
@@ -44,7 +45,12 @@ vi.mock('firebase/firestore', () => ({
     if (data === 'denied') {
       onError(new Error('permission-denied'));
     } else {
-      onNext({ exists: () => data !== undefined, data: () => data });
+      // like Firestore: every snapshot hands out a fresh copy
+      onNext({
+        id: ref.split('/')[1],
+        exists: () => data !== undefined,
+        data: () => structuredClone(data),
+      });
     }
     return () => {};
   },
@@ -53,6 +59,8 @@ vi.mock('firebase/firestore', () => ({
   deleteField: () => null,
   writeBatch: () => ({ update() {}, set() {}, commit: async () => {} }),
 }));
+
+vi.mock('quasar', () => ({ Notify: { create: vi.fn() } }));
 
 vi.mock('src/models/config', () => ({
   default: { make: () => ({ fake: true }), isCompatible: () => true },
@@ -120,5 +128,56 @@ describe('reopening the app restores the last open sheet', () => {
     await store.login('someone@else', 'password');
 
     expect(store.currentSheetId).toBeNull();
+  });
+});
+
+describe('old data repaired on read is notified once per sheet per session', () => {
+  // v0 sheet with one legacy transaction whose payer is missing
+  const brokenSheet = (id) => ({
+    id,
+    name: `Sheet ${id}`,
+    users: { me: 'owner' },
+    people: { me: { id: 'me', name: 'Me', timestamp: 1 } },
+    transactions: {
+      t1: {
+        id: 't1',
+        name: 'Dinner',
+        currency: 'EUR',
+        amount: 10,
+        debts: [10],
+      },
+    },
+  });
+
+  beforeEach(() => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    Notify.create.mockClear();
+    fake.currentUser = { uid: 'me' };
+    fake.docs = {
+      'users/me': { friends: {}, sheets: {} },
+      'sheets/broken-1': brokenSheet('broken-1'),
+      'sheets/broken-2': brokenSheet('broken-2'),
+    };
+  });
+
+  it('repairs the data, notifies once per sheet, and logs every time', async () => {
+    const store = reopenApp();
+    await store.init();
+
+    await store.subscribeCurrentSheet('broken-1');
+    expect(store.currentSheet.transactions.t1.credits).toEqual([10]);
+    expect(Notify.create).toHaveBeenCalledTimes(1);
+    expect(Notify.create.mock.calls[0][0].caption).toBe(
+      '"Dinner": payer unknown, 10 EUR assigned to Me',
+    );
+
+    // same sheet again (stored data is still v0): no second notification
+    await store.subscribeCurrentSheet('broken-1');
+    expect(Notify.create).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledTimes(2);
+
+    // another sheet: its own notification
+    await store.subscribeCurrentSheet('broken-2');
+    expect(Notify.create).toHaveBeenCalledTimes(2);
   });
 });

@@ -141,8 +141,8 @@
         <template v-slot:avatar>
           <q-icon name="warning" color="amber-9" />
         </template>
-        This sheet is {{ Math.floor(fullness * 100) }}% full: start a new sheet
-        soon. A full sheet can't take new entries.
+        This sheet is almost full: start a new sheet soon. A full sheet can't
+        take new entries.
       </q-banner>
 
       <summary-card
@@ -216,9 +216,6 @@ const searchString = ref(null);
 const searchActive = ref(false);
 const searchInput = ref(null);
 
-const fullness = computed(() =>
-  store.currentSheet ? Sheet.fullness(store.currentSheet) : 0,
-);
 const isNearlyFull = computed(
   () => !!store.currentSheet && Sheet.isNearlyFull(store.currentSheet),
 );

@@ -1,0 +1,67 @@
+rules_version = '2';
+
+// kBalance Firestore security rules.
+// Publish: paste into Firebase console → Firestore → Rules → Publish
+// (see README, "Firestore Security Rules").
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Replace ADMIN_UID with the UID of this project's admin
+    // (Firebase console → Authentication → Users → "User UID").
+    // Left unchanged, nobody is admin.
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.uid == 'ADMIN_UID';
+    }
+
+    // Admin: full access to everything, including list queries and
+    // subcollections. For the planned admin page (#41).
+    match /{path=**} {
+      allow read, write: if isAdmin();
+    }
+
+    // App-wide settings for the planned version gate (#42). Everyone signed
+    // in reads, only the admin writes (via the rule above).
+    match /config/app {
+      allow read: if isSignedIn();
+    }
+
+    // Sheets. Every member is "owner": members trust each other with the
+    // whole sheet (edit, remove members, delete).
+    match /sheets/{sheetId} {
+      allow read: if isSignedIn() && resource.data.users[request.auth.uid] != null;
+      allow create: if isSignedIn() && request.resource.data.users[request.auth.uid] == "owner";
+      allow update, delete: if isSignedIn() && resource.data.users[request.auth.uid] == "owner";
+    }
+
+    // User ledgers.
+    match /users/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && request.auth.uid != userId && isAddingSharedSheet(userId);
+    }
+
+    // Sharing: anyone may add one well-formed entry to another user's
+    // `sheets` map, as long as that sheet (after this write or batch) lists
+    // the user as a member. This keeps ledgers consistent with sheets; it is
+    // not consent: anyone can create a sheet listing any UID.
+    // getAfter(), not get(): the app writes the sheet and ledgers in one batch.
+    function isAddingSharedSheet(userId) {
+      let sheetsDiff = request.resource.data.sheets.diff(resource.data.sheets);
+      // Sets can't be indexed: compute the one added key as a list.
+      let newSheetKey = request.resource.data.sheets.keys().removeAll(resource.data.sheets.keys())[0];
+      let entry = request.resource.data.sheets[newSheetKey];
+
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(["sheets"]) &&
+             sheetsDiff.affectedKeys().hasOnly([newSheetKey]) &&
+             entry is map &&
+             entry.keys().hasOnly(["name", "timestamp"]) &&
+             entry.name is string &&
+             entry.timestamp is int &&
+             getAfter(/databases/$(database)/documents/sheets/$(newSheetKey)).data.users[userId] != null;
+    }
+  }
+}

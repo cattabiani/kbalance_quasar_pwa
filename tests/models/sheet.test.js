@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import Sheet, { docBytes, MAX_DOC_BYTES } from '../../src/models/sheet.js';
+import Sheet, {
+  docBytes,
+  MAX_DOC_BYTES,
+  NEARLY_FULL,
+} from '../../src/models/sheet.js';
 
 describe('docBytes', () => {
   // the worked example in Firestore's storage-size docs: 147 bytes
@@ -34,5 +38,18 @@ describe('Sheet.fullness', () => {
     const sheet = Sheet.make('Trip', {}, {});
     sheet.transactions.t = { name: 'x'.repeat(MAX_DOC_BYTES / 2) };
     expect(Sheet.fullness(sheet)).toBeCloseTo(0.5, 2);
+  });
+});
+
+describe('Sheet.isNearlyFull', () => {
+  const sheetOf = (fullness) => {
+    const sheet = Sheet.make('Trip', {}, {});
+    sheet.transactions.t = { name: 'x'.repeat(fullness * MAX_DOC_BYTES) };
+    return sheet;
+  };
+
+  it('is false below the threshold and true from it on', () => {
+    expect(Sheet.isNearlyFull(sheetOf(NEARLY_FULL - 0.01))).toBe(false);
+    expect(Sheet.isNearlyFull(sheetOf(NEARLY_FULL))).toBe(true);
   });
 });

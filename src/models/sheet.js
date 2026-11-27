@@ -4,6 +4,8 @@ import { currentVersion } from './schema';
 // Firestore's maximum document size. A sheet keeps all its transactions in
 // one document, so a sheet that reaches it can't take new entries.
 export const MAX_DOC_BYTES = 1024 * 1024;
+// From this fullness on, users are told to start a new sheet.
+export const NEARLY_FULL = 0.9;
 
 // Stored size of a field value, per Firestore's rules
 // (https://firebase.google.com/docs/firestore/storage-size).
@@ -54,6 +56,10 @@ const Sheet = {
   // How full the sheet's document is: 0 (empty) to 1 (Firestore's limit).
   fullness(sheet) {
     return docBytes('sheets', sheet.id, sheet) / MAX_DOC_BYTES;
+  },
+
+  isNearlyFull(sheet) {
+    return this.fullness(sheet) >= NEARLY_FULL;
   },
 };
 

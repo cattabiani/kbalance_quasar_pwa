@@ -133,7 +133,7 @@
       </q-card>
 
       <q-banner
-        v-if="fullness >= SHEET_FULL_WARNING"
+        v-if="isNearlyFull"
         dense
         rounded
         class="bg-amber-2 text-black q-mx-md"
@@ -216,10 +216,11 @@ const searchString = ref(null);
 const searchActive = ref(false);
 const searchInput = ref(null);
 
-// A sheet is one Firestore document (max 1 MiB): warn well before it fills.
-const SHEET_FULL_WARNING = 0.9;
 const fullness = computed(() =>
   store.currentSheet ? Sheet.fullness(store.currentSheet) : 0,
+);
+const isNearlyFull = computed(
+  () => !!store.currentSheet && Sheet.isNearlyFull(store.currentSheet),
 );
 
 // The totals card only ever shows for >2 people, so for 2-person sheets the

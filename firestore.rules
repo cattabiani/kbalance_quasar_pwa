@@ -10,22 +10,22 @@ service cloud.firestore {
     // Replace ADMIN_UID with the UID of this project's admin
     // (Firebase console → Authentication → Users → "User UID").
     // Left unchanged, nobody is admin.
-    function isAdmin() {
-      return request.auth != null && request.auth.uid == 'ADMIN_UID';
-    }
-
     function isSignedIn() {
       return request.auth != null;
     }
 
+    function isAdmin() {
+      return isSignedIn() && request.auth.uid == 'ADMIN_UID';
+    }
+
     // Admin: full access to everything, including list queries and
-    // subcollections. Used by the admin page (backup / migrate / restore).
+    // subcollections. For the planned admin page (#41).
     match /{path=**} {
       allow read, write: if isAdmin();
     }
 
-    // App-wide settings (e.g. minSchemaVersion). Everyone signed in reads,
-    // only the admin writes (via the rule above).
+    // App-wide settings for the planned version gate (#42). Everyone signed
+    // in reads, only the admin writes (via the rule above).
     match /config/app {
       allow read: if isSignedIn();
     }
@@ -34,46 +34,34 @@ service cloud.firestore {
     // whole sheet (edit, remove members, delete).
     match /sheets/{sheetId} {
       allow read: if isSignedIn() && resource.data.users[request.auth.uid] != null;
-
-      // The creator must be an owner of the sheet they create.
       allow create: if isSignedIn() && request.resource.data.users[request.auth.uid] == "owner";
-
       allow update, delete: if isSignedIn() && resource.data.users[request.auth.uid] == "owner";
     }
 
     // User ledgers.
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
-
-      // Sharing: a sheet member may add that sheet to another member's ledger.
-      allow update: if isSignedIn() && isAddingSharedSheet(userId);
+      allow update: if isSignedIn() && request.auth.uid != userId && isAddingSharedSheet(userId);
     }
 
-    // True if the update only adds one entry to the ledger's `sheets` map,
-    // the entry is well formed, and the sheet (as it is after this write or
-    // batch) lists the ledger's owner as a member. getAfter(), not get():
-    // the app writes the sheet and the ledgers in the same batch.
+    // Sharing: anyone may add one well-formed entry to another user's
+    // `sheets` map, as long as that sheet (after this write or batch) lists
+    // the user as a member. This keeps ledgers consistent with sheets; it is
+    // not consent: anyone can create a sheet listing any UID.
+    // getAfter(), not get(): the app writes the sheet and ledgers in one batch.
     function isAddingSharedSheet(userId) {
-      let diff = request.resource.data.diff(resource.data);
       let sheetsDiff = request.resource.data.sheets.diff(resource.data.sheets);
       // Sets can't be indexed: compute the one added key as a list.
       let newSheetKey = request.resource.data.sheets.keys().removeAll(resource.data.sheets.keys())[0];
       let entry = request.resource.data.sheets[newSheetKey];
-      let sheetAfter = getAfter(/databases/$(database)/documents/sheets/$(newSheetKey));
 
-      return diff.addedKeys().size() == 0 &&
-             diff.removedKeys().size() == 0 &&
-             diff.changedKeys().hasOnly(["sheets"]) &&
-             sheetsDiff.changedKeys().size() == 0 &&
-             sheetsDiff.removedKeys().size() == 0 &&
-             sheetsDiff.addedKeys().size() == 1 &&
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(["sheets"]) &&
+             sheetsDiff.affectedKeys().hasOnly([newSheetKey]) &&
              entry is map &&
              entry.keys().hasOnly(["name", "timestamp"]) &&
              entry.name is string &&
-             entry.name.size() <= 200 &&
              entry.timestamp is int &&
-             sheetAfter != null &&
-             sheetAfter.data.users[userId] != null;
+             getAfter(/databases/$(database)/documents/sheets/$(newSheetKey)).data.users[userId] != null;
     }
   }
 }
